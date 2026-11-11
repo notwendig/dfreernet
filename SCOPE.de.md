@@ -1,6 +1,6 @@
 # Geltungsbereich der Lizenz
 
-[English](LICENSE-SCOPE.md) | [Deutsch](LICENSE-SCOPE.de.md)
+[English](SCOPE.md) | [Deutsch](SCOPE.de.md)
 
 Copyright (c) 2026 Jürgen Willi Sievers für den eigenständig erstellten Code
 dieses Projekts.

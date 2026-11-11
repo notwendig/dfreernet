@@ -65,7 +65,7 @@ Buildverzeichnisse, Python-Caches, Mitschnitte und Sicherungsarchive sind generi
 
 Die rein lokalen Dateien `QUELLSTAND.sha256`, `LETZTE_SICHERUNG.txt` und `CHECKPOINT.json` dokumentieren Entwicklungsprüfsummen und wiederherstellbare Sicherungen. Sie bleiben zusammen mit Mitschnitten, persönlichen Konfigurationen und Build-Ausgaben außerhalb von Git. Frühere lokale Nachweise bleiben beim ursprünglichen Entwickler erhalten.
 
-Eigenständig erstellter Code steht im Geltungsbereich von `LICENSE-SCOPE.de.md` unter GPL-3.0-only. Das lokale Programmverzeichnis enthält ausgenommene abgeleitete Katalog-, Text- und Vorlagendaten; Herkunft und Weitergabegrenzen stehen in `resources/PROVENANCE.de.md`. Die Codelizenz erlaubt keine Weitergabe der vollständig gebündelten Anwendung.
+Eigenständig erstellter Code steht im Geltungsbereich von `SCOPE.de.md` unter GPL-3.0-only. Das lokale Programmverzeichnis enthält ausgenommene abgeleitete Katalog-, Text- und Vorlagendaten; Herkunft und Weitergabegrenzen stehen in `resources/PROVENANCE.de.md`. Die Codelizenz erlaubt keine Weitergabe der vollständig gebündelten Anwendung.
 
 ## Schlafsperre und Heartbeat-Wiederverbindung
 

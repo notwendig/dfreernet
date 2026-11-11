@@ -65,7 +65,7 @@ Build trees, Python caches, captures and checkpoint archives are generated/priva
 
 The local-only files `QUELLSTAND.sha256`, `LETZTE_SICHERUNG.txt` and `CHECKPOINT.json` record development checksums and recoverable checkpoints. They are excluded from Git together with captures, personal configurations and build outputs. Earlier local evidence remains available to the original developer.
 
-Independently authored code is GPL-3.0-only within the scope stated in `LICENSE-SCOPE.md`. The standalone directory contains excluded derived catalog, text and template resources; see `resources/PROVENANCE.md` for origin and redistribution limits. The code license does not clear distribution of the complete bundled application.
+Independently authored code is GPL-3.0-only within the scope stated in `SCOPE.md`. The standalone directory contains excluded derived catalog, text and template resources; see `resources/PROVENANCE.md` for origin and redistribution limits. The code license does not clear distribution of the complete bundled application.
 
 ## Sleep inhibition and heartbeat recovery
 

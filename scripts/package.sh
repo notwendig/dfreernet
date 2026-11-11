@@ -5,7 +5,7 @@ project=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 "$project/scripts/build.sh"
 cmake --install "$project/build-native" --prefix "$project/dist/dfreernet"
 install -d "$project/dist/dfreernet/share/doc/dfreernet"
-cp -- "$project"/README{,.de}.md "$project"/CHANGELOG{,.de}.md "$project"/LICENSE "$project"/LICENSE-SCOPE{,.de}.md "$project/dist/dfreernet/share/doc/dfreernet/"
+cp -- "$project"/README{,.de}.md "$project"/CHANGELOG{,.de}.md "$project"/LICENSE "$project"/SCOPE{,.de}.md "$project/dist/dfreernet/share/doc/dfreernet/"
 install -d "$project/dist/dfreernet/share/doc/dfreernet/docs"
 cp -- "$project"/docs/*.md "$project/dist/dfreernet/share/doc/dfreernet/docs/"
 install -d "$project/dist/dfreernet/share/doc/dfreernet/resources"
