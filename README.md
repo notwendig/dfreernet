@@ -6,6 +6,8 @@
 
 An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. No original installation, EXE, DLL or RND file is required for building or running the application.
 
+**License:** Original code is [GPL-3.0-only](LICENSE). The bundled catalog and other third-party-derived materials are excluded; see the [license scope](LICENSE-SCOPE.md). A complete bundled application is not cleared for redistribution.
+
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
 ## Version 0.1.0
@@ -67,10 +69,10 @@ build-native/    Generated native build, including dfreernet
 build-windows/   Historical Windows reconstruction build
 ```
 
-Historical investigation files, local checkpoints, controller captures, personal configurations and build outputs remain outside Git. The repository contains the native application sources and the pinned runtime catalog; it is private because redistribution rights for derived data have not been established.
+Historical investigation files, local checkpoints, controller captures, personal configurations and build outputs remain outside Git. The repository contains the native application sources and the pinned runtime catalog; the bundled derived data are excluded from the code license.
 
 ## Use and distribution
 
 Independent experimental software; not an official Permobil or controller-manufacturer tool. Incorrect settings can disable a wheelchair or cause unintended movement. Read the application warning and the [user guide](docs/USER-GUIDE.md) before controller access. Retain an independent backup and verify changes by reading back.
 
-This workspace contains private analysis and reference material. No distribution license has been selected. Embedded data were derived once from locally verified reference resources; see [resource provenance](resources/PROVENANCE.md). Runtime independence does not establish new redistribution rights. Original software, catalogs, documents, captures and binaries are not licensed for redistribution by this project. The product and company names identify compatibility context only; no endorsement is implied.
+The independently authored code is licensed under GPL-3.0-only within the stated [scope](LICENSE-SCOPE.md). Embedded data were derived once from locally verified reference resources; see [resource provenance](resources/PROVENANCE.md). Runtime independence does not establish redistribution rights for these data. Original software, catalogs, documents, captures and binaries are not licensed for redistribution by this project. The product and company names identify compatibility context only; no endorsement is implied.

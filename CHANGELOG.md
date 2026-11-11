@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## Unreleased
+
+- License independently authored code under GPL-3.0-only; explicitly exclude the derived catalog and other third-party material.
+
 ## 0.1.0 — 2026-11-11
 
 - First private Git source snapshot; align the application version and bilingual documentation.

@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## Unveröffentlicht
+
+- Eigenständig erstellten Code unter GPL-3.0-only gestellt; abgeleiteten Katalog und weitere Inhalte Dritter ausdrücklich ausgenommen.
+
 ## 0.1.0 — 2026-11-11
 
 - Erster privater Git-Quelltextstand; Anwendungsversion und zweisprachige Dokumentation angeglichen.
