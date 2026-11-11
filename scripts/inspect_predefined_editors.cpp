@@ -1,0 +1,3 @@
+#include "database.hpp"
+#include <iostream>
+int main(){auto b=rnet::read_file("analysis/rnd-cpp.bin");auto c=rnet::ParameterCatalog::read(b);rnet::ArchiveReader a(b,c.parameter_end);std::cout<<a.u32()<<'\n';auto n=a.count();std::cout<<"count="<<n<<'\n';for(unsigned i=0;i<n;++i){auto key=a.u32(),schema=a.u32(),f0=a.u32(),f1=a.u32();auto name=a.string();auto f2=a.u32(),f3=a.u32();auto flag=a.boolean();std::cout<<"key="<<key<<" schema="<<schema<<" fields="<<f0<<','<<f1<<','<<f2<<','<<f3<<" flag="<<flag<<" name="<<rnet::utf8(name)<<'\n';for(unsigned j=0;j<33;++j){auto t=a.string();if(!t.empty())std::cout<<" text["<<j<<"]="<<rnet::utf8(t)<<'\n';}std::cout<<" nums=";for(unsigned j=0;j<34;++j)std::cout<<a.u32()<<',';std::cout<<'\n';}}

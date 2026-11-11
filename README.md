@@ -1,0 +1,76 @@
+# dfreernet
+
+[English](README.md) | [Deutsch](README.de.md)
+
+**Dongle free R-Net Programmer** · Native Linux application · C++17 / Qt 6 / SocketCAN
+
+An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. No original installation, EXE, DLL or RND file is required for building or running the application.
+
+**Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
+
+## Version 0.1.0
+
+This tag marks the first private source snapshot. It is an experimental development build, not a validated product release. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+
+## Quick start
+
+Requires Linux, a C++17 compiler, CMake 3.21+, Ninja, Python 3, zlib development files, Qt 6.10+ Widgets/Sql/DBus/LinguistTools and Qt Test for the default test build. The development machine currently uses Qt 6.11.2. A configured SocketCAN adapter is needed for controller access.
+
+```bash
+scripts/build.sh
+scripts/run.sh
+# Open a saved configuration:
+scripts/run.sh --document '/absolute/path/configuration.R-net'
+# Run the offline test suite:
+scripts/test.sh
+```
+
+The native executable is `build-native/dfreernet`. The launcher works from this checkout at any location. For a relocatable local application directory, run `scripts/package.sh`, then start `dist/dfreernet/bin/dfreernet`. Copy the complete directory, including its controller helper programs. The target machine needs Qt 6.10+ including the Sql module/QSQLITE driver, and zlib installed; no Wine or original programmer is needed.
+
+A warning and disclaimer appears at every interactive start. Choose Continue deliberately to enter the application. The interface defaults to US English; German is available through Language or **Edit → Settings → General**. Existing preferences from the former “R-net Qt” application are copied once when no dfreernet preferences exist.
+
+## Main functions
+
+- Read controller configuration and preserve received payloads, including unsupported blocks.
+- Show parameters supported by the installed catalog and the received file version; filter by access level.
+- Edit supported raw values using validated boolean, selection, number and text editors. Pending changes appear red and bold.
+- Open and save `.R-net` files; export displayed information.
+- File → Import RND catalog… validates an RND file and exports its tables to a new SQLite database. The built-in catalog is not switched automatically.
+- Write supported parameter changes with backups, comparison and readback verification. This is a bounded experimental implementation.
+- Query module identifiers and serial numbers, and monitor CAN traffic.
+- Show a passive CAN heartbeat as a pulsating heart at the right of the status bar.
+- Keep Linux awake while the app is open; optional configurable hazard-light experiment (default interval 300 s, duration 60 s; does not reliably prevent wheelchair sleep).
+- Store CAN, folder, language and appearance preferences in grouped vertical settings tabs.
+
+## Documentation
+
+| Document | Purpose |
+| --- | --- |
+| [User guide](docs/USER-GUIDE.md) | Setup and operating instructions (English / German) |
+| [Validation and limitations](docs/VALIDATION.md) | Actual test scope, evidence and known gaps |
+| [Development](docs/DEVELOPMENT.md) | Build, structure, translations and checks |
+| [Changelog](CHANGELOG.md) | Current changes |
+
+## Project layout
+
+```text
+src/             Native core, SocketCAN tools and Qt interface
+translations/    Qt Linguist German catalog; English source strings
+scripts/         Build, launch, verification and investigation tools
+tests/           Automated tests; private reference fixtures stay local
+resources/       Pinned SQLite catalog and resource provenance
+cmake/           Optional cross-compilation configuration
+docs/            Current bilingual documentation
+analysis/        Private captures, reports and screenshots (generated)
+checkpoints/     Recoverable source snapshots (local)
+build-native/    Generated native build, including dfreernet
+build-windows/   Historical Windows reconstruction build
+```
+
+Historical investigation files, local checkpoints, controller captures, personal configurations and build outputs remain outside Git. The repository contains the native application sources and the pinned runtime catalog; it is private because redistribution rights for derived data have not been established.
+
+## Use and distribution
+
+Independent experimental software; not an official Permobil or controller-manufacturer tool. Incorrect settings can disable a wheelchair or cause unintended movement. Read the application warning and the [user guide](docs/USER-GUIDE.md) before controller access. Retain an independent backup and verify changes by reading back.
+
+This workspace contains private analysis and reference material. No distribution license has been selected. Embedded data were derived once from locally verified reference resources; see [resource provenance](resources/PROVENANCE.md). Runtime independence does not establish new redistribution rights. Original software, catalogs, documents, captures and binaries are not licensed for redistribution by this project. The product and company names identify compatibility context only; no endorsement is implied.

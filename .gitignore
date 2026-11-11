@@ -1,0 +1,28 @@
+# Generated output and local working state
+/analysis/
+/build*/
+/dist/
+/logs/
+/checkpoints/
+/archive/
+/docs/history/
+/tests/fixtures/
+/CHECKPOINT.json
+/QUELLSTAND.sha256
+/LETZTE_SICHERUNG.txt
+/originals.sha256
+__pycache__/
+*.py[cod]
+
+# Controller documents, captures, proprietary originals and binaries
+*.rnd
+*.R-net
+*.rnss
+*.dll
+*.exe
+*.bin
+*.log
+*.png
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
