@@ -41,7 +41,7 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 - Write supported parameter changes with backups, comparison and readback verification. This is a bounded experimental implementation.
 - Query module identifiers and serial numbers, and monitor CAN traffic.
 - Show a passive CAN heartbeat as a pulsating heart at the right of the status bar.
-- Keep Linux awake while the app is open; optional configurable hazard-light experiment (default interval 300 s, duration 60 s; does not reliably prevent wheelchair sleep).
+- Keep Linux awake while the app is open; optional session-only hazard-light experiment (default interval 300 s, duration 60 s; requires physical OFF-state confirmation and does not prevent wheelchair sleep).
 - Store CAN, folder, language and appearance preferences in grouped vertical settings tabs.
 
 ## Documentation

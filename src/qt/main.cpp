@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
         }
       });
     }
-    if((parser.isSet("hazard-blink-test")||preferences.liveSignalEnabled)&&!parser.isSet("read-controller"))
+    if(parser.isSet("hazard-blink-test")&&!parser.isSet("read-controller"))
       QTimer::singleShot(0,&window,[&window]{window.requestBlinkCycle();});
     if (parser.isSet("screenshot"))
       QTimer::singleShot(1000, &window, [&] {

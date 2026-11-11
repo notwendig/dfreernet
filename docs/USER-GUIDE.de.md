@@ -61,7 +61,7 @@ Der Import entschlüsselt und prüft das unterstützte Katalogformat und fragt n
 
 Unter **Bearbeiten → Einstellungen → Allgemein** lässt sich „Linux-Schlafmodus verhindern, solange die App geöffnet ist“ ein- oder ausschalten. Die Option ist standardmäßig aktiv. Die App fordert eine temporäre Systemsperre gegen automatischen Suspend und, soweit vom Desktop unterstützt, eine Leerlauf-/Bildschirm-Sperre an. „Linux wach“ rechts in der Statusleiste zeigt eine erhaltene Systemsperre; der Tooltip nennt Teilfunktionen oder fehlende Unterstützung. Ausschalten der Option oder Schließen der App gibt die Sperren frei. Systemeinstellungen werden nicht dauerhaft geändert.
 
-Das betrifft den Linux-Rechner. Der Sleep Timer des Rollstuhls bleibt unverändert. Eine temporäre Wachhaltewirkung durch Lichtbefehle ist am T5 VS noch nicht bestätigt; eine gespeicherte Live-Signal-Einstellung kann nach der allgemeinen Startwarnung einen Warnblinker-Zyklus fortsetzen; standardmäßig ist sie ausgeschaltet.
+Das betrifft den Linux-Rechner. Der Sleep Timer des Rollstuhls bleibt unverändert. Ein passiver 30-Minuten-Test zeigte, dass Lichtbefehle den getesteten T5 VS nicht wach halten. Der Lichtzyklus startet niemals automatisch.
 
 ## CAN-Herz und Identifikation
 
@@ -75,11 +75,13 @@ Schnittstelle und Ordner zuerst in Einstellungen prüfen. Sicherung, Protokoll u
 
 ## Optionales Live-Signal: Warnblinker
 
-Unter **Bearbeiten → Einstellungen** bietet die CAN-Seite **Live-Signal: regelmäßiger Warnblinker** (Ja/Nein), Intervall (Standard **300 Sekunden**) und Blinkdauer (Standard **60 Sekunden**). Die Dauer muss kürzer als das Intervall sein. Der CAN-Menüpunkt startet oder beendet den Zyklus direkt. Die gespeicherte Aktivierung setzt ihn beim nächsten Start nach der allgemeinen Startwarnung fort; eine zusätzliche Lichttest-Warnung oder Bestätigung entfällt.
+Unter **Bearbeiten → Einstellungen** bietet die CAN-Seite den Lichtzyklus-Schalter, das Intervall (Standard **300 Sekunden**) und die Impulsdauer (Standard **60 Sekunden**). Auch das CAN-Menü startet oder beendet den Zyklus. Er ist **bei jedem App-Start aus**; ein gespeicherter Ein-Wert wird ignoriert.
 
-Bei vorhandenem aktuellem Heartbeat startet ein Zyklus sofort. Das Lichtsymbol ist während eines Blinkimpulses gelb und in den Pausen oder beim Warten grau. Der Tooltip zeigt die Zeiten oder den Grund für das Warten. Sobald Heartbeat zurückkehrt oder der Controllerzugriff endet, beginnt ein fälliger Zyklus nach ungefähr 100 ms statt erst nach einem weiteren vollständigen Intervall. Das nächste Intervall zählt ab dem tatsächlich gesendeten ersten Umschaltbefehl. Neue Zyklen warten während eines Controllerzugriffs. Deaktivieren oder Schließen der App versucht den zweiten Umschaltbefehl eines laufenden Paares. Schnittstellenwechsel oder Sendefehler stoppen den Zyklus; tatsächliche Sendefehler werden nicht wiederholt. Fehler erscheinen im Tooltip des Lichtsymbols und im Protokoll.
+Zum Start ist ein aktueller Heartbeat nötig. Vorher fragt die App, ob der Rollstuhl abgestellt und der Warnblinker **sichtbar AUS** ist. Der Befehl schaltet nur um; ein gemessener Lampenzustand fehlt. Ist das Licht bereits an, bleibt es zwischen den Impulsen an. Das Statussymbol zeigt den Zeitablauf, nicht den tatsächlichen Lampenzustand.
 
-Die Befehle schalten Lampen um und liefern keine Rückmeldung zum Lampenzustand. Der Benutzer bestätigte Blinken in der aktuellen T5-VS-Sitzung; das Protokoll dokumentiert beide Umschaltbefehle mit genau 60 Sekunden Abstand. Lampenzustands-Rückmeldung und allgemeine Hardwareprüfung stehen weiterhin aus. Der Rollstuhl schaltete sich trotz des früheren Zyklus später aus. Dies ist daher **keine zuverlässige Schlafsperre**. Controllerparameter bleiben unverändert. CLI-Start ist mit `scripts/run.sh --hazard-blink-test` möglich; kein Heartbeat-Zeitlimit beendet einen wartenden Zyklus.
+Der erste Umschaltbefehl erfolgt sofort, der zweite nach der eingestellten Dauer. Fehlt der CAN-Empfang oder ist der Controllerzugang blockiert, stoppt der Zyklus und startet nicht selbst wieder. Ausschalten oder Schließen versucht ein laufendes Paar abzuschließen. Bei Sendefehlern oder einer anderen Betätigung die Lampen sichtbar prüfen.
+
+Ein passiver 31-Minuten-Test vom 11. November 2026 erfasste 31 Umschaltpaare. Der Rollstuhl schaltete exakt 30 Minuten nach der letzten Joystickaktivität ab, nur 37 Sekunden nach dem letzten Paar. Der Zyklus **verhindert das automatische Abschalten** am getesteten T5 VS **nicht**. Controllerparameter bleiben unverändert. Ein CLI-Start mit `scripts/run.sh --hazard-blink-test` braucht ebenfalls die sichtbare Bestätigung und einen aktuellen Heartbeat.
 
 Unter **Darstellung → Werkzeugleiste: nur Symbole** lassen sich die Beschriftungen ausblenden. Die Tooltips benennen weiterhin jede Aktion.
 

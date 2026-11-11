@@ -41,7 +41,7 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 - Unterstützte Änderungen mit Sicherung, Vergleich und Rückleseprüfung übertragen. Der Schreibpfad ist begrenzt und experimentell.
 - Modulkennungen und Seriennummern abfragen sowie CAN-Verkehr beobachten.
 - Passiven CAN-Heartbeat als pulsierendes Herz rechts in der Statusleiste anzeigen.
-- Linux während der App-Nutzung wach halten; optionales konfigurierbares Warnblinker-Signal (Standardintervall 300 s, Dauer 60 s; verhindert den Rollstuhl-Ruhezustand nicht zuverlässig).
+- Linux während der App-Nutzung wach halten; optionales Warnblinker-Signal nur für die aktuelle Sitzung (Standardintervall 300 s, Dauer 60 s; verlangt die Bestätigung „sichtbar aus“ und verhindert den Rollstuhl-Ruhezustand nicht).
 - CAN-, Ordner-, Sprach- und Darstellungseinstellungen in vertikalen Reitern speichern.
 
 ## Dokumentation

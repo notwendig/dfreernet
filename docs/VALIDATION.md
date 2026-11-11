@@ -19,6 +19,8 @@ Status: 10 November 2026. Application: dfreernet 0.1.0, native Linux / Qt 6.
 
 These local evidence paths are private development artifacts, not a redistributable test data package. Later branding and documentation changes do not constitute additional physical hardware testing.
 
+A later 31-minute passive CAN observation on 11 November 2026 recorded 31 hazard-light toggle pairs. The chair powered off 1800.328 seconds after the last non-neutral joystick frame, despite a pair ending 37 seconds earlier. Periodic module heartbeats continued until shutdown. The light cycle did not inhibit automatic power-off in that session. Raw data remain in the private local analysis folder.
+
 ## Automated checks
 
 `scripts/test.sh` builds the application, runs the offline CTest suite, verifies pinned embedded-resource checksums during the build and checks native runtime dependencies. The local suite with private fixtures contains 17 targets; the Git snapshot runs the fixture-free subset. It covers document preservation, catalog decoding, value validation, bounded write logic, capture audits, translations, startup consent, preferences and Qt interaction. These tests do not send to a physical CAN bus.

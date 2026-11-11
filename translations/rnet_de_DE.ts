@@ -1561,6 +1561,14 @@ Experimentell; rudimentär auf Permobil T5 VS getestet. Die Kompatibilität mit 
             <translation>Test starten</translation>
         </message>
         <message>
+            <source>Are the hazard lights OFF and the wheelchair stationary? This CAN command only toggles them. Starting while they are ON will leave them ON between pulses. The cycle does not prevent automatic power-off.</source>
+            <translation>Sind der Warnblinker AUS und der Rollstuhl abgestellt? Dieser CAN-Befehl schaltet nur um. Ist der Warnblinker beim Start AN, bleibt er zwischen den Impulsen AN. Der Zyklus verhindert das automatische Abschalten nicht.</translation>
+        </message>
+        <message>
+            <source>Light cycle stopped: CAN heartbeat or controller access unavailable. Check the hazard lights.</source>
+            <translation>Lichtzyklus gestoppt: CAN-Heartbeat oder Controllerzugang nicht verfügbar. Warnblinkerzustand prüfen.</translation>
+        </message>
+        <message>
             <source>Blink test stopped: the first light command could not be sent.</source>
             <translation>Blinktest gestoppt: Der erste Lichtbefehl konnte nicht gesendet werden.</translation>
         </message>

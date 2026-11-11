@@ -4,6 +4,8 @@
 
 ## Unveröffentlicht
 
+- Sichtbar ausgeschalteten Warnblinker vor Start bestätigen, Zyklus bei verlorenem CAN-Empfang stoppen und gespeicherte Aktivierung beim Start nicht fortsetzen. Ein passiver 31-Minuten-Test zeigte, dass die Umschaltbefehle das Abschalten nicht verhindern.
+
 - Eigenständig erstellten Code unter GPL-3.0-only gestellt; abgeleiteten Katalog und weitere Inhalte Dritter ausdrücklich ausgenommen.
 
 ## 0.1.0 — 2026-11-11

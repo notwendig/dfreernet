@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Require visible hazard-OFF confirmation, stop on lost CAN reception, and never resume a saved light cycle at startup. A 31-minute passive test showed the toggles do not prevent wheelchair sleep.
+
 - License independently authored code under GPL-3.0-only; explicitly exclude the derived catalog and other third-party material.
 
 ## 0.1.0 — 2026-11-11

@@ -1248,15 +1248,10 @@ void Window::updateBlinkState() {
   blinkLabel_->setPixmap(uiIcon(icon).pixmap(QSize(24, 24), blinkLabel_->devicePixelRatioF(), mode));
 
   QString status = error;
-  if (status.isEmpty()) {
-    if (blinkCycle_->waiting()) {
-      status = QCoreApplication::translate("RNet", "Lights: waiting for CAN");
-    } else {
-      status = QCoreApplication::translate("RNet", "Light signal every %1 s for %2 s")
-                   .arg(blinkCycle_->intervalMs() / 1000)
-                   .arg(blinkCycle_->durationMs() / 1000);
-    }
-  }
+  if (status.isEmpty())
+    status = QCoreApplication::translate("RNet", "Light signal every %1 s for %2 s")
+                 .arg(blinkCycle_->intervalMs() / 1000)
+                 .arg(blinkCycle_->durationMs() / 1000);
   blinkLabel_->setToolTip(status);
   blinkLabel_->setAccessibleName(status);
 }
@@ -1264,8 +1259,14 @@ bool Window::heartbeatReceiving()const{return heartbeat_&&heartbeat_->receiving(
 void Window::startBlinkCycle(){
   if(blinkCycle_->active())return;
   if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));
+  if(!heartbeatReceiving())throw UiError(QCoreApplication::translate("RNet","No current CAN heartbeat; blink test not started"));
+  if(QMessageBox::question(this,QCoreApplication::translate("RNet","Live signal: hazard lights"),
+      QCoreApplication::translate("RNet","Are the hazard lights OFF and the wheelchair stationary? This CAN command only toggles them. Starting while they are ON will leave them ON between pulses. The cycle does not prevent automatic power-off."),
+      QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel)!=QMessageBox::Yes){
+    settings_.liveSignalEnabled=false;return;
+  }
   blinkCycle_->configure(settings_.liveSignalIntervalSeconds * 1000, settings_.liveSignalDurationSeconds * 1000);
-  blinkCycle_->start(settings_.canInterface);settings_.liveSignalEnabled=true;QSettings().setValue("can/liveSignalEnabled",true);
+  blinkCycle_->start(settings_.canInterface);settings_.liveSignalEnabled=blinkCycle_->active();
 }
 void Window::requestBlinkCycle(){startBlinkCycle();}
 void Window::updateSleepStatus(){

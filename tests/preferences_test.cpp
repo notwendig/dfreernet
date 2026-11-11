@@ -50,7 +50,9 @@ private slots:
     settings.toolbarIconsOnly = true;
     settings.validated().save();
     const auto loaded = AppSettings::load();
-    QVERIFY(loaded.liveSignalEnabled);
+    QVERIFY(!loaded.liveSignalEnabled);
+    QSettings().setValue("can/liveSignalEnabled",true);
+    QVERIFY(!AppSettings::load().liveSignalEnabled); // Legacy saved ON never auto-resumes.
     QVERIFY(!loaded.showAllParameters);
     QVERIFY(loaded.toolbarIconsOnly);
     QCOMPARE(loaded.liveSignalIntervalSeconds, 23);
@@ -66,7 +68,7 @@ private slots:
     dialog.findChild<QDialogButtonBox*>("settingsButtons")->button(QDialogButtonBox::Apply)->click();
     QVERIFY(dialog.findChild<QLabel*>("settingsError")->text().isEmpty());
     const auto applied = AppSettings::load();
-    QVERIFY(applied.liveSignalEnabled);
+    QVERIFY(!applied.liveSignalEnabled);
     QVERIFY(applied.toolbarIconsOnly);
     QCOMPARE(applied.liveSignalIntervalSeconds, 11);
     QCOMPARE(applied.liveSignalDurationSeconds, 3);

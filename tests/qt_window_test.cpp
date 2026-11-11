@@ -306,28 +306,15 @@ private slots:
     for (const auto &row : w->model()->rows)
       QVERIFY(row.valueIndex >= 0);
   }
-  void blinkArmsWithoutHeartbeatAndWaitsBeforeSending() {
+  void blinkCannotArmWithoutCurrentHeartbeat() {
     auto w = make();
     QVERIFY(!w->heartbeatReceiving());
-    w->settings_.liveSignalIntervalSeconds = 23;
-    w->settings_.liveSignalDurationSeconds = 7;
     auto *action = w->findChild<QAction*>("hazardBlinkAction");
     QVERIFY(action);
+    QVERIFY_EXCEPTION_THROWN(w->requestBlinkCycle(),UiError);
     QVERIFY(!action->isChecked());
-    w->requestBlinkCycle();
-    QVERIFY(QApplication::activeModalWidget() == nullptr);
-    QVERIFY(action->isChecked());
-    QVERIFY(w->blinkCycle_->waiting());
-    QVERIFY(!w->blinkCycle_->pending());
-    QCOMPARE(w->blinkCycle_->intervalMs(), 23000);
-    QCOMPARE(w->blinkCycle_->durationMs(), 7000);
-    auto *indicator = w->findChild<QLabel*>("lightStatus");
-    QVERIFY(indicator && indicator->isVisible());
-    QVERIFY(indicator->text().isEmpty());
-    QVERIFY(!indicator->pixmap().isNull());
-    QCOMPARE(indicator->accessibleName(), QString("Lights: waiting for CAN"));
-    w->close();
     QVERIFY(!w->blinkCycle_->active());
+    QVERIFY(QApplication::activeModalWidget() == nullptr);
   }
   void persistentSettingsAndPassiveStatusWidget(){
     auto w=make();w->openDocument(fixture_);const auto bytes=w->document()->write();

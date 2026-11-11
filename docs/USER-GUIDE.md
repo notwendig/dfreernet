@@ -61,7 +61,7 @@ The importer decrypts and validates the supported catalog format and asks for a 
 
 Enable or disable **Edit → Settings → General → Prevent Linux sleep while the app is open**. It is enabled by default. The app requests a temporary system sleep inhibitor and, when supported by the desktop, an idle/screen-blanking inhibitor. “Linux awake” on the right of the status bar indicates an acquired system lock; its tooltip describes partial or unavailable support. Disabling the option or closing the app releases the locks. Persistent system power settings are unchanged.
 
-This applies to the Linux computer. The wheelchair Sleep Timer is unchanged. A temporary keep-awake effect from lighting commands has not been established on the T5 VS; a saved live-signal setting can resume a hazard-light cycle after the general startup warning; the default setting is off.
+This applies to the Linux computer. The wheelchair Sleep Timer is unchanged. A passive 30-minute test showed that lighting toggles do not keep the tested T5 VS awake. The light cycle never starts automatically.
 
 ## CAN heart and identification
 
@@ -75,11 +75,13 @@ Check the interface and folders in Settings first. Retain backups, logs and the 
 
 ## Optional live signal: hazard lights
 
-Under **Edit → Settings**, the CAN page provides **Live signal: periodic hazard lights** (yes/no), interval (default **300 seconds**) and blink duration (default **60 seconds**). Duration must be shorter than the interval. The CAN menu action starts or stops the cycle directly. The saved enable preference resumes it on the next launch after the general startup notice; there is no separate light-test warning or confirmation.
+Under **Edit → Settings**, the CAN page provides the light-cycle switch, interval (default **300 seconds**) and pulse duration (default **60 seconds**). The CAN menu also starts or stops the cycle. It is **off at every app start**; a saved enabled value is ignored.
 
-A cycle begins immediately when a current heartbeat is available. The light symbol is amber during a pulse and gray between pulses or while waiting. Its tooltip shows the timings or why it is waiting. When heartbeat returns or controller access finishes, a due cycle starts within approximately 100 ms instead of waiting for another full interval. The next interval is measured from the actual first toggle. New cycles wait during controller access. Disabling or closing the app attempts the second toggle of a pending pair. Interface replacement or send failure stops the cycle; actual send failures are not retried. Errors appear in the light symbol’s tooltip and the log.
+A current heartbeat is required. Before starting, the app asks you to confirm that the wheelchair is stationary and the hazard lights are **physically OFF**. The command only toggles them; there is no measured lamp state. Starting while the lights are on leaves them on between pulses. The status icon shows timing, not actual lamp state.
 
-The commands toggle the lamps and provide no lamp-state feedback. The user confirmed blinking in the current T5 VS session; runtime logs record the two toggles exactly 60 seconds apart. Lamp-state readback and general hardware validation remain unavailable. The wheelchair subsequently powered off despite the earlier cycle, so this is **not a reliable sleep inhibitor**. No controller parameter is changed. CLI startup is available with `scripts/run.sh --hazard-blink-test`; there is no heartbeat timeout that disables a waiting cycle.
+The first toggle is immediate, the second follows after the configured duration. If CAN reception or controller access becomes unavailable, the cycle stops and does not resume automatically. Closing or disabling attempts to complete a pending pair. If sending fails or someone else changes the lights, check them physically.
+
+A passive 31-minute test on 11 November 2026 recorded 31 toggle pairs. The chair powered off exactly 30 minutes after the last joystick activity, only 37 seconds after the final pair. The cycle **does not prevent automatic power-off** on the tested T5 VS. No controller parameter is changed. CLI startup with `scripts/run.sh --hazard-blink-test` also requires the visible confirmation and a current heartbeat.
 
 In **Appearance**, enable **Toolbar: icons only** to hide toolbar labels. Tooltips still name each action.
 

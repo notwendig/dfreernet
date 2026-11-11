@@ -7,9 +7,9 @@ class HazardBlinkCycleTest;
 // Explicitly started lighting experiment; never a drive or parameter command.
 class HazardBlinkCycle final : public QObject {
   friend class HazardBlinkCycleTest;
-  QTimer interval_,endPulse_,retry_;
+  QTimer interval_,endPulse_,watchdog_;
   QString interface_,error_;
-  bool active_=false,pending_=false,waiting_=false;
+  bool active_=false,pending_=false;
   int fd_=-1,index_=0,pulseMs_=60000;
   std::function<bool(bool)> sender_;
   bool transmit(bool first);
@@ -29,7 +29,6 @@ public:
   void quiesce(){if(pending_)finishPulse();}
   bool active()const{return active_;}
   bool pending()const{return pending_;}
-  bool waiting()const{return waiting_;}
   QString interface()const{return interface_;}
   QString error()const{return error_;}
   std::function<bool()> canPulse;

@@ -11,8 +11,12 @@
 namespace rnet::qt {
 HazardBlinkCycle::HazardBlinkCycle(QObject *parent,std::function<bool(bool)> sender):QObject(parent),sender_(std::move(sender)){
   interval_.setInterval(5*60*1000);interval_.setTimerType(Qt::PreciseTimer);endPulse_.setSingleShot(true);endPulse_.setTimerType(Qt::PreciseTimer);
-  retry_.setInterval(100);
-  connect(&retry_,&QTimer::timeout,this,[this]{pulse();});
+  watchdog_.setInterval(100);
+  connect(&watchdog_,&QTimer::timeout,this,[this]{
+    if(!active_|| (canPulse&&canPulse()))return;
+    if(pending_)finishPulse();
+    if(active_)fail(QCoreApplication::translate("RNet","Light cycle stopped: CAN heartbeat or controller access unavailable. Check the hazard lights."));
+  });
   if(!sender_)sender_=[this](bool first){return transmit(first);};
   connect(&interval_,&QTimer::timeout,this,[this]{pulse();});connect(&endPulse_,&QTimer::timeout,this,[this]{finishPulse();});
 }
@@ -44,17 +48,15 @@ bool HazardBlinkCycle::configure(int intervalMs,int durationMs){
   if(active_&&intervalChanged)interval_.start();
   changed();return true;
 }
-void HazardBlinkCycle::start(const QString &interface){stop();interface_=interface;error_.clear();active_=true;interval_.start();if(onEvent)onEvent(QString("BLINK_TEST_STARTED interval_ms=%1 pulse_ms=%2 first=immediate").arg(interval_.interval()).arg(pulseMs_));changed();pulse();}
-void HazardBlinkCycle::stop(){const bool wasActive=active_||pending_;active_=false;waiting_=false;retry_.stop();interval_.stop();if(pending_)finishPulse();endPulse_.stop();closeSocket();if(wasActive&&onEvent)onEvent("BLINK_TEST_STOPPED");changed();}
-void HazardBlinkCycle::fail(const QString &message){if(onEvent)onEvent("BLINK_TEST_FAILED "+message);error_=message;active_=false;waiting_=false;retry_.stop();interval_.stop();endPulse_.stop();closeSocket();changed();}
+void HazardBlinkCycle::start(const QString &interface){stop();interface_=interface;error_.clear();active_=true;interval_.start();watchdog_.start();if(onEvent)onEvent(QString("BLINK_TEST_STARTED interval_ms=%1 pulse_ms=%2 first=immediate").arg(interval_.interval()).arg(pulseMs_));changed();pulse();}
+void HazardBlinkCycle::stop(){const bool wasActive=active_||pending_;active_=false;watchdog_.stop();interval_.stop();if(pending_)finishPulse();endPulse_.stop();closeSocket();if(wasActive&&onEvent)onEvent("BLINK_TEST_STOPPED");changed();}
+void HazardBlinkCycle::fail(const QString &message){if(onEvent)onEvent("BLINK_TEST_FAILED "+message);error_=message;active_=false;watchdog_.stop();interval_.stop();endPulse_.stop();closeSocket();changed();}
 void HazardBlinkCycle::pulse(){
   if(!active_||pending_)return;
   if(!canPulse||!canPulse()){
-    if(!waiting_){waiting_=true;if(onEvent)onEvent("BLINK_TEST_WAITING no_heartbeat_or_controller_busy");changed();}
-    if(!retry_.isActive())retry_.start();
+    fail(QCoreApplication::translate("RNet","Light cycle stopped: CAN heartbeat or controller access unavailable. Check the hazard lights."));
     return;
   }
-  waiting_=false;retry_.stop();
   if(!sender_(true)){fail(QCoreApplication::translate("RNet","Blink test stopped: the first light command could not be sent."));return;}
   pending_=true;interval_.start();endPulse_.start(pulseMs_);if(onEvent)onEvent("BLINK_TEST_FIRST_TOGGLE");changed();
 }

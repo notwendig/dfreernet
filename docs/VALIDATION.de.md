@@ -19,6 +19,8 @@ Stand: 10. November 2026. Anwendung: dfreernet 0.1.0, natives Linux / Qt 6.
 
 Diese lokalen Nachweise sind private Entwicklungsartefakte, kein weitergabefähiges Testdatenpaket. Spätere Namens- und Dokumentationsänderungen stellen keine zusätzliche Hardwareerprobung dar.
 
+Eine spätere passive CAN-Messung über 31 Minuten am 11. November 2026 erfasste 31 Warnblinker-Umschaltpaare. Der Rollstuhl schaltete 1800,328 Sekunden nach dem letzten nicht neutralen Joystick-Frame ab, obwohl das letzte Paar erst 37 Sekunden zuvor endete. Die zyklischen Modul-Heartbeats liefen bis zum Abschalten. Der Lichtzyklus verhinderte das automatische Abschalten in dieser Sitzung nicht. Die Rohdaten bleiben im privaten lokalen Analyseordner.
+
 ## Automatisierte Prüfungen
 
 `scripts/test.sh` baut die Anwendung, startet die Offline-CTest-Suite, prüft beim Build die festen Prüfsummen eingebetteter Ressourcen und native Laufzeitabhängigkeiten. Mit lokalen privaten Referenzdaten umfasst die Suite 17 Ziele; der Git-Quelltextstand führt die referenzdatenfreien Tests aus: Dateierhaltung, Katalogdekodierung, Werteprüfung, begrenzte Schreiblogik, Mitschnittprüfungen, Übersetzungen, Startzustimmung, Einstellungen und Qt-Bedienung. Diese Tests senden nicht auf einen physischen CAN-Bus.
