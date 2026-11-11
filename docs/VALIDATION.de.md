@@ -21,6 +21,9 @@ Diese lokalen Nachweise sind private Entwicklungsartefakte, kein weitergabefähi
 
 Eine spätere passive CAN-Messung über 31 Minuten am 11. November 2026 erfasste 31 Warnblinker-Umschaltpaare. Der Rollstuhl schaltete 1800,328 Sekunden nach dem letzten nicht neutralen Joystick-Frame ab, obwohl das letzte Paar erst 37 Sekunden zuvor endete. Die zyklischen Modul-Heartbeats liefen bis zum Abschalten. Der Lichtzyklus verhinderte das automatische Abschalten in dieser Sitzung nicht. Die Rohdaten bleiben im privaten lokalen Analyseordner.
 
+
+Ein separater Einschaltvergleich am 11. November 2026: Ein einziger, ausdrücklich autorisierter `0x00C`-Frame ließ das Display kurz aufleuchten; in den folgenden sechs Sekunden antwortete kein CAN-Modul, und das Display ging wieder aus. Beim anschließenden Einschalten über den Ein/Aus-Taster blieb das Display an. Der passive Mitschnitt begann mit `0x00C`, nach etwa 21 ms `0x00E` (acht Byte), dann Erkennungsframes und zyklischem Verkehr. Damit ist `0x00C` allein kein bestätigter Fern-Einschaltweg. Die Rohdaten mit Modulkennung bleiben privat unter `analysis/`.
+
 ## Automatisierte Prüfungen
 
 `scripts/test.sh` baut die Anwendung, startet die Offline-CTest-Suite, prüft beim Build die festen Prüfsummen eingebetteter Ressourcen und native Laufzeitabhängigkeiten. Mit lokalen privaten Referenzdaten umfasst die Suite 17 Ziele; der Git-Quelltextstand führt die referenzdatenfreien Tests aus: Dateierhaltung, Katalogdekodierung, Werteprüfung, begrenzte Schreiblogik, Mitschnittprüfungen, Übersetzungen, Startzustimmung, Einstellungen und Qt-Bedienung. Diese Tests senden nicht auf einen physischen CAN-Bus.

@@ -21,6 +21,9 @@ These local evidence paths are private development artifacts, not a redistributa
 
 A later 31-minute passive CAN observation on 11 November 2026 recorded 31 hazard-light toggle pairs. The chair powered off 1800.328 seconds after the last non-neutral joystick frame, despite a pair ending 37 seconds earlier. Periodic module heartbeats continued until shutdown. The light cycle did not inhibit automatic power-off in that session. Raw data remain in the private local analysis folder.
 
+
+A separate power-on comparison on 11 November 2026: one explicitly authorized `0x00C` frame briefly lit the display; no CAN module responded in the following six seconds, and the display went off again. On the subsequent physical On/Off-button start, the display stayed on. The passive capture began with `0x00C`, followed about 21 ms later by an eight-byte `0x00E`, then discovery frames and cyclic traffic. Thus `0x00C` alone is not a verified remote power-on method. Raw data containing a module identifier remain private under `analysis/`.
+
 ## Automated checks
 
 `scripts/test.sh` builds the application, runs the offline CTest suite, verifies pinned embedded-resource checksums during the build and checks native runtime dependencies. The local suite with private fixtures contains 17 targets; the Git snapshot runs the fixture-free subset. It covers document preservation, catalog decoding, value validation, bounded write logic, capture audits, translations, startup consent, preferences and Qt interaction. These tests do not send to a physical CAN bus.
