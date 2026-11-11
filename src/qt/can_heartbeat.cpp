@@ -32,9 +32,9 @@ void CanHeartbeatIndicator::openSocket(){
   const int index=request.ifr_ifindex;
   if(::ioctl(fd_,SIOCGIFFLAGS,&request)<0){closeSocket();return;}
   if(!(request.ifr_flags&IFF_UP)){interfaceDown_=true;closeSocket();return;}
-  // Observed JSM serial heartbeat 0x00E. Match standard and extended frames;
-  // remote/error frames are never treated as a heartbeat.
-  can_filter filter{0x00e,CAN_EFF_MASK|CAN_RTR_FLAG};
+  // Observed seven-byte extended JSM device heartbeat. The 0x00E serial
+  // announcement alone does not establish that normal cyclic traffic started.
+  can_filter filter{CAN_EFF_FLAG|0x03c30f0fU,CAN_EFF_MASK|CAN_EFF_FLAG|CAN_RTR_FLAG};
   if(::setsockopt(fd_,SOL_CAN_RAW,CAN_RAW_FILTER,&filter,sizeof(filter))){closeSocket();return;}
   sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=index;
   if(::bind(fd_,reinterpret_cast<sockaddr*>(&address),sizeof(address))){closeSocket();return;}
@@ -55,7 +55,10 @@ void CanHeartbeatIndicator::receive(){
     can_frame frame{};auto length=::read(fd_,&frame,sizeof(frame));
     if(length<0&&(errno==EAGAIN||errno==EWOULDBLOCK))break;
     if(length!=sizeof(frame)){closeSocket();break;}
-    if(!(frame.can_id&(CAN_ERR_FLAG|CAN_RTR_FLAG))&&(frame.can_id&CAN_EFF_MASK)==0x00e&&frame.can_dlc==8)lastFrame_.restart();
+    if(frame.can_id==(CAN_EFF_FLAG|0x03c30f0fU)&&frame.can_dlc==7){
+      bool complete=true;for(int i=0;i<7;++i)complete=complete&&frame.data[i]==0x87;
+      if(complete)lastFrame_.restart();
+    }
   }
   refresh();
 }

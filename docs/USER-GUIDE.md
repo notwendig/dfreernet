@@ -65,7 +65,7 @@ This applies to the Linux computer. The wheelchair Sleep Timer is unchanged. A p
 
 ## CAN heart and identification
 
-The heart at the right of the status bar pulses red while recent complete heartbeat messages are received. Without recent reception it is gray and still. A down interface is reported explicitly in the tooltip. The receiver rebinds automatically after USB/interface replacement; it never configures the adapter or sends CAN messages. The indicator only listens and sends no CAN messages. It does not confirm driving readiness or write permission. A gray heart may also indicate an incorrect interface or a different heartbeat on the connected system.
+The heart at the right of the status bar pulses red while recent complete `0x03C30F0F` device-heartbeat frames with seven `0x87` bytes are received. The `0x00E` serial-identification frame does not activate it. Without recent reception it is gray and still. A down interface is reported explicitly in the tooltip. The receiver rebinds automatically after USB/interface replacement; it never configures the adapter or sends CAN messages. The indicator only listens and sends no CAN messages. It does not confirm driving readiness or write permission. A gray heart may also indicate an incorrect interface or a different heartbeat on the connected system.
 
 Serial queries and CAN monitoring use the saved interface. A serial number does not automatically establish a reliable module name.
 

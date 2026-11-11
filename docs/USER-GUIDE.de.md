@@ -65,7 +65,7 @@ Das betrifft den Linux-Rechner. Der Sleep Timer des Rollstuhls bleibt unverände
 
 ## CAN-Herz und Identifikation
 
-Rechts in der Statusleiste pulsiert das Herz rot, wenn aktuelle vollständige Heartbeat-Nachrichten empfangen werden. Ohne aktuellen Empfang ist es grau und still. Eine ausgeschaltete Schnittstelle steht ausdrücklich im Tooltip. Nach USB-/Schnittstellenwechsel bindet sich der Empfänger automatisch neu; er konfiguriert den Adapter nicht und sendet keine CAN-Nachrichten. Die Anzeige hört ausschließlich mit und sendet keine CAN-Nachrichten. Sie bestätigt weder Fahrbereitschaft noch Schreibberechtigung. Ein graues Herz kann auch durch eine falsche Schnittstelle oder einen auf diesem System abweichenden Heartbeat entstehen.
+Rechts in der Statusleiste pulsiert das Herz rot, wenn aktuelle vollständige Geräte-Heartbeat-Frames `0x03C30F0F` mit sieben Bytes `0x87` empfangen werden. `0x00E` ist hier eine Serienkennung und aktiviert das Herz nicht. Ohne aktuellen Empfang ist es grau und still. Eine ausgeschaltete Schnittstelle steht ausdrücklich im Tooltip. Nach USB-/Schnittstellenwechsel bindet sich der Empfänger automatisch neu; er konfiguriert den Adapter nicht und sendet keine CAN-Nachrichten. Die Anzeige hört ausschließlich mit und sendet keine CAN-Nachrichten. Sie bestätigt weder Fahrbereitschaft noch Schreibberechtigung. Ein graues Herz kann auch durch eine falsche Schnittstelle oder einen auf diesem System abweichenden Heartbeat entstehen.
 
 Seriennummernabfrage und CAN-Monitor verwenden die gespeicherte Schnittstelle. Eine Seriennummer ist nicht automatisch ein zuverlässig ermittelter Modulname.
 
