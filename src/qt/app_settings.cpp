@@ -43,7 +43,7 @@ void AppSettings::save()const{
   QSettings q;
   q.setValue("ui/language",language);q.setValue("can/interface",canInterface);q.setValue("ui/monitor",monitor);
   q.setValue("paths/working",workingDirectory);q.setValue("paths/backups",backupDirectory);q.setValue("paths/exports",exportDirectory);
-  q.remove("paths/installation");q.setValue("paths/logs",logDirectory);
+  q.setValue("paths/logs",logDirectory);
   q.setValue("ui/showAllParameters",showAllParameters);
   q.setValue("can/liveSignalEnabled", false); // Session-only light experiment.
   q.setValue("can/liveSignalIntervalSeconds", liveSignalIntervalSeconds);

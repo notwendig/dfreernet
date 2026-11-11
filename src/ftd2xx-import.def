@@ -1,4 +1,0 @@
-LIBRARY FTD2XX.dll
-EXPORTS
-FT_ListDevices@12=FT_ListDevices
-FT_GetLibraryVersion@4=FT_GetLibraryVersion

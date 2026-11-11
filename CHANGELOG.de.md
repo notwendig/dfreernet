@@ -22,7 +22,7 @@
 - Ausdrücklich startbaren Fünf-Minuten-Warnblinkertest ergänzt: beim Start aus, paarweise Umschaltung, Heartbeat-/Busy-Prüfung, Ende beim Schließen und keine Parameteränderung; Wachhaltewirkung unbestätigt.
 - Passiven Heartbeat nach USB-/Schnittstellenwechsel wiederhergestellt, ausgeschaltete Schnittstelle gemeldet und abschaltbare Linux-Schlafsperre für die App-Laufzeit ergänzt.
 - Katalog- und Ressourcentabellen in SQLite gespeichert; Datei → RND-Katalog importieren… mit geprüftem Transaktionsimport in eine neue SQLite-Datenbank ergänzt.
-- Abhängigkeit von der Originalinstallation für nativen Start, Menüs, Katalog, Einstellungen und Controller-Hilfsprogramme entfernt; geprüfte Projektressourcen eingebettet und verschiebbares lokales Programmverzeichnis ergänzt.
+- Geprüfte Projektressourcen für nativen Start, Menüs, Katalog, Einstellungen und Controller-Hilfsprogramme eingebettet; verschiebbares lokales Programmverzeichnis ergänzt.
 - Native Anwendung und Programmdatei in **dfreernet — Dongle free R-Net Programmer** umbenannt.
 - Kurze, eindeutige Titelleiste: `dfreernet` beziehungsweise `Dateiname — dfreernet`.
 - Vorhandene Qt-Einstellungen beim ersten Start unter dem neuen Namen erhalten.

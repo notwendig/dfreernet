@@ -2,7 +2,7 @@
 
 [English](PROVENANCE.md) | [Deutsch](PROVENANCE.de.md)
 
-Imported once on 2026-11-10 from the locally verified schema-33 catalog and resource tables. The native application and normal build never read the original installation. These are derived reference data, not a newly authored or independently licensed replacement catalog. The GPL-3.0-only grant for original code does not cover these data; existing redistribution restrictions remain. See [license scope](../SCOPE.md).
+Imported once on 2026-11-10 from the locally verified schema-33 catalog and resource tables. These are derived reference data, not a newly authored or independently licensed replacement catalog. The GPL-3.0-only grant for original code does not cover these data; existing redistribution restrictions remain. See [license scope](../SCOPE.md).
 
 Source EXE SHA256: d5f8773a64d9259e57f3dfb0d0da93c6e6cfdc2377dc854dc0216fd402fd91ec. Catalog plaintext SHA256: 30bbe3a7edc45b1ec7975544254bbec6853199a899f46144b33eeebe946723cc (4,814,680 bytes). Independent parameter/storage/value fixtures are retained for parity testing.
 

@@ -651,11 +651,6 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Konfiguration öffnen</translation>
         </message>
         <message>
-            <location filename="../src/qt/main.cpp" line="25" />
-            <source>Original installation (read only)</source>
-            <translation>Originalinstallation (nur lesend)</translation>
-        </message>
-        <message>
             <location filename="../src/qt/window.cpp" line="168" />
             <source>Original menu resource is missing</source>
             <translation>Originalmenü fehlt</translation>
@@ -981,11 +976,6 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <location filename="../src/qt/window.cpp" line="1134" />
             <source>The original default template is missing</source>
             <translation>Original-Defaultvorlage fehlt</translation>
-        </message>
-        <message>
-            <location filename="../src/qt/window.cpp" line="805" />
-            <source>The original installation is protected from writes</source>
-            <translation>Originalinstallation ist schreibgeschützt</translation>
         </message>
         <message>
             <location filename="../src/qt/window.cpp" line="1087" />

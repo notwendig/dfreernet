@@ -36,7 +36,7 @@ The optional heartbeat integration test uses a fresh isolated network namespace 
 - A multi-file write can be partially applied. Commit acknowledgement and verified readback are distinct states; no automatic write retry is performed.
 - Reliable module-name/type mapping is incomplete.
 - The passive heart watches the observed eight-byte ID `0x00E` heartbeat. This is not proof of whole-system health or universal heartbeat coverage.
-- The native app embeds derived reference resources and no longer requires an original installation. Their provenance and redistribution restrictions remain; this is not an independently authored replacement catalog. Opaque document metadata still come from the bundled reference template.
+- The native app embeds derived reference resources. Their provenance and redistribution restrictions remain; this is not an independently authored replacement catalog. Opaque document metadata still come from the bundled reference template.
 
 ## Reporting a reproducible issue
 

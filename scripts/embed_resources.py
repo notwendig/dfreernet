@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify and embed the local SQLite database; no original-installation access."""
+"""Verify and embed the versioned SQLite database."""
 from pathlib import Path
 import hashlib,sqlite3,struct,sys,zlib
 source,output=map(Path,sys.argv[1:])

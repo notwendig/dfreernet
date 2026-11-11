@@ -10,7 +10,7 @@
 
 Linux with Qt 6.10 or later and a suitable SocketCAN interface. The application does not configure the CAN adapter. Interface, wiring and bitrate must match the actual controller. The development setup used `can0` at 125 kbit/s; this is not an automatic recommendation for other systems.
 
-The verified catalog, UI texts and snapshot template are embedded in the application. No original installation, EXE, RND, Wine, dongle or FTDI/CUSBMsg DLLs are needed. For a copied standalone directory, launch `bin/dfreernet` and keep its controller helpers beside it. Installed Qt 6.10+ including the Sql module/QSQLITE driver, and zlib are still required.
+The verified catalog, UI texts and snapshot template are embedded in the application. The app uses its embedded resources and Linux SocketCAN. For a copied standalone directory, launch `bin/dfreernet` and keep its controller helpers beside it. Installed Qt 6.10+ including the Sql module/QSQLITE driver, and zlib are still required.
 
 ```bash
 scripts/run.sh

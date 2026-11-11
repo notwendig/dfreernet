@@ -21,7 +21,7 @@ private slots:
     const auto saved=read_file(target);QVERIFY_EXCEPTION_THROWN(write_catalog_database(before,target),std::runtime_error);QVERIFY(read_file(target)==saved);QVERIFY(bundled_catalog_bytes()==before);
     auto rnd=qEnvironmentVariable("DFREERNET_TEST_RND_PATH");if(!rnd.isEmpty()){const auto decoded=RndDecoder().decode(read_file(rnd.toStdString()));auto extra=target.parent_path()/"rnd.sqlite3";write_catalog_database(decoded,extra);QCOMPARE(read_catalog_database(extra).parameters.size(),expected.parameters.size());}
   }
-  void embeddedAssetsAndDocumentEditingWithoutInstallation(){
+  void embeddedAssetsAndDocumentEditing(){
     QTemporaryDir temp;QVERIFY(temp.isValid());
     QCoreApplication::setOrganizationName("dfreernetTests");QCoreApplication::setApplicationName("standalone");
     QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());
@@ -37,7 +37,6 @@ private slots:
     auto target=temp.path()+"/after.R-net";window.saveAs(target);auto after=RnetDocument::read(read_file(target.toStdString()));QVERIFY(!controller_write_plan(before,after,catalog,AccessLevel::OEM).empty());window.openDocument(target);QVERIFY(window.document()->write()==after.write());
     window.showResources();QCOMPARE(window.model()->rowCount(),1454);
     QVERIFY(window.findChild<QAction*>("command40040"));
-    QVERIFY(!window.findChild<QLineEdit*>("settingsInstallationDirectory"));
     if(auto path=qEnvironmentVariable("DFREERNET_SMOKE_SCREENSHOT");!path.isEmpty()){
       QVERIFY(window.grab().save(path));
       auto *action=window.findChild<QAction*>("command40002");QVERIFY(action);auto *menu=qobject_cast<QMenu*>(action->parent());QVERIFY(menu);menu->popup(window.mapToGlobal(QPoint(10,25)));QTest::qWait(50);QVERIFY(menu->grab().save(path+"-rnd-menu.png"));menu->hide();

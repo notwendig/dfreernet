@@ -22,7 +22,7 @@
 - Add an explicitly started five-minute hazard-light test, off at startup, with paired toggles, no-heartbeat/busy guards, stop-on-exit and no parameter changes; keep-awake efficacy remains unverified.
 - Recover passive heartbeat reception after USB/interface replacement, report a down interface, and add a configurable Linux sleep inhibitor scoped to app lifetime.
 - Store catalog and resource tables in SQLite; add File → Import RND catalog… with validated transaction-based export to a new SQLite database.
-- Remove the original-installation dependency from native startup, menus, catalog, settings and controller helpers; embed verified project resources and provide a relocatable local application directory.
+- Embed verified project resources for native startup, menus, catalog, settings and controller helpers; provide a relocatable local application directory.
 - Rename the native application and executable to **dfreernet — Dongle free R-Net Programmer**.
 - Use a short, unique window title: `dfreernet` or `filename — dfreernet`.
 - Provide README, user guide, development, validation and changelog in English and German.

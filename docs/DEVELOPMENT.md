@@ -14,7 +14,7 @@ scripts/run.sh --language en_US
 
 CMake target and binary: `dfreernet`, `build-native/dfreernet`. Build configuration: `RelWithDebInfo`; scripts use two build jobs. Compiler warnings are enabled for native source targets. For manual CMake use, provide the same Qt modules and use an out-of-source build.
 
-Native runtime resources are embedded from checked project files in `resources/`. CMake runs `scripts/embed_resources.py`, which checks their pinned SHA256 values and creates a C++ translation unit. It never reads an original installation. The legacy `--installation` argument is ignored and hidden from help for compatibility. The original-directory setting has been removed. The main program requires explicit acceptance of its startup warning before constructing the document/controller UI. `--quit-after` can reject this warning for UI checks; it cannot accept it.
+Native runtime resources are embedded from checked project files in `resources/`. CMake runs `scripts/embed_resources.py`, which checks their pinned SHA256 values and creates a C++ translation unit. The main program requires explicit acceptance of its startup warning before constructing the document/controller UI. `--quit-after` can reject this warning for UI checks; it cannot accept it.
 
 ## Source map
 
@@ -29,7 +29,7 @@ Native runtime resources are embedded from checked project files in `resources/`
 | `translations/rnet_de_DE.ts` | German Qt Linguist catalog; English source language |
 | `docs/history/` | Archived chronological project notes; may describe superseded implementations |
 
-Internal `rnet_*` library/helper names, the `RNet` Qt translation context, `.R-net` document extension and historical evidence filenames are retained for compatibility. They are not the displayed product name. The optional Windows target is a historical reconstruction; it is not the current Qt frontend.
+Internal `rnet_*` library/helper names, the `RNet` Qt translation context, `.R-net` document extension and historical evidence filenames are retained for compatibility. They are not the displayed product name.
 
 ## SQLite catalog
 
@@ -41,7 +41,7 @@ RND imports create new database files using a transaction and readback checks; e
 
 ## Preferences and translation
 
-Application identity: `LocalRNet` / `dfreernet`, version 0.1.0. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. The obsolete original-installation key is removed when preferences are next saved. Other persisted paths remain intact; default application-local paths use the new application name.
+Application identity: `LocalRNet` / `dfreernet`, version 0.1.0. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. Other persisted paths remain intact; default application-local paths use the new application name.
 
 English (US) is the source language; German uses a compiled Qt `.qm` resource. Add translated strings with the existing `RNet` context, preserve placeholders, update the `.ts` catalog and run translation tests. Qt standard widgets use the installed Qt German translations.
 
@@ -55,7 +55,7 @@ scripts/test.sh
 unshare --user --map-root-user --net python3 scripts/test_can_heartbeat.py
 ```
 
-Do not point integration tests at a live CAN interface. Standard checks are offline and do not require original installed files. A local checkout with private fixtures has 17 test targets; the private Git snapshot runs the fixture-free subset. Two legacy original-resource/RND comparisons can be enabled explicitly with `-DDFREERNET_REFERENCE_TESTS=ON`; they are optional developer checks. Visual changes should include Qt screenshots; tests already capture settings and startup layouts into `analysis/`. Physical access requires a stationary wheelchair and an explicitly authorized operation. Never infer a write authorization from a code change request.
+Do not point integration tests at a live CAN interface. Standard checks run offline. A local checkout with private fixtures has 17 test targets; the private Git snapshot runs the fixture-free subset. Visual changes should include Qt screenshots; tests already capture settings and startup layouts into `analysis/`. Physical access requires a stationary wheelchair and an explicitly authorized operation. Never infer a write authorization from a code change request.
 
 ## Local artifacts and recovery
 

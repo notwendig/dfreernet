@@ -10,7 +10,7 @@
 
 Linux mit Qt 6.10 oder neuer und einer passenden SocketCAN-Schnittstelle. Die Anwendung richtet den CAN-Adapter nicht selbst ein. Schnittstelle, Verkabelung und Bitrate müssen zur tatsächlichen Steuerung passen. Auf dem bisherigen Entwicklungsaufbau wurde `can0` mit 125 kbit/s verwendet; das ist keine automatische Vorgabe für andere Systeme.
 
-Der geprüfte Katalog, Oberflächentexte und die Snapshotvorlage sind eingebettet. Originalinstallation, EXE, RND, Wine, Dongle und FTDI-/CUSBMsg-DLLs werden nicht benötigt. Ein kopiertes eigenständiges Programmverzeichnis über `bin/dfreernet` starten und die Controller-Hilfsprogramme daneben erhalten. Installiertes Qt ab 6.10 einschließlich Sql-Modul/QSQLITE-Treiber und zlib bleiben erforderlich.
+Der geprüfte Katalog, Oberflächentexte und die Snapshotvorlage sind eingebettet. Die App verwendet ihre eingebetteten Ressourcen und Linux SocketCAN. Ein kopiertes eigenständiges Programmverzeichnis über `bin/dfreernet` starten und die Controller-Hilfsprogramme daneben erhalten. Installiertes Qt ab 6.10 einschließlich Sql-Modul/QSQLITE-Treiber und zlib bleiben erforderlich.
 
 ```bash
 scripts/run.sh

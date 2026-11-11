@@ -40,7 +40,6 @@ private slots:
     QTemporaryDir temporary;auto output=temporary.path()+"/must-not-be-created";
     QProcess process;
     process.start(QCoreApplication::applicationDirPath()+"/dfreernet",{
-      "--installation",temporary.path()+"/missing-installation",
       "--document",temporary.path()+"/missing.R-net",
       "--output",output,
       "--read-controller","not-a-real-CAN-interface",

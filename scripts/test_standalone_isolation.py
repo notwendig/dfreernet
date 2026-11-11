@@ -7,20 +7,17 @@ with tempfile.TemporaryDirectory(prefix='dfreernet-isolated-') as name:
     stage=Path(name);app=stage/'app';shutil.copytree(root/'dist/dfreernet',app)
     shutil.copy2(root/'build-native/rnet_standalone_test',app/'bin/rnet_standalone_test')
     shutil.copy2(root/'tests/fixtures/original-reference-default.R-net',stage/'before.R-net')
-    rnd=root.parent/'Generic_V33_1_1245.rnd'
-    if rnd.exists():shutil.copy2(rnd,stage/'import.rnd')
     (stage/'config').mkdir();(stage/'data').mkdir();(stage/'runtime').mkdir(mode=0o700)
     command=['bwrap','--ro-bind','/','/','--bind',name,name,'--tmpfs',str(Path.home()/'.wine'),'--unshare-net','--dev','/dev','--proc','/proc','--chdir',name]
     for key,value in {'QT_QPA_PLATFORM':'offscreen','TMPDIR':name,'XDG_CONFIG_HOME':str(stage/'config'),'XDG_DATA_HOME':str(stage/'data'),'XDG_RUNTIME_DIR':str(stage/'runtime'),'DFREERNET_SMOKE_SCREENSHOT':str(stage/'standalone.png')}.items():
         command+=['--setenv',key,value]
-    if (stage/'import.rnd').exists():command+=['--setenv','DFREERNET_TEST_RND_PATH',str(stage/'import.rnd')]
     def run(args,expected=0):
         result=subprocess.run(command+list(map(str,args)),text=True,capture_output=True,timeout=30)
         print(result.stdout,end='');print(result.stderr,end='')
         assert result.returncode==expected,(args,result.returncode)
         return result.stdout+result.stderr
     run([app/'bin/rnet_standalone_test'])
-    helptext=run([app/'bin/dfreernet','--help']);assert '--installation' not in helptext
+    run([app/'bin/dfreernet','--help'])
     run([app/'bin/dfreernet','--quit-after','30'])
     text=run([app/'bin/rnet_config_read','rnetMissing',stage/'snapshot','read'],1)
     assert (stage/'snapshot/manifest.csv').exists() and 'FAILED:' in text

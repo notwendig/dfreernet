@@ -31,9 +31,6 @@ int main(int argc, char **argv) {
       "RNet", "dfreernet — Dongle free R-Net Programmer"));
   parser.addHelpOption();
   parser.addVersionOption();
-  QCommandLineOption legacyInstallation("installation", "Ignored legacy option", "directory");
-  legacyInstallation.setFlags(QCommandLineOption::HiddenFromHelp);
-  parser.addOption(legacyInstallation);
   parser.addOption({"document",
                     QCoreApplication::translate("RNet", "Open R-net document"),
                     "file"});

@@ -4,7 +4,7 @@
 
 **Dongle free R-Net Programmer** · Native Linux application · C++17 / Qt 6 / SocketCAN
 
-An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. No original installation, EXE, DLL or RND file is required for building or running the application.
+An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. Build and runtime use only checked-in resources and installed Linux libraries.
 
 **License:** Original code is [GPL-3.0-only](LICENSE). The bundled catalog and other third-party-derived materials are excluded; see the [license scope](SCOPE.md). A complete bundled application is not cleared for redistribution.
 
@@ -61,12 +61,10 @@ translations/    Qt Linguist German catalog; English source strings
 scripts/         Build, launch, verification and investigation tools
 tests/           Automated tests; private reference fixtures stay local
 resources/       Pinned SQLite catalog and resource provenance
-cmake/           Optional cross-compilation configuration
 docs/            Current bilingual documentation
 analysis/        Private captures, reports and screenshots (generated)
 checkpoints/     Recoverable source snapshots (local)
 build-native/    Generated native build, including dfreernet
-build-windows/   Historical Windows reconstruction build
 ```
 
 Historical investigation files, local checkpoints, controller captures, personal configurations and build outputs remain outside Git. The repository contains the native application sources and the pinned runtime catalog; the bundled derived data are excluded from the code license.

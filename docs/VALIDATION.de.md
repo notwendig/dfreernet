@@ -36,7 +36,7 @@ Der optionale Heartbeat-Integrationstest verwendet einen neuen isolierten Netzwe
 - Mehrere Dateien können nur teilweise geschrieben sein. Commit-Bestätigung und verifiziertes Rücklesen sind getrennte Zustände; keine automatische Schreibwiederholung.
 - Eine zuverlässige Zuordnung der Modulnamen/-typen ist unvollständig.
 - Das passive Herz überwacht den beobachteten Acht-Byte-Heartbeat mit ID `0x00E`. Es belegt weder den Zustand des gesamten Systems noch eine universelle Heartbeat-Abdeckung.
-- Die native Anwendung bettet abgeleitete Referenzressourcen ein und benötigt keine Originalinstallation mehr. Deren Herkunft und Weitergabebeschränkungen bleiben bestehen; es handelt sich nicht um einen unabhängig erstellten Ersatzkatalog. Opaque Dokumentmetadaten stammen weiterhin aus der eingebetteten Referenzvorlage.
+- Die native Anwendung bettet abgeleitete Referenzressourcen ein. Deren Herkunft und Weitergabebeschränkungen bleiben bestehen; es handelt sich nicht um einen unabhängig erstellten Ersatzkatalog. Opaque Dokumentmetadaten stammen weiterhin aus der eingebetteten Referenzvorlage.
 
 ## Nachvollziehbare Fehlermeldung
 

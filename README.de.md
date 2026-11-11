@@ -4,7 +4,7 @@
 
 **Dongle free R-Net Programmer** · Native Linux-Anwendung · C++17 / Qt 6 / SocketCAN
 
-Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, Bearbeiten unterstützter Parameter und Speichern von Konfigurationsdateien. Die Verbindung erfolgt über Linux SocketCAN ohne Programmierdongle, Wine oder FTDI-/CUSBMsg-Laufzeit-DLLs. Der geprüfte Parameterkatalog, Menü-/Textressourcen, kryptografische Konstanten und die Konfigurationsvorlage sind in die nativen Binärdateien eingebettet. Weder Build noch Betrieb benötigen Originalinstallation, EXE, DLL oder RND-Datei.
+Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, Bearbeiten unterstützter Parameter und Speichern von Konfigurationsdateien. Die Verbindung erfolgt über Linux SocketCAN ohne Programmierdongle, Wine oder FTDI-/CUSBMsg-Laufzeit-DLLs. Der geprüfte Parameterkatalog, Menü-/Textressourcen, kryptografische Konstanten und die Konfigurationsvorlage sind in die nativen Binärdateien eingebettet. Build und Betrieb verwenden ausschließlich eingecheckte Ressourcen und installierte Linux-Bibliotheken.
 
 **Lizenz:** Eigenständig erstellter Code steht unter [GPL-3.0-only](LICENSE). Der eingebettete Katalog und weitere von Dritten abgeleitete Inhalte sind ausgenommen; siehe [Geltungsbereich](SCOPE.de.md). Die Weitergabe der vollständigen Anwendung ist damit nicht freigegeben.
 
@@ -61,12 +61,10 @@ translations/    Deutscher Qt-Linguist-Katalog; englische Quelltexte
 scripts/         Build, Start, Prüfungen und Untersuchungswerkzeuge
 tests/           Automatisierte Tests; private Referenzdaten bleiben lokal
 resources/       Geprüfter SQLite-Katalog und Datenherkunft
-cmake/           Optionale Cross-Compiler-Konfiguration
 docs/            Aktuelle zweisprachige Dokumentation
 analysis/        Private Mitschnitte, Berichte und Screenshots (generiert)
 checkpoints/     Wiederherstellbare lokale Sicherungen
 build-native/    Generierter nativer Build einschließlich dfreernet
-build-windows/   Historischer Windows-Rekonstruktionsbuild
 ```
 
 Historische Untersuchungen, lokale Sicherungen, Controller-Mitschnitte, persönliche Konfigurationen und Build-Ausgaben bleiben außerhalb von Git. Das Repository enthält den Quellcode der nativen Anwendung und den festgelegten Laufzeitkatalog; die eingebetteten abgeleiteten Daten sind von der Codelizenz ausgenommen.
