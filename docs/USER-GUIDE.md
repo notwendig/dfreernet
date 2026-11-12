@@ -41,6 +41,8 @@ Received files are saved in a new unique subfolder of the configured backup dire
 
 Under **Views**, choose **Hierarchical list**, **Profile table**, or **Module groups**. The profile tree offers Common and Profile 1–8. The module tree groups parameters by the first two parts of their catalog path. The right table shows the selected group. Unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in all three views. The choice is remembered.
 
+Column widths and order are saved automatically after changes and restored when you reopen a view or restart the app. **Views → Save column layout** saves immediately; **Load column layout** restores the last saved state, and **Reset column layout** returns to the defaults. Each table view has its own layout.
+
 The profile table's Module / group column distinguishes identically named parameters belonging to different R-net modules. A suffix such as “/ 2” denotes the second element or channel.
 
 The column immediately after the raw value combines unit, scale and raw minimum/maximum (`unit · a:b · min–max`). The column title uses two lines; cell values remain on one line. The tooltip labels each field. Unit comes from the catalog symbol and prefix; the numeric limits are raw catalog values. These metadata do not convert the stored raw value into engineering units. The colored access column remains fixed on the right during horizontal scrolling.

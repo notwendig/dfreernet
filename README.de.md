@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 0.2.2
+## Version 1.0.0
 
-Diese Version ergänzt eine Modulgruppenansicht, fasst Einheit, Skala und Rohwertgrenzen in einer Spalte zusammen, hält die farbige Berechtigung beim Scrollen sichtbar und bricht lange Spaltentitel um. Sie bleibt eine experimentelle Entwicklungsversion. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version ergänzt dauerhaft gespeicherte Spaltenlayouts für alle Tabellenansichten und zeigt im Über-Dialog Name, Kontakt und Projektlink. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Schnellstart
 
@@ -37,6 +37,7 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 - Zum installierten Katalog und zur gelesenen Dateiversion passende Parameter anzeigen und nach Berechtigung filtern.
 - Unter Ansichten zwischen Kategorienliste, Profilansicht und Modulgruppen wechseln. Die Profilansicht zeigt links Allgemein und Profil 1–8; die Modulansicht gruppiert nach Katalogmodulen. Alle Ansichten nutzen dieselben gelesenen Werte, Suche, Berechtigungen und Editoren.
 - Die drei Ansichtsschaltflächen stehen direkt neben dem Suchfeld.
+- Spaltenbreiten und -reihenfolge bleiben für jede Tabelle automatisch erhalten; unter Ansichten gibt es zusätzlich Speichern, Laden und Zurücksetzen.
 - Die Profilansicht zeigt das zugehörige Modul und die Gruppe; gleich benannte Parameter mit unterschiedlichen IDs bleiben unterscheidbar.
 - Eine kompakte Spalte direkt nach dem Rohwert zeigt Katalogeinheit, Skalierungsfelder und Rohwert-Minimum/-Maximum. Die farbige Berechtigung bleibt rechts auch beim horizontalen Scrollen sichtbar. Eine ungeprüfte Umrechnung in technische Einheiten erfolgt nicht.
 - Unterstützte Rohwerte mit geprüften Ja/Nein-, Auswahl-, Zahlen- und Texteditoren bearbeiten; Änderungen erscheinen rot und fett.

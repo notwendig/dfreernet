@@ -10,9 +10,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 0.2.2
+## Version 1.0.0
 
-This version adds a module-group view, combines unit, scale and raw limits in one column, keeps the colored access level visible while scrolling, and wraps long column titles. It remains an experimental development build. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version adds persistent column layouts for every table view and shows the author, contact and project link in About. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
 ## Quick start
 
@@ -37,6 +37,7 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 - Show parameters supported by the installed catalog and the received file version; filter by access level.
 - Switch under Views between the category list, profile view, and module groups. The profile view lists Common and Profiles 1–8; the module view groups parameters by their catalog module. All use the same read values, search, access filter and editors.
 - All three view buttons are visible beside the search field.
+- Column widths and order persist automatically for each table; Views also offers save, load and reset actions.
 - The profile table identifies the source module/group, so parameters with the same name but different IDs remain distinguishable.
 - One compact column after the raw value shows catalog unit, scale fields, and raw minimum/maximum. The colored access column stays visible on the right while scrolling horizontally. No unverified engineering-unit conversion is applied.
 - Edit supported raw values using validated boolean, selection, number and text editors. Pending changes appear red and bold.

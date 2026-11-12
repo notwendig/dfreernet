@@ -36,10 +36,41 @@ private slots:
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
+    auto *aboutAction=window.findChild<QAction*>("command57664");
+    QVERIFY(aboutAction);
+    QString aboutHeading,aboutContact;
+    QTimer::singleShot(0,&window,[&]{
+      auto *dialog=window.findChild<QDialog*>("aboutDialog");
+      if(!dialog)return;
+      auto *heading=dialog->findChild<QLabel*>("aboutHeading");
+      auto *contact=dialog->findChild<QLabel*>("aboutContact");
+      if(heading)aboutHeading=heading->text();
+      if(contact){aboutContact=contact->text();QVERIFY(contact->openExternalLinks());}
+      dialog->accept();
+    });
+    aboutAction->trigger();
+    QVERIFY(aboutHeading.contains(QStringLiteral(DFREERNET_VERSION)));
+    QVERIFY(aboutContact.contains(QString::fromUtf8("Jürgen Willi Sievers")));
+    QVERIFY(aboutContact.contains("mailto:JSievers@NadiSoft.de"));
+    QVERIFY(aboutContact.contains("https://github.com/notwendig/dfreernet"));
     auto values=read_values(before,catalog);int index=-1;for(std::size_t i=0;i<values.size();++i)if(values[i].parameter==68){index=int(i);break;}QVERIFY(index>=0);
     auto *table=window.findChild<QTableView*>("parameters");
+    auto *saveColumns=window.findChild<QAction*>("saveColumnLayout");
+    auto *loadColumns=window.findChild<QAction*>("loadColumnLayout");
+    auto *resetColumns=window.findChild<QAction*>("resetColumnLayout");
     auto *helpAction=window.findChild<QAction*>("parameterHelp");
-    QVERIFY(table&&helpAction);
+    QVERIFY(table&&helpAction&&saveColumns&&loadColumns&&resetColumns);
+    QVERIFY(saveColumns->isEnabled());
+    QVERIFY(!loadColumns->isEnabled());
+    table->setColumnWidth(0,210);
+    table->horizontalHeader()->moveSection(0,1);
+    saveColumns->trigger();
+    QVERIFY(loadColumns->isEnabled());
+    table->setColumnWidth(0,145);
+    table->horizontalHeader()->moveSection(1,0);
+    loadColumns->trigger();
+    QCOMPARE(table->columnWidth(0),210);
+    QCOMPARE(table->horizontalHeader()->visualIndex(0),1);
     QCOMPARE(helpAction->shortcut(),QKeySequence(Qt::Key_F1));
     int helpRow=-1;
     for(int row=0;row<window.model()->rowCount();++row)
@@ -72,6 +103,9 @@ private slots:
     QCOMPARE(profileButton->defaultAction(),profileAction);
     profileAction->trigger();
     QVERIFY(profileButton->isChecked());
+    QVERIFY(!loadColumns->isEnabled());
+    table->setColumnWidth(0,175);
+    saveColumns->trigger();
     auto *tree=window.findChild<QTreeWidget*>("groups");
     QCOMPARE(tree->topLevelItemCount(),9);
     QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
@@ -129,15 +163,35 @@ private slots:
     QVERIFY(!fixedAccess->isColumnHidden(window.model()->columnCount()-1));
     listAction->trigger();
     QVERIFY(!QSettings().value("ui/moduleGroupView").toBool());
+    QCOMPARE(table->columnWidth(0),210);
+    QCOMPARE(table->horizontalHeader()->visualIndex(0),1);
+    resetColumns->trigger();
+    QCOMPARE(table->columnWidth(0),130);
+    QCOMPARE(table->horizontalHeader()->visualIndex(0),0);
+    QVERIFY(!loadColumns->isEnabled());
     QVERIFY(window.model()->rowCount()>=window.valueCount());
     auto target=temp.path()+"/after.R-net";window.saveAs(target);auto after=RnetDocument::read(read_file(target.toStdString()));QVERIFY(!controller_write_plan(before,after,catalog,AccessLevel::OEM).empty());window.openDocument(target);QVERIFY(window.document()->write()==after.write());
     window.showResources();QCOMPARE(window.model()->rowCount(),1454);
+    table->setColumnWidth(0,205);
+    saveColumns->trigger();
+    table->setColumnWidth(0,140);
+    loadColumns->trigger();
+    QCOMPARE(table->columnWidth(0),205);
+    resetColumns->trigger();
+    QCOMPARE(table->columnWidth(0),130);
     QVERIFY(window.findChild<QAction*>("command40040"));
     if(auto path=qEnvironmentVariable("DFREERNET_SMOKE_SCREENSHOT");!path.isEmpty()){
       QVERIFY(window.grab().save(path));
       auto *action=window.findChild<QAction*>("command40002");QVERIFY(action);auto *menu=qobject_cast<QMenu*>(action->parent());QVERIFY(menu);menu->popup(window.mapToGlobal(QPoint(10,25)));QTest::qWait(50);QVERIFY(menu->grab().save(path+"-rnd-menu.png"));menu->hide();
     }
+    window.showValues();
+    table->setColumnWidth(1,555);
     window.close();
+    QVERIFY(QSettings().contains("ui/columns/v1/hierarchy"));
+    Window restarted(settings.logDirectory);
+    restarted.show();
+    QCOMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(1),555);
+    restarted.close();
   }
 };
 QTEST_MAIN(StandaloneTest)

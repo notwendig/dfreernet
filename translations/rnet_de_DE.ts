@@ -16,6 +16,30 @@
             <translation>Modulgruppen</translation>
         </message>
         <message>
+            <source>Save column layout</source>
+            <translation>Spalteneinstellungen speichern</translation>
+        </message>
+        <message>
+            <source>Load column layout</source>
+            <translation>Spalteneinstellungen laden</translation>
+        </message>
+        <message>
+            <source>Reset column layout</source>
+            <translation>Spalteneinstellungen zurücksetzen</translation>
+        </message>
+        <message>
+            <source>Could not save column layout</source>
+            <translation>Spalteneinstellungen konnten nicht gespeichert werden</translation>
+        </message>
+        <message>
+            <source>No valid saved column layout</source>
+            <translation>Keine gültigen gespeicherten Spalteneinstellungen vorhanden</translation>
+        </message>
+        <message>
+            <source>Could not reset column layout</source>
+            <translation>Spalteneinstellungen konnten nicht zurückgesetzt werden</translation>
+        </message>
+        <message>
             <source>All modules</source>
             <translation>Alle Module</translation>
         </message>
@@ -1493,14 +1517,18 @@ Sicherungsverzeichnis: %2</translation>
             <translation>dfreernet konnte nicht gestartet werden</translation>
         </message>
         <message>
-            <source>dfreernet — Dongle free R-Net Programmer
-
-Native C++17 / Qt 6 application for Linux with SocketCAN. Read controller configuration, edit supported parameters, save working copies, and write supported changes with readback verification.
+            <source>About dfreernet</source>
+            <translation>Über dfreernet</translation>
+        </message>
+        <message>
+            <source>Dongle free R-Net Programmer</source>
+            <translation>Donglefreier R-Net-Programmierer</translation>
+        </message>
+        <message>
+            <source>Native C++17 / Qt 6 application for Linux with SocketCAN. Read controller configuration, edit supported parameters, save working copies, and write supported changes with readback verification.
 
 Experimental; rudimentarily tested on Permobil T5 VS. Compatibility with other wheelchairs or firmware versions has not been established. Additional file versions, parameter conversions, and encrypted document metadata generation remain incomplete.</source>
-            <translation>dfreernet — Dongle free R-Net Programmer
-
-Native C++17-/Qt-6-Anwendung für Linux mit SocketCAN. Controllerkonfiguration lesen, unterstützte Parameter bearbeiten, Arbeitskopien speichern und unterstützte Änderungen mit Rückleseprüfung schreiben.
+            <translation>Native C++17-/Qt-6-Anwendung für Linux mit SocketCAN. Controllerkonfiguration lesen, unterstützte Parameter bearbeiten, Arbeitskopien speichern und unterstützte Änderungen mit Rückleseprüfung schreiben.
 
 Experimentell; rudimentär auf Permobil T5 VS getestet. Die Kompatibilität mit anderen Rollstühlen oder Firmwareversionen ist nicht nachgewiesen. Weitere Dateiversionen, Parameterumrechnungen und die Erzeugung verschlüsselter Dokumentmetadaten sind noch unvollständig.</translation>
         </message>

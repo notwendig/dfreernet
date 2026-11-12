@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.0.0 — 2026-11-12
+
+- Save, load and reset column layouts separately for every table view.
+- Show the author, contact email, current version and GitHub project link in About.
+- Persist column resizing and reordering automatically, including when the app closes before the save delay.
+
 ## 0.2.2 — 2026-11-12
 
 - Add a third parameter view grouped by catalog module.

@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   QApplication app(argc, argv);
   QCoreApplication::setApplicationName("dfreernet");
   QCoreApplication::setOrganizationName("LocalRNet");
-  QCoreApplication::setApplicationVersion("0.2.2");
+  QCoreApplication::setApplicationVersion(DFREERNET_VERSION);
   QGuiApplication::setApplicationDisplayName("dfreernet");
   // Keep existing user preferences when upgrading from the former Qt app name.
   QSettings settings;

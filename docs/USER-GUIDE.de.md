@@ -41,6 +41,8 @@ Empfangene Dateien werden in einem neuen eindeutigen Unterordner des Sicherungso
 
 Unter **Ansichten** zwischen **Hierarchische Liste**, **Profiltabelle** und **Modulgruppen** wechseln. Die Profilansicht bietet links Allgemein und Profil 1–8. Die Modulansicht gruppiert nach den ersten beiden Teilen des Katalogpfads. Rechts erscheinen die Parameter der Auswahl. Ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in allen drei Ansichten. Die Auswahl wird gespeichert.
 
+Spaltenbreiten und -reihenfolge werden nach Änderungen automatisch gespeichert und beim erneuten Öffnen einer Ansicht oder nach einem Neustart wiederhergestellt. **Ansichten → Spalteneinstellungen speichern** sichert sofort; **Spalteneinstellungen laden** stellt den zuletzt gespeicherten Stand wieder her und **Spalteneinstellungen zurücksetzen** die Standardwerte. Jede Tabellenansicht hat ein eigenes Layout.
+
 Die Spalte „Modul / Gruppe“ unterscheidet gleich benannte Parameter verschiedener R-net-Module. Ein Zusatz wie „/ 2“ bezeichnet das zweite Element beziehungsweise den zweiten Kanal.
 
 Die Spalte direkt nach dem Rohwert fasst Einheit, Skala und Rohwert-Minimum/-Maximum zusammen (`Einheit · a:b · min–max`). Der Spaltentitel ist zweizeilig; die Werte bleiben einzeilig. Der Tooltip benennt jedes Feld. Die Einheit stammt aus Symbol und Vorsatz des Katalogs; die numerischen Grenzen sind rohe Katalogwerte. Diese Metadaten rechnen den gespeicherten Rohwert nicht in technische Einheiten um. Die farbige Berechtigung bleibt beim horizontalen Scrollen rechts fest sichtbar.

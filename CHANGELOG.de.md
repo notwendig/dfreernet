@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.0.0 — 12. November 2026
+
+- Spalteneinstellungen für alle Tabellenansichten getrennt speichern, laden und zurücksetzen.
+- Im Über-Dialog Name, Kontaktadresse, aktuelle Version und GitHub-Projektlink anzeigen.
+- Veränderte Spaltenbreiten und -reihenfolgen automatisch sichern, auch beim schnellen Schließen der App.
+
 ## 0.2.2 — 12. November 2026
 
 - Dritte Parameteransicht nach Katalogmodulen ergänzt.

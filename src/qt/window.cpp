@@ -8,6 +8,7 @@
 #include "rnd_decoder.hpp"
 #include "runtime_resources.hpp"
 #include <QSocketNotifier>
+#include <QScopedValueRollback>
 #include <QtWidgets>
 #include <cerrno>
 #include <csignal>
@@ -257,12 +258,13 @@ Window::Window(const QString &output,
   buildUi();
   applyPreferences();
   showValues();
+  columnLayoutReady_=true;
   updateTitle();
   log(QString("START Qt %1 Linux; parameters=%2; no Wine or DLL runtime")
           .arg(qVersion())
           .arg(catalog_.parameters.size()));
 }
-Window::~Window() { stopMonitor(false); }
+Window::~Window() { flushColumnSave();stopMonitor(false); }
 void Window::log(const QString &text) {
   QFile f(output_ + "/runtime.log");
   if (f.open(QIODevice::WriteOnly | QIODevice::Append))
@@ -387,6 +389,16 @@ void Window::buildUi() {
     guarded([this]{commitPendingValueEditor();settings_.profileTableView=false;settings_.moduleGroupView=true;
       QSettings q;q.setValue("ui/profileTableView",false);q.setValue("ui/moduleGroupView",true);renderValues();});
   });
+  view->addSeparator();
+  saveColumnsAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Save column layout"));
+  loadColumnsAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Load column layout"));
+  resetColumnsAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Reset column layout"));
+  saveColumnsAction_->setObjectName("saveColumnLayout");
+  loadColumnsAction_->setObjectName("loadColumnLayout");
+  resetColumnsAction_->setObjectName("resetColumnLayout");
+  connect(saveColumnsAction_,&QAction::triggered,this,[this]{guarded([this]{saveColumns();});});
+  connect(loadColumnsAction_,&QAction::triggered,this,[this]{guarded([this]{loadColumns();});});
+  connect(resetColumnsAction_,&QAction::triggered,this,[this]{guarded([this]{resetColumns();});});
   add(view, "Repository-Dateien", Repository);
   add(view, QT_TRANSLATE_NOOP("RNet", "Bundled resource texts"), Resources);
   view->addSeparator();
@@ -528,7 +540,16 @@ void Window::buildUi() {
   table_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   table_->verticalHeader()->hide();
   table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-  table_->horizontalHeader()->setStretchLastSection(true);
+  table_->horizontalHeader()->setSectionsMovable(true);
+  table_->horizontalHeader()->setStretchLastSection(false);
+  columnSaveTimer_=new QTimer(this);
+  columnSaveTimer_->setSingleShot(true);
+  columnSaveTimer_->setInterval(250);
+  connect(columnSaveTimer_,&QTimer::timeout,this,[this]{flushColumnSave();});
+  connect(table_->horizontalHeader(),&QHeaderView::sectionResized,this,
+          [this](int, int, int){queueColumnSave();});
+  connect(table_->horizontalHeader(),&QHeaderView::sectionMoved,this,
+          [this](int, int, int){queueColumnSave();});
   auto *tableContainer=new QWidget;
   auto *tableLayout=new QHBoxLayout(tableContainer);
   tableLayout->setContentsMargins(0,0,0,0);
@@ -646,6 +667,7 @@ void Window::changeEvent(QEvent *event) {
     retranslateUi();
 }
 void Window::retranslateUi() {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   updateSleepStatus();updateBlinkState();
   const auto query = search_->text(), group = proxy_->group;
   QSet<QString> expanded;
@@ -810,6 +832,7 @@ void Window::resetGroup(bool show) {
   proxy_->refilter();
 }
 void Window::showCatalog() {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   view_ = View::Catalog;
   valuesView_ = false;
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -836,6 +859,8 @@ void Window::showCatalog() {
   table_->setColumnWidth(0, 130);
   table_->setColumnWidth(1, 700);
   table_->sortByColumn(1, Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   banner_->setText(QCoreApplication::translate(
       "RNet", "Parameter definitions from the original RND. The catalog does "
               "not contain values read from the controller."));
@@ -845,6 +870,7 @@ void Window::showCatalog() {
 }
 void Window::renderValues(bool preserveContext) {
   if(settings_.profileTableView){renderProfileValues(preserveContext);return;}
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   const auto query=search_->text(),group=proxy_->group;
   const auto current=proxy_->mapToSource(table_->currentIndex());
@@ -867,6 +893,11 @@ void Window::renderValues(bool preserveContext) {
     if(settings_.moduleGroupView)buildModuleGroups({});else resetGroup(true);
     table_->setColumnHidden(2, false);
     table_->setColumnHidden(3, false);
+    table_->setColumnWidth(0,130);table_->setColumnWidth(1,620);
+    table_->setColumnWidth(2,200);table_->setColumnWidth(3,240);
+    table_->setColumnWidth(4,180);
+    resetColumnOrder();
+    restoreSavedColumns();
     banner_->setText(QCoreApplication::translate(
         "RNet", "No configuration has been read. Read the controller or open "
                 "an R-net file."));
@@ -941,6 +972,8 @@ void Window::renderValues(bool preserveContext) {
   table_->setColumnWidth(1, 620);
   table_->setColumnWidth(2, 200);
   table_->sortByColumn(1, Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   if(document_)updateDocumentBanner();else banner_->setText(QCoreApplication::translate("RNet","No configuration has been read. Read the controller or open an R-net file."));
   QString details = documentPath_;
   if (!warnings_.empty())
@@ -966,6 +999,7 @@ void Window::renderValues(bool preserveContext) {
   updateActions();
 }
 void Window::renderProfileValues(bool preserveContext) {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   const auto query=search_->text(),group=proxy_->group;
   const auto current=proxy_->mapToSource(table_->currentIndex());
   const int selectedValue=current.isValid()?current.data(Qt::UserRole).toInt():-1;
@@ -1076,6 +1110,8 @@ void Window::renderProfileValues(bool preserveContext) {
   table_->setColumnWidth(2,200);table_->setColumnWidth(3,240);
   table_->setColumnWidth(4,100);table_->setColumnWidth(5,300);
   table_->sortByColumn(1,Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   if(document_)updateDocumentBanner();
   else banner_->setText(QCoreApplication::translate(
       "RNet","No configuration has been read. Read the controller or open an R-net file."));
@@ -1116,6 +1152,7 @@ void Window::updateDocumentBanner() {
 }
 void Window::showValues() { renderValues(); }
 void Window::showRepository() {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   view_ = View::Repository;
   if (!document_)
     return;
@@ -1145,10 +1182,16 @@ void Window::showRepository() {
   resetGroup(false);
   table_->setColumnHidden(2, false);
   table_->setColumnHidden(3, false);
+  table_->setColumnWidth(0,130);table_->setColumnWidth(1,500);
+  table_->setColumnWidth(2,100);table_->setColumnWidth(3,100);
+  table_->sortByColumn(0,Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   details_->setPlainText(documentPath_);
   updateActions();
 }
 void Window::showResources() {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   view_ = View::Resources;
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   banner_->setText(QCoreApplication::translate(
@@ -1169,6 +1212,10 @@ void Window::showResources() {
   resetGroup(false);
   table_->setColumnHidden(2, true);
   table_->setColumnHidden(3, true);
+  table_->setColumnWidth(0,130);table_->setColumnWidth(1,700);
+  table_->sortByColumn(0,Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   updateActions();
 }
 void Window::openDocument(const QString &name) { loadDocument(name, false); }
@@ -1203,6 +1250,11 @@ void Window::updateTitle() {
 }
 void Window::updateActions() {
   syncAccessColumn();
+  const auto columnKey=columnLayoutKey();
+  if(saveColumnsAction_)saveColumnsAction_->setEnabled(!columnKey.isEmpty());
+  if(loadColumnsAction_)loadColumnsAction_->setEnabled(
+      !columnKey.isEmpty()&&QSettings().contains(columnKey));
+  if(resetColumnsAction_)resetColumnsAction_->setEnabled(!columnKey.isEmpty());
   int index = -1;
   auto current = table_->currentIndex();
   if (current.isValid()) {
@@ -1270,6 +1322,93 @@ void Window::syncAccessColumn(){
   accessTable_->setColumnWidth(accessColumn,160);
   accessTable_->verticalScrollBar()->setValue(table_->verticalScrollBar()->value());
 }
+QString Window::columnLayoutKey() const{
+  QString mode;
+  switch(view_){
+  case View::Values:
+    mode=settings_.profileTableView?QStringLiteral("profiles"):
+        settings_.moduleGroupView?QStringLiteral("modules"):QStringLiteral("hierarchy");
+    break;
+  case View::Catalog:mode=QStringLiteral("catalog");break;
+  case View::Repository:mode=QStringLiteral("repository");break;
+  case View::Resources:mode=QStringLiteral("resources");break;
+  case View::Monitor:mode=QStringLiteral("monitor");break;
+  }
+  return QStringLiteral("ui/columns/v1/")+mode;
+}
+void Window::resetColumnOrder(){
+  auto *header=table_->horizontalHeader();
+  for(int logical=0;logical<model_->columnCount();++logical)
+    header->moveSection(header->visualIndex(logical),logical);
+}
+void Window::restoreSavedColumns(){
+  const auto key=columnLayoutKey();
+  if(key.isEmpty())return;
+  const auto state=pendingColumnKey_==key?pendingColumnState_:
+      QSettings().value(key).toByteArray();
+  if(!state.isEmpty())table_->horizontalHeader()->restoreState(state);
+}
+void Window::queueColumnSave(){
+  if(!columnLayoutReady_||columnLayoutBusy_)return;
+  pendingColumnKey_=columnLayoutKey();
+  pendingColumnState_=table_->horizontalHeader()->saveState();
+  columnSaveTimer_->start();
+}
+void Window::flushColumnSave(){
+  if(pendingColumnKey_.isEmpty())return;
+  if(columnSaveTimer_)columnSaveTimer_->stop();
+  QSettings settings;
+  settings.setValue(pendingColumnKey_,pendingColumnState_);
+  settings.sync();
+  if(settings.status()!=QSettings::NoError){
+    log("COLUMN_LAYOUT_SAVE_FAILED "+pendingColumnKey_);
+    return;
+  }
+  pendingColumnKey_.clear();
+  pendingColumnState_.clear();
+  if(saveColumnsAction_)updateActions();
+}
+void Window::saveColumns(){
+  const auto key=columnLayoutKey();
+  if(key.isEmpty())return;
+  columnSaveTimer_->stop();
+  pendingColumnKey_.clear();pendingColumnState_.clear();
+  QSettings settings;
+  settings.setValue(key,table_->horizontalHeader()->saveState());
+  settings.sync();
+  if(settings.status()!=QSettings::NoError)
+    throw UiError(QCoreApplication::translate("RNet","Could not save column layout"));
+  updateActions();
+}
+void Window::loadColumns(){
+  const auto key=columnLayoutKey();
+  if(key.isEmpty())return;
+  columnSaveTimer_->stop();
+  pendingColumnKey_.clear();pendingColumnState_.clear();
+  const auto state=QSettings().value(key).toByteArray();
+  if(state.isEmpty()||!table_->horizontalHeader()->restoreState(state))
+    throw UiError(QCoreApplication::translate("RNet","No valid saved column layout"));
+  syncAccessColumn();
+  updateActions();
+}
+void Window::resetColumns(){
+  const auto key=columnLayoutKey();
+  if(key.isEmpty())return;
+  columnSaveTimer_->stop();
+  pendingColumnKey_.clear();pendingColumnState_.clear();
+  QSettings settings;
+  settings.remove(key);
+  settings.sync();
+  if(settings.status()!=QSettings::NoError)
+    throw UiError(QCoreApplication::translate("RNet","Could not reset column layout"));
+  switch(view_){
+  case View::Values:renderValues(true);break;
+  case View::Catalog:showCatalog();break;
+  case View::Repository:showRepository();break;
+  case View::Resources:showResources();break;
+  case View::Monitor:showMonitorCapture(false);break;
+  }
+}
 void Window::selected() {
   auto current = proxy_->mapToSource(table_->currentIndex());
   if (current.isValid() && current.row() < int(model_->rows.size()))
@@ -1321,6 +1460,41 @@ void Window::showParameterHelp() {
       "RNet","Source: bundled R-net parameter catalog. The R-net PC Programmer guide, section 3.3.2, describes this parameter help text."));
   source->setWordWrap(true);
   layout->addWidget(source);
+  auto *buttons=new QDialogButtonBox(QDialogButtonBox::Close);
+  connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);
+  layout->addWidget(buttons);
+  dialog.exec();
+}
+void Window::showAbout(){
+  QDialog dialog(this);
+  dialog.setObjectName("aboutDialog");
+  dialog.setWindowTitle(QCoreApplication::translate("RNet","About dfreernet"));
+  dialog.setMinimumWidth(540);
+  auto *layout=new QVBoxLayout(&dialog);
+  auto *heading=new QLabel(QStringLiteral("<h2>dfreernet %1</h2>%2")
+      .arg(QStringLiteral(DFREERNET_VERSION),
+           QCoreApplication::translate("RNet","Dongle free R-Net Programmer")));
+  heading->setObjectName("aboutHeading");
+  heading->setTextFormat(Qt::RichText);
+  layout->addWidget(heading);
+  auto *description=new QLabel(QCoreApplication::translate("RNet",
+      "Native C++17 / Qt 6 application for Linux with SocketCAN. Read controller configuration, "
+      "edit supported parameters, save working copies, and write supported changes with "
+      "readback verification.\n\nExperimental; rudimentarily tested on Permobil T5 VS. "
+      "Compatibility with other wheelchairs or firmware versions has not been established. "
+      "Additional file versions, parameter conversions, and encrypted document metadata "
+      "generation remain incomplete."));
+  description->setWordWrap(true);
+  layout->addWidget(description);
+  const QString email=QStringLiteral("JSievers@NadiSoft.de");
+  const QString repository=QStringLiteral("https://github.com/notwendig/dfreernet");
+  auto *contact=new QLabel(QStringLiteral("<b>%1</b><br><a href=\"mailto:%2\">%2</a><br><a href=\"%3\">%3</a>")
+      .arg(QStringLiteral("Jürgen Willi Sievers"),email,repository));
+  contact->setObjectName("aboutContact");
+  contact->setTextFormat(Qt::RichText);
+  contact->setTextInteractionFlags(Qt::TextBrowserInteraction);
+  contact->setOpenExternalLinks(true);
+  layout->addWidget(contact);
   auto *buttons=new QDialogButtonBox(QDialogButtonBox::Close);
   connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);
   layout->addWidget(buttons);
@@ -1657,18 +1831,7 @@ void Window::command(unsigned id) {
     requestIdentities();
     break;
   case 57664:
-    QMessageBox::about(
-        this, "dfreernet",
-        QCoreApplication::translate(
-            "RNet",
-            "dfreernet — Dongle free R-Net Programmer\n\nNative C++17 / Qt 6 "
-            "application for Linux with SocketCAN. Read controller configuration, "
-            "edit supported parameters, save working copies, and write supported "
-            "changes with readback verification.\n\nExperimental; rudimentarily "
-            "tested on Permobil T5 VS. Compatibility with other wheelchairs or "
-            "firmware versions has not been established. Additional file versions, "
-            "parameter conversions, and encrypted document metadata generation "
-            "remain incomplete."));
+    showAbout();
     break;
   default:
     break;
@@ -2082,6 +2245,7 @@ void Window::stopMonitor(bool show) {
     showMonitorCapture();
 }
 void Window::showMonitorCapture(bool record) {
+  QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   view_ = View::Monitor;
   valuesView_ = false;
@@ -2103,8 +2267,13 @@ void Window::showMonitorCapture(bool record) {
   resetGroup(false);
   table_->setColumnHidden(2, false);
   table_->setColumnHidden(3, false);
+  table_->setColumnWidth(0,130);
   table_->setColumnWidth(1, 180);
   table_->setColumnWidth(2, 480);
+  table_->setColumnWidth(3,80);
+  table_->sortByColumn(0,Qt::AscendingOrder);
+  resetColumnOrder();
+  restoreSavedColumns();
   banner_->setText(QString(QCoreApplication::translate(
                                "RNet", "SocketCAN: received %1 data frames and "
                                        "%2 IDs. No CAN data sent."))
@@ -2157,6 +2326,7 @@ void Window::closeEvent(QCloseEvent *event) {
       return;
     }
     stopMonitor(false);
+    flushColumnSave();
     log("SHUTDOWN clean");
     event->accept();
   } catch (const std::exception &e) {
