@@ -24,6 +24,7 @@ __pycache__/
 *.log
 *.png
 !/resources/illustrations/sick-wheelchair.png
+!/docs/screens/*.png
 *.sqlite3-journal
 *.sqlite3-wal
 *.sqlite3-shm

@@ -14,6 +14,25 @@ An experimental desktop application for reading R-Net controller configurations,
 
 This version preserves column layouts when switching views quickly, rebuilds the launcher when sources change, and shows the version in the main title and startup warning. The Help menu is last on the menu bar. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
+## Screenshots
+
+Main window with the parameter table and access levels:
+
+![dfreernet main window with parameter table](docs/screens/Bildschirmfoto%20vom%202026-11-12%2011-18-25.png)
+
+Startup warning with the illustrated wheelchair:
+
+![dfreernet startup warning](docs/screens/Bildschirmfoto%20vom%202026-11-12%2020-12-57.png)
+
+<details>
+<summary>More screenshots: Dongle access warning and About dialog</summary>
+
+![Dongle access warning](docs/screens/Bildschirmfoto%20vom%202026-11-12%2009-28-23.png)
+
+![About dfreernet](docs/screens/Bildschirmfoto%20vom%202026-11-12%2011-16-00.png)
+
+</details>
+
 ## Quick start
 
 Requires Linux, a C++17 compiler, CMake 3.21+, Ninja, Python 3, zlib development files, Qt 6.10+ Widgets/Sql/DBus/LinguistTools and Qt Test for the default test build. The development machine currently uses Qt 6.11.2. A configured SocketCAN adapter is needed for controller access.
