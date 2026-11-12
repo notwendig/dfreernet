@@ -29,11 +29,37 @@ private slots:
     const Bytes encryptedPrefix={23,11,237,144,246,191,29,43,202,71,194,194,17,163,47,134,135,65,45,116,173,153,1,17,200,51,137,189,4,44,95,208,98,53,109,98,129,74,253,251,4,15,209,72,219,16,143,100,64,235,91,12,199,187,224,120,98,101,175,173,155,18,137,4};
     auto decodedPrefix=RndDecoder().decode(encryptedPrefix);QVERIFY(std::equal(decodedPrefix.begin(),decodedPrefix.end(),bundled_catalog_bytes().begin()));
     const auto catalog=bundled_catalog();QCOMPARE(catalog.parameters.size(),std::size_t(2154));QCOMPARE(catalog.storage_maps.size(),std::size_t(29));QCOMPARE(catalog.editors.size(),std::size_t(164));
+    QCOMPARE(catalog.parameters.at(30).name(),catalog.parameters.at(2129).name());
+    QVERIFY(catalog.parameters.at(30).text88!=catalog.parameters.at(2129).text88);
+    QVERIFY(catalog.parameters.at(30).help()!=catalog.parameters.at(2129).help());
     QCOMPARE(QCryptographicHash::hash(QByteArray(reinterpret_cast<const char*>(bundled_catalog_bytes().data()),int(bundled_catalog_bytes().size())),QCryptographicHash::Sha256).toHex(),QByteArray("30bbe3a7edc45b1ec7975544254bbec6853199a899f46144b33eeebe946723cc"));
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
     auto values=read_values(before,catalog);int index=-1;for(std::size_t i=0;i<values.size();++i)if(values[i].parameter==68){index=int(i);break;}QVERIFY(index>=0);
+    auto *table=window.findChild<QTableView*>("parameters");
+    auto *helpAction=window.findChild<QAction*>("parameterHelp");
+    QVERIFY(table&&helpAction);
+    QCOMPARE(helpAction->shortcut(),QKeySequence(Qt::Key_F1));
+    int helpRow=-1;
+    for(int row=0;row<window.model()->rowCount();++row)
+      if(window.model()->rows[std::size_t(row)].valueIndex==index){helpRow=row;break;}
+    QVERIFY(helpRow>=0);
+    table->setCurrentIndex(window.filter()->mapFromSource(window.model()->index(helpRow,2)));
+    QVERIFY(helpAction->isEnabled());
+    QString shownHelp,shownContext;
+    QTimer::singleShot(0,&window,[&]{
+      auto *dialog=window.findChild<QDialog*>("parameterHelpDialog");
+      if(!dialog)return;
+      shownHelp=dialog->findChild<QPlainTextEdit*>("parameterHelpText")->toPlainText();
+      shownContext=dialog->findChild<QLabel*>("parameterHelpContext")->text();
+      dialog->accept();
+    });
+    table->setFocus();
+    QTest::keyClick(table,Qt::Key_F1);
+    QCOMPARE(shownHelp,fromU16(catalog.parameters.at(68).help()).trimmed());
+    QVERIFY(shownContext.contains("Stored raw value:"));
+    QVERIFY(shownContext.contains(QString::number(values[index].number)));
     auto *profileAction=window.findChild<QAction*>("profileTableView");
     auto *listAction=window.findChild<QAction*>("hierarchicalListView");
     QVERIFY(profileAction&&listAction);
@@ -49,12 +75,25 @@ private slots:
     QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
     QCOMPARE(tree->topLevelItem(8)->text(0),QString("Profile 8"));
     QCOMPARE(window.filter()->group,QString("common"));
+    QCOMPARE(window.model()->headings.at(4),QString("Module / group"));
+    QCOMPARE(window.model()->headings.at(5),QString("Unit"));
+    QCOMPARE(window.model()->headings.at(6),QString("Scale (catalog)"));
+    QCOMPARE(window.model()->headings.at(7),QString("Raw min"));
+    QCOMPARE(window.model()->headings.at(8),QString("Raw max"));
+    QCOMPARE(window.model()->headings.at(9),QString("Access level"));
     bool found=false;
     for(int row=0;row<window.model()->rowCount();++row)
       {
         const auto cell=window.model()->index(row,2);
         if(window.model()->rows[std::size_t(row)].valueIndex!=index)continue;
         QCOMPARE(cell.data().toString(),QString::number(values[index].number));
+        auto expectedModule=fromU16(catalog.parameters.at(values[index].parameter).text88);
+        expectedModule.replace('~',QStringLiteral(" / "));
+        QCOMPARE(window.model()->index(row,4).data().toString(),expectedModule);
+        QCOMPARE(window.model()->index(row,5).data().toString(),QString("—"));
+        QCOMPARE(window.model()->index(row,6).data().toString(),QString("1:1"));
+        QCOMPARE(window.model()->index(row,7).data().toString(),QString("0"));
+        QCOMPARE(window.model()->index(row,8).data().toString(),QString("1"));
         found=true;
       }
     QVERIFY(found);

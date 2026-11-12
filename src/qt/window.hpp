@@ -41,6 +41,8 @@ struct Row {
     bool changed = false;
   };
   std::vector<Cell> cells{};
+  QString module{};
+  QString unit{},scale{},minimum{},maximum{};
 };
 class TableModel final : public QAbstractTableModel {
 public:
@@ -124,6 +126,7 @@ public:
 protected:
   void closeEvent(QCloseEvent *) override;
   void changeEvent(QEvent *) override;
+  bool eventFilter(QObject *,QEvent *) override;
 
 private:
   ParameterCatalog catalog_;
@@ -155,6 +158,7 @@ private:
   QString sleepStatus_;
   CanHeartbeatIndicator *heartbeat_=nullptr;
   QAction *detailsAction_=nullptr;
+  QAction *parameterHelpAction_=nullptr;
   QAction *listViewAction_=nullptr,*profileViewAction_=nullptr;
   AccessLevel access_ = AccessLevel::Dealer;
   TableModel *model_ = nullptr;
@@ -206,6 +210,7 @@ private:
   void editSelected();
   void commitPendingValueEditor();
   void selected();
+  void showParameterHelp();
   void command(unsigned);
   bool finishChanges();
   void closeDocument();

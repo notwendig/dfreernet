@@ -150,8 +150,8 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
   }
   if (role == Qt::UserRole) return r.valueIndex;
   if (role == Qt::DecorationRole && i.column()==1 && r.icon!=Icon::None) return uiIcon(r.icon);
-  if(r.unread&&i.column()!=4&&role==Qt::ForegroundRole)return QColor(Qt::gray);
-  if (i.column() == 4 && r.requiredAccess >= 0 && r.requiredAccess <= 3) {
+  if(r.unread&&i.column()!=headings.size()-1&&role==Qt::ForegroundRole)return QColor(Qt::gray);
+  if (i.column() == headings.size()-1 && r.requiredAccess >= 0 && r.requiredAccess <= 3) {
     if (role == Qt::BackgroundRole)
       return accessColor(r.requiredAccess);
     if (role == Qt::ForegroundRole)
@@ -161,10 +161,20 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
     if (role == Qt::ForegroundRole) return QColor(Qt::red);
     if (role == Qt::FontRole) {QFont font; font.setBold(true); return font;}
   }
-  if (role == Qt::ToolTipRole)
+  if (role == Qt::ToolTipRole){
+    if(headings.size()==10&&i.column()==4)return r.module;
+    if(headings.size()==10&&i.column()==6)
+      return QCoreApplication::translate("RNet",
+          "Catalog scale fields only; a display conversion has not been verified.");
+    if(headings.size()==10&&(i.column()==7||i.column()==8))
+      return QCoreApplication::translate("RNet","Raw catalog limit; no unit conversion.");
     return r.detail;
+  }
   if (role != Qt::DisplayRole)
     return {};
+  if(i.column()==headings.size()-1&&r.requiredAccess>=0)
+    return QString::number(r.requiredAccess)+" · "+
+        QCoreApplication::translate("RNet",access_level_name(AccessLevel(r.requiredAccess)));
   switch (i.column()) {
   case 0:
     return r.id;
@@ -175,9 +185,20 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
   case 3:
     return r.location;
   case 4:
-    if (r.requiredAccess >= 0)
-      return QString::number(r.requiredAccess) + " · " +
-          QCoreApplication::translate("RNet", access_level_name(AccessLevel(r.requiredAccess)));
+    if(headings.size()==10)return r.module;
+    break;
+  case 5:
+    if(headings.size()==10)return r.unit;
+    break;
+  case 6:
+    if(headings.size()==10)return r.scale;
+    break;
+  case 7:
+    if(headings.size()==10)return r.minimum;
+    break;
+  case 8:
+    if(headings.size()==10)return r.maximum;
+    break;
   }
   return {};
 }
@@ -203,7 +224,7 @@ bool Filter::filterAcceptsRow(int row, const QModelIndex &) const {
   return (r.requiredAccess < 0 || access_allows(unsigned(r.requiredAccess), access)) &&
          (group.isEmpty() || r.group == group ||
           r.group.startsWith(group + '~')) &&
-         (query.isEmpty() || (r.id + ' ' + r.name + ' ' + r.value +
+         (query.isEmpty() || (r.id + ' ' + r.name + ' ' + r.value + ' ' + r.module +
              [&r] {QString values;for(const auto &cell:r.cells)values+=' '+cell.value;return values;}())
                                  .contains(query, Qt::CaseInsensitive));
 }
@@ -367,6 +388,15 @@ void Window::buildUi() {
   toolbar->setObjectName("readFileToolbar");
   toolbar->setMovable(false);
   actions_.at(57664)->setText(QT_TRANSLATE_NOOP("RNet", "&About dfreernet"));
+  auto *helpMenu=qobject_cast<QMenu*>(actions_.at(57664)->parent());
+  if(!helpMenu)throw UiError("Help menu is missing");
+  parameterHelpAction_=new QAction(QT_TRANSLATE_NOOP("RNet","Parameter help"),this);
+  parameterHelpAction_->setObjectName("parameterHelp");
+  parameterHelpAction_->setIcon(uiIcon(Icon::Info));
+  parameterHelpAction_->setShortcut(QKeySequence(Qt::Key_F1));
+  helpMenu->insertAction(actions_.at(57664),parameterHelpAction_);
+  connect(parameterHelpAction_,&QAction::triggered,this,
+          [this]{guarded([this]{showParameterHelp();});});
   actions_.at(40030)->setText(QT_TRANSLATE_NOOP("RNet", "Read controller…"));
   actions_.at(57601)->setText(QT_TRANSLATE_NOOP("RNet", "Read file…"));
   actions_.at(57604)->setText(QT_TRANSLATE_NOOP("RNet", "Write file as…"));
@@ -434,12 +464,14 @@ void Window::buildUi() {
   auto *horizontal = new QSplitter(Qt::Horizontal);
   tree_ = new QTreeWidget;
   tree_->setObjectName("groups");
+  tree_->installEventFilter(this);
   tree_->setHeaderHidden(true);
   tree_->setIconSize(QSize(18,18));
   tree_->setMinimumWidth(180);
   horizontal->addWidget(tree_);
   table_ = new QTableView;
   table_->setObjectName("parameters");
+  table_->installEventFilter(this);
   auto *delegate=new ChangedValueDelegate(table_);
   auto editable=[this](int i){
     if(busy()||!valuesView_||!document_||i<0||i>=int(values_.size()))return false;
@@ -504,6 +536,7 @@ void Window::buildUi() {
             proxy_->group =
                 item ? item->data(0, Qt::UserRole).toString() : QString();
             proxy_->refilter();
+            updateActions();
           });
   connect(table_->selectionModel(), &QItemSelectionModel::currentChanged,
           this, [this] { selected(); });
@@ -546,6 +579,15 @@ void Window::registerStaticTexts() {
   add(search_, "placeholderText");
   for (auto *toolbar : findChildren<QToolBar *>())
     add(toolbar, "windowTitle");
+}
+bool Window::eventFilter(QObject *object,QEvent *event) {
+  if((object==table_||object==tree_)&&event->type()==QEvent::KeyPress&&
+      static_cast<QKeyEvent*>(event)->key()==Qt::Key_F1&&
+      parameterHelpAction_&&parameterHelpAction_->isEnabled()){
+    parameterHelpAction_->trigger();
+    return true;
+  }
+  return QMainWindow::eventFilter(object,event);
 }
 void Window::changeEvent(QEvent *event) {
   QMainWindow::changeEvent(event);
@@ -914,6 +956,25 @@ void Window::renderProfileValues(bool preserveContext) {
       row.location=cell&&cell->valueIndex>=0?
           QString::number(values_.at(std::size_t(cell->valueIndex)).element+1):QStringLiteral("—");
       row.group=key;
+      row.module=source.group;
+      row.module.replace('~',QStringLiteral(" / "));
+      const auto &parameter=catalog_.parameters.at(row.id.toUInt());
+      auto prefix=fromU16(parameter.option_texts[0]);
+      if(prefix==QStringLiteral("u"))prefix=QString::fromUtf8("µ");
+      row.unit=prefix+fromU16(parameter.option_texts[2]);
+      if(row.unit.isEmpty())row.unit=QStringLiteral("—");
+      if(parameter.metadata[8]&&parameter.metadata[9])
+        row.scale=QStringLiteral("%1:%2").arg(parameter.metadata[8]).arg(parameter.metadata[9]);
+      else row.scale=QStringLiteral("—");
+      const bool numeric=cell&&cell->valueIndex>=0?
+          values_.at(std::size_t(cell->valueIndex)).numeric:
+          (parameter.metadata[4]||parameter.metadata[5]||parameter.metadata[9]);
+      if(numeric){
+        row.minimum=QString::number(parameter.signed_storage?
+            qint64(qint32(parameter.metadata[4])):qint64(parameter.metadata[4]));
+        row.maximum=QString::number(parameter.signed_storage?
+            qint64(qint32(parameter.metadata[5])):qint64(parameter.metadata[5]));
+      }else row.minimum=row.maximum=QStringLiteral("—");
       row.detail=cell&&!cell->detail.isEmpty()?cell->detail:source.detail;
       row.valueIndex=cell?cell->valueIndex:-1;
       row.requiredAccess=source.requiredAccess;
@@ -928,6 +989,11 @@ void Window::renderProfileValues(bool preserveContext) {
        QCoreApplication::translate("RNet","Parameter"),
        QCoreApplication::translate("RNet","Stored raw value"),
        QCoreApplication::translate("RNet","Element"),
+       QCoreApplication::translate("RNet","Module / group"),
+       QCoreApplication::translate("RNet","Unit"),
+       QCoreApplication::translate("RNet","Scale (catalog)"),
+       QCoreApplication::translate("RNet","Raw min"),
+       QCoreApplication::translate("RNet","Raw max"),
        QCoreApplication::translate("RNet","Access level")});
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   search_->clear();
@@ -935,7 +1001,9 @@ void Window::renderProfileValues(bool preserveContext) {
   for(int col=0;col<model_->columnCount();++col)table_->setColumnHidden(col,false);
   table_->setColumnWidth(0,130);table_->setColumnWidth(1,480);
   table_->setColumnWidth(2,200);table_->setColumnWidth(3,100);
-  table_->setColumnWidth(4,160);
+  table_->setColumnWidth(4,300);table_->setColumnWidth(5,85);
+  table_->setColumnWidth(6,120);table_->setColumnWidth(7,110);
+  table_->setColumnWidth(8,110);table_->setColumnWidth(9,160);
   table_->sortByColumn(1,Qt::AscendingOrder);
   if(document_)updateDocumentBanner();
   else banner_->setText(QCoreApplication::translate(
@@ -1086,6 +1154,13 @@ void Window::updateActions() {
     actions_[57643]->setEnabled(!undo_.empty() && !busy());
   if (actions_.count(Edit))
     actions_[Edit]->setEnabled(edit_->isEnabled());
+  if(parameterHelpAction_){
+    const auto current=proxy_->mapToSource(table_->currentIndex());
+    parameterHelpAction_->setEnabled(
+        (view_==View::Values||view_==View::Catalog)&&current.isValid()&&
+        current.row()<int(model_->rows.size())&&
+        catalog_.parameters.count(model_->rows[std::size_t(current.row())].id.toUInt()));
+  }
   for (unsigned id : {57601u, 32803u, 40030u, 40031u, 40025u, 40002u, 40040u})
     if (actions_.count(id))
       actions_[id]->setEnabled(!busy());
@@ -1113,6 +1188,56 @@ void Window::selected() {
   if (current.isValid() && current.row() < int(model_->rows.size()))
     details_->setPlainText(current.data(Qt::ToolTipRole).toString());
   updateActions();
+}
+void Window::showParameterHelp() {
+  const auto current=proxy_->mapToSource(table_->currentIndex());
+  if(!current.isValid()||current.row()>=int(model_->rows.size())||
+      (view_!=View::Values&&view_!=View::Catalog))return;
+  const auto &row=model_->rows[std::size_t(current.row())];
+  bool valid=false;
+  const unsigned id=row.id.toUInt(&valid);
+  if(!valid)return;
+  const auto found=catalog_.parameters.find(id);
+  if(found==catalog_.parameters.end())return;
+  const auto &parameter=found->second;
+  QDialog dialog(this);
+  dialog.setObjectName("parameterHelpDialog");
+  dialog.setWindowTitle(QCoreApplication::translate("RNet","Parameter help — %1").arg(id));
+  dialog.resize(650,420);
+  auto *layout=new QVBoxLayout(&dialog);
+  auto *heading=new QLabel(QStringLiteral("<b>%1</b> · ID %2")
+      .arg(fromU16(parameter.name()).toHtmlEscaped()).arg(id));
+  heading->setTextFormat(Qt::RichText);
+  heading->setWordWrap(true);
+  layout->addWidget(heading);
+  auto *context=new QLabel(
+      QCoreApplication::translate("RNet","Group: %1\nProfile / element: %2\nStored raw value: %3\nAccess level: %4")
+        .arg(fromU16(parameter.text88))
+        .arg(settings_.profileTableView&&view_==View::Values&&tree_->currentItem()?
+            tree_->currentItem()->text(0)+" / "+row.location:
+            (row.location.isEmpty()?QStringLiteral("—"):row.location))
+        .arg(row.unread?QCoreApplication::translate("RNet","Not read"):row.value)
+        .arg(QCoreApplication::translate("RNet",access_level_name(
+            AccessLevel(parameter.metadata[1]>>5)))));
+  context->setObjectName("parameterHelpContext");
+  context->setWordWrap(true);
+  layout->addWidget(context);
+  auto *help=new QPlainTextEdit;
+  help->setObjectName("parameterHelpText");
+  help->setReadOnly(true);
+  const auto description=fromU16(parameter.help()).trimmed();
+  help->setPlainText(description.isEmpty()?
+      QCoreApplication::translate("RNet","No parameter help text is available in the bundled catalog."):
+      description);
+  layout->addWidget(help,1);
+  auto *source=new QLabel(QCoreApplication::translate(
+      "RNet","Source: bundled R-net parameter catalog. The R-net PC Programmer guide, section 3.3.2, describes this parameter help text."));
+  source->setWordWrap(true);
+  layout->addWidget(source);
+  auto *buttons=new QDialogButtonBox(QDialogButtonBox::Close);
+  connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);
+  layout->addWidget(buttons);
+  dialog.exec();
 }
 void Window::setAccess(AccessLevel level) {
   if (unsigned(level) > 3)

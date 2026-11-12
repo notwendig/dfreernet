@@ -41,7 +41,13 @@ Empfangene Dateien werden in einem neuen eindeutigen Unterordner des Sicherungso
 
 Unter **Ansichten** zwischen **Hierarchische Liste** (bisherige Kategorien) und **Profiltabelle** wechseln. In der Profilansicht links Allgemein oder Profil 1–8 auswählen; rechts erscheinen nur die Parameter dieser Auswahl. Ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in beiden Ansichten. Die Auswahl wird gespeichert.
 
+Die Spalte „Modul / Gruppe“ unterscheidet gleich benannte Parameter verschiedener R-net-Module. Ein Zusatz wie „/ 2“ bezeichnet das zweite Element beziehungsweise den zweiten Kanal.
+
+„Einheit“ stammt aus Symbol und Vorsatz des Katalogs. „Skala“ zeigt dessen zwei Skalierungsfelder als `a:b`; „Rohwert min.“ und „Rohwert max.“ sind gespeicherte numerische Kataloggrenzen. Diese Spalten beschreiben Metadaten und rechnen den gespeicherten Rohwert nicht in technische Einheiten um.
+
 Suche und Gruppenbaum begrenzen die Anzeige. Doppelklick oder F2 in der Rohwertspalte öffnet einen zum Parameter passenden Editor: Ja/Nein, Auswahl, Ganzzahl oder Text. Grenzen, Schrittweite und Textkodierung werden geprüft. Ungeklärte Sondertypen bleiben schreibgeschützt. Escape verwirft die laufende Eingabe.
+
+Einen Parameter auswählen und **F1** drücken (oder **Hilfe → Parameterhilfe**), um seinen eingebetteten Kataloghilfetext mit ID, Gruppe, Profil, Rohwert und Berechtigung zu sehen. Die Anleitung „R-net PC Programmer“ beschreibt diese Parameterhilfe in Abschnitt 3.3.2. Das Hilfefenster funktioniert ohne Originalinstallation.
 
 Änderungen erscheinen rot und fett. Rückgängig stellt vorherige Werte wieder her. „Datei speichern“ beziehungsweise „Datei schreiben unter“ speichert eine Arbeitskopie; dies überträgt keine Werte auf den Controller und ist keine Bestätigung eines Controller-Schreibvorgangs.
 

@@ -41,7 +41,7 @@ RND-Importe erzeugen neue Datenbankdateien in einer Transaktion mit Rückprüfun
 
 ## Einstellungen und Übersetzung
 
-Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 0.2.0. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
+Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 0.2.1. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
 
 US-Englisch ist die Quellsprache; Deutsch verwendet eine kompilierte Qt-`.qm`-Ressource. Übersetzungstexte im vorhandenen Kontext `RNet` ergänzen, Platzhalter erhalten, den `.ts`-Katalog aktualisieren und Übersetzungstests ausführen. Qt-Standardwidgets verwenden die installierten deutschen Qt-Übersetzungen.
 

@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 0.2.1 — 12. November 2026
+
+- F1-Parameterhilfe mit eingebettetem Katalogtext gemäß der Anleitung „R-net PC Programmer“ ergänzt.
+- Modul und Gruppe in der Profiltabelle anzeigen, um gleich benannte Parameter verschiedener IDs zu unterscheiden.
+- Katalogeinheit, Skalierungspaar und numerische Rohwertgrenzen ohne ungeprüfte Umrechnung in der Profiltabelle anzeigen.
+
 ## 0.2.0 — 12. November 2026
 
 - Umschaltbare Kategorien- und Profilansicht ergänzt: links Allgemein oder Profil 1–8 auswählen, rechts nur deren Parameter anzeigen.

@@ -4,6 +4,60 @@
     <context>
         <name>RNet</name>
         <message>
+            <source>Parameter help</source>
+            <translation>Parameterhilfe</translation>
+        </message>
+        <message>
+            <source>Module / group</source>
+            <translation>Modul / Gruppe</translation>
+        </message>
+        <message>
+            <source>Unit</source>
+            <translation>Einheit</translation>
+        </message>
+        <message>
+            <source>Scale (catalog)</source>
+            <translation>Skala (Katalog)</translation>
+        </message>
+        <message>
+            <source>Raw min</source>
+            <translation>Rohwert min.</translation>
+        </message>
+        <message>
+            <source>Raw max</source>
+            <translation>Rohwert max.</translation>
+        </message>
+        <message>
+            <source>Catalog scale fields only; a display conversion has not been verified.</source>
+            <translation>Nur Skalierungsfelder aus dem Katalog; eine Anzeigeumrechnung wurde noch nicht verifiziert.</translation>
+        </message>
+        <message>
+            <source>Raw catalog limit; no unit conversion.</source>
+            <translation>Rohwertgrenze aus dem Katalog; keine Einheitenumrechnung.</translation>
+        </message>
+        <message>
+            <source>Parameter help — %1</source>
+            <translation>Parameterhilfe — %1</translation>
+        </message>
+        <message>
+            <source>Group: %1
+Profile / element: %2
+Stored raw value: %3
+Access level: %4</source>
+            <translation>Gruppe: %1
+Profil / Element: %2
+Gespeicherter Rohwert: %3
+Berechtigung: %4</translation>
+        </message>
+        <message>
+            <source>No parameter help text is available in the bundled catalog.</source>
+            <translation>Im eingebetteten Katalog ist kein Hilfetext für diesen Parameter vorhanden.</translation>
+        </message>
+        <message>
+            <source>Source: bundled R-net parameter catalog. The R-net PC Programmer guide, section 3.3.2, describes this parameter help text.</source>
+            <translation>Quelle: eingebetteter R-net-Parameterkatalog. Die Anleitung „R-net PC Programmer“, Abschnitt 3.3.2, beschreibt diesen Parameterhilfetext.</translation>
+        </message>
+        <message>
             <source>Hierarchical list</source>
             <translation>Hierarchische Liste</translation>
         </message>
