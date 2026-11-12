@@ -39,7 +39,7 @@ Received files are saved in a new unique subfolder of the configured backup dire
 
 ## Edit parameters and save files
 
-Under **Views**, choose **Hierarchical list**, **Profile table**, or **Module groups**. The profile tree offers Common and Profile 1–8. The module tree groups parameters by the first two parts of their catalog path. The right table shows the selected group. Unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in all three views. The choice is remembered.
+Under **Views**, choose **Hierarchical list**, **Profile table**, or **Module groups**. The profile tree offers Common and Profile 1–8. The module tree groups parameters by the first two parts of their catalog path. The right table shows the selected group. Profile selections show only parameters mapped to profile storage; applicable unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in all three views. The choice is remembered.
 
 Column widths and order are saved automatically after changes and restored when you reopen a view or restart the app. **Views → Save column layout** saves immediately; **Load column layout** restores the last saved state, and **Reset column layout** returns to the defaults. Each table view has its own layout.
 

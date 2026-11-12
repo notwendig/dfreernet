@@ -59,11 +59,13 @@ private slots:
       QVERIFY(dialog.windowTitle().contains(QStringLiteral(DFREERNET_VERSION)));
       QVERIFY(dialog.findChild<QLabel*>("startupTitle")->text().contains(QStringLiteral(DFREERNET_VERSION)));
       auto text=dialog.findChild<QTextBrowser*>("startupNoticeText")->toPlainText();
+      const auto *illustration=dialog.findChild<QLabel*>("startupIllustration");
+      QVERIFY(illustration);QVERIFY(!illustration->pixmap().isNull());
       if(code=="en_US"){
-        QVERIFY(text.contains("unintended movement"));QVERIFY(text.contains("Mandatory statutory liability"));
+        QVERIFY(text.contains("unintended movement"));QVERIFY(text.contains("motors and control electronics"));QVERIFY(text.contains("Mandatory statutory liability"));
         QCOMPARE(dialog.findChild<QPushButton*>("startupContinue")->text(),QString("I understand — Continue"));
       }else{
-        QVERIFY(text.contains("unbeabsichtigte Bewegungen"));QVERIFY(text.contains("Haftungsregelungen bleiben unberührt"));
+        QVERIFY(text.contains("unbeabsichtigte Bewegungen"));QVERIFY(text.contains("Motoren und Steuerungselektronik"));QVERIFY(text.contains("Haftungsregelungen bleiben unberührt"));
         QCOMPARE(dialog.findChild<QPushButton*>("startupExit")->text(),QString("Beenden"));
       }
       QVERIFY(dialog.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/startup-warning-"+code+".png"));

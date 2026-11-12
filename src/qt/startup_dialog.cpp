@@ -18,7 +18,13 @@ StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
       .arg(QStringLiteral(DFREERNET_VERSION)));
   title->setObjectName("startupTitle");
   auto font=title->font();font.setPointSizeF(font.pointSizeF()*1.35);font.setBold(true);title->setFont(font);title->setWordWrap(true);
-  header->addSpacing(12);header->addWidget(title,1);layout->addLayout(header);
+  header->addSpacing(12);header->addWidget(title,1);
+  auto *illustration=new QLabel;
+  illustration->setObjectName("startupIllustration");
+  illustration->setPixmap(QPixmap(":/art/sick-wheelchair.png").scaled(150,125,Qt::KeepAspectRatio,Qt::SmoothTransformation));
+  illustration->setAccessibleName(QCoreApplication::translate("RNet","Sick wheelchair illustration"));
+  header->addWidget(illustration,0,Qt::AlignRight|Qt::AlignVCenter);
+  layout->addLayout(header);
   auto tr=[](const char *source){return QCoreApplication::translate("RNet",source).toHtmlEscaped();};
   auto *notice=new QTextBrowser;notice->setObjectName("startupNoticeText");
   notice->setFrameShape(QFrame::NoFrame);notice->setOpenLinks(false);notice->setOpenExternalLinks(false);
@@ -29,7 +35,9 @@ StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
   notice->setHtml(
       para(tr("Independent, experimental software. This is not an official controller-manufacturer programming tool."))+
       section(tr("Warning"))+
-      para(tr("Incorrect settings can disable the wheelchair or cause unintended movement. Only change parameters you understand and are authorized to change."))+
+      "<p style='color:#a51b1b;font-weight:bold'>"+
+      tr("Incorrect settings can cause unintended movement, loss of control and serious injury. They can permanently damage or even destroy the wheelchair's motors and control electronics.")+"</p>"+
+      para(tr("Only change parameters you understand and are authorized to change."))+
       "<ul><li>"+tr("Keep the wheelchair stationary during controller access. Driving must not be needed until readback and release of programming access are complete.")+"</li><li>"+
       tr("Back up the configuration, check the selected Dongle access level, and verify written values by reading them back. Do not repeat an unverified write.")+"</li></ul>"+
       section(tr("Disclaimer"))+
@@ -44,7 +52,7 @@ StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
   leave->setText(QCoreApplication::translate("RNet","Exit"));leave->setMinimumHeight(38);leave->setDefault(true);leave->setFocus();
   connect(buttons,&QDialogButtonBox::accepted,this,&QDialog::accept);
   connect(buttons,&QDialogButtonBox::rejected,this,&QDialog::reject);
-  layout->addWidget(buttons);resize(720,610);setMinimumSize(500,430);
+  layout->addWidget(buttons);resize(760,650);setMinimumSize(500,470);
 }
 void StartupDialog::showEvent(QShowEvent *event){
   QDialog::showEvent(event);
@@ -56,7 +64,7 @@ void StartupDialog::placeOnSecondary(){
   auto *screen=preferredScreen(AppSettings::load().monitor);
   if(!screen)return;
   const auto area=screen->availableGeometry();
-  resize(qMin(720,area.width()-32),qMin(610,area.height()-32));
+  resize(qMin(760,area.width()-32),qMin(650,area.height()-32));
   winId();windowHandle()->setScreen(screen);move(area.center()-rect().center());
 }
 }

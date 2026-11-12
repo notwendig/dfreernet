@@ -125,6 +125,8 @@ private slots:
     QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
     QCOMPARE(tree->topLevelItem(8)->text(0),QString("Profile 8"));
     QCOMPARE(window.filter()->group,QString("common"));
+    const int commonRows=window.filter()->rowCount();
+    QVERIFY(commonRows>0);
     QCOMPARE(window.model()->headings.at(3),QString::fromUtf8("Unit · Scale · Min–Max"));
     QCOMPARE(window.model()->headerData(3,Qt::Horizontal).toString(),QString::fromUtf8("Unit · Scale\nMin–Max"));
     QCOMPARE(window.model()->headings.at(5),QString("Module / group"));
@@ -160,8 +162,18 @@ private slots:
     QVERIFY(found);
     tree->setCurrentItem(tree->topLevelItem(1));
     QCOMPARE(window.filter()->group,QString("profile1"));
+    QVERIFY(window.filter()->rowCount()>0);
+    QVERIFY(window.filter()->rowCount()<commonRows);
+    for(int row=0;row<window.filter()->rowCount();++row){
+      const auto &shown=window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())];
+      QCOMPARE(shown.group,QString("profile1"));
+      QVERIFY(shown.id!="68"); // Common-only PID 68 must not be copied into every profile.
+    }
+    tree->setCurrentItem(tree->topLevelItem(2));
+    QCOMPARE(window.filter()->group,QString("profile2"));
+    QVERIFY(window.filter()->rowCount()>0);
     for(int row=0;row<window.filter()->rowCount();++row)
-      QCOMPARE(window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())].group,QString("profile1"));
+      QCOMPARE(window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())].group,QString("profile2"));
     moduleAction->trigger();
     QVERIFY(moduleAction->isChecked());
     QVERIFY(QSettings().value("ui/moduleGroupView").toBool());

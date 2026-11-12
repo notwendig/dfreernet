@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## Unveröffentlicht
+
+- Zweisprachige Startwarnung um Verletzungsgefahr und mögliche Zerstörung von Motoren oder Steuerungselektronik ergänzt; Illustration eines kranken Rollstuhls hinzugefügt.
+- Profiltabellen auf profilbezogene Parameter begrenzen; passende ungelesene Werte bleiben grau.
+
 ## 1.1.0 — 12. November 2026
 
 - Ausstehende Spaltenlayouts aller Ansichten auch beim schnellen Ansichtswechsel erhalten.

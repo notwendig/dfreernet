@@ -1065,14 +1065,31 @@ void Window::renderProfileValues(bool preserveContext) {
       rows.push_back(std::move(row));
     }
   }
+  QSet<unsigned> commonParameters,profileParameters;
+  for(const auto &entry:catalog_.storage_maps){
+    const auto &map=entry.second;
+    for(unsigned group=0;group<2;++group)
+      for(const auto &section:map.groups[group].sections)
+        for(const auto &item:section.items){
+          const unsigned id=item.id&0xffffu;
+          if(group)profileParameters.insert(id);
+          else commonParameters.insert(id);
+        }
+  }
   std::vector<Row> scoped;
-  scoped.reserve(rows.size()*9);
+  scoped.reserve(rows.size()+profileParameters.size()*8);
   for(int scope=0;scope<=8;++scope){
     const QString key=scope?QStringLiteral("profile%1").arg(scope):QStringLiteral("common");
     for(const auto &source:rows){
       const Row::Cell *cell=scope<int(source.cells.size())?
           &source.cells[std::size_t(scope)]:nullptr;
-      if((!cell||cell->valueIndex<0)&&!settings_.showAllParameters)continue;
+      const bool read=cell&&cell->valueIndex>=0;
+      if(!read){
+        if(!settings_.showAllParameters)continue;
+        const unsigned id=source.id.toUInt();
+        if(scope>0&&!profileParameters.contains(id))continue;
+        if(scope==0&&profileParameters.contains(id)&&!commonParameters.contains(id))continue;
+      }
       Row row;
       row.id=source.id;row.name=source.name;
       row.value=cell&&cell->valueIndex>=0?cell->value:

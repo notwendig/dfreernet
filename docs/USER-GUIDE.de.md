@@ -39,7 +39,7 @@ Empfangene Dateien werden in einem neuen eindeutigen Unterordner des Sicherungso
 
 ## Parameter bearbeiten und Dateien speichern
 
-Unter **Ansichten** zwischen **Hierarchische Liste**, **Profiltabelle** und **Modulgruppen** wechseln. Die Profilansicht bietet links Allgemein und Profil 1–8. Die Modulansicht gruppiert nach den ersten beiden Teilen des Katalogpfads. Rechts erscheinen die Parameter der Auswahl. Ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in allen drei Ansichten. Die Auswahl wird gespeichert.
+Unter **Ansichten** zwischen **Hierarchische Liste**, **Profiltabelle** und **Modulgruppen** wechseln. Die Profilansicht bietet links Allgemein und Profil 1–8. Die Modulansicht gruppiert nach den ersten beiden Teilen des Katalogpfads. Rechts erscheinen die Parameter der Auswahl. Ein Profil zeigt nur Parameter, die im Katalog dem Profilspeicher zugeordnet sind; passende ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in allen drei Ansichten. Die Auswahl wird gespeichert.
 
 Spaltenbreiten und -reihenfolge werden nach Änderungen automatisch gespeichert und beim erneuten Öffnen einer Ansicht oder nach einem Neustart wiederhergestellt. **Ansichten → Spalteneinstellungen speichern** sichert sofort; **Spalteneinstellungen laden** stellt den zuletzt gespeicherten Stand wieder her und **Spalteneinstellungen zurücksetzen** die Standardwerte. Jede Tabellenansicht hat ein eigenes Layout.
 

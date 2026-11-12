@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## Unreleased
+
+- Strengthen the bilingual startup warning about injury and possible destruction of motors or control electronics; add an illustrated sick wheelchair.
+- Restrict each profile's table to profile-mapped parameters; keep applicable unread values gray.
+
 ## 1.1.0 — 2026-11-12
 
 - Keep pending column layouts for every view while switching views quickly.

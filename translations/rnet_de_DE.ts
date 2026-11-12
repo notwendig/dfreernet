@@ -1299,8 +1299,16 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Unabhängige, experimentelle Software. Dies ist kein offizielles Programmierwerkzeug des Steuerungsherstellers.</translation>
         </message>
         <message>
-            <source>Incorrect settings can disable the wheelchair or cause unintended movement. Only change parameters you understand and are authorized to change.</source>
-            <translation>Falsche Einstellungen können den Rollstuhl blockieren oder unbeabsichtigte Bewegungen auslösen. Ändern Sie nur Parameter, die Sie verstehen und für deren Änderung Sie berechtigt sind.</translation>
+            <source>Incorrect settings can cause unintended movement, loss of control and serious injury. They can permanently damage or even destroy the wheelchair's motors and control electronics.</source>
+            <translation>Falsche Einstellungen können unbeabsichtigte Bewegungen, Kontrollverlust und schwere Verletzungen verursachen. Sie können Motoren und Steuerungselektronik dauerhaft beschädigen oder sogar zerstören.</translation>
+        </message>
+        <message>
+            <source>Only change parameters you understand and are authorized to change.</source>
+            <translation>Ändern Sie nur Parameter, die Sie verstehen und für deren Änderung Sie berechtigt sind.</translation>
+        </message>
+        <message>
+            <source>Sick wheelchair illustration</source>
+            <translation>Illustration eines kranken Rollstuhls</translation>
         </message>
         <message>
             <source>Keep the wheelchair stationary during controller access. Driving must not be needed until readback and release of programming access are complete.</source>
