@@ -13,12 +13,12 @@ private slots:
   void catalogImportIsTransactionalAndDoesNotReplaceBundledData(){
     QTemporaryDir temp;const auto target=std::filesystem::path(temp.path().toStdString())/"imported.sqlite3";
     const auto before=bundled_catalog_bytes();
-    QVERIFY_EXCEPTION_THROWN(write_catalog_database(Bytes{1,2,3},target),std::runtime_error);QVERIFY(!std::filesystem::exists(target));
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,write_catalog_database(Bytes{1,2,3},target));QVERIFY(!std::filesystem::exists(target));
     write_catalog_database(before,target);
     auto actual=read_catalog_database(target),expected=bundled_catalog();QCOMPARE(actual.parameters.size(),expected.parameters.size());QCOMPARE(actual.storage_maps.size(),expected.storage_maps.size());QCOMPARE(actual.editors.size(),expected.editors.size());
     for(const auto &[key,p]:expected.parameters){const auto &q=actual.parameters.at(key);QVERIFY(p.metadata==q.metadata);QVERIFY(p.serialized_metadata==q.serialized_metadata);QVERIFY(p.extension==q.extension);QVERIFY(p.texts==q.texts);QVERIFY(p.option_texts==q.option_texts);QCOMPARE(p.text88,q.text88);QCOMPARE(p.text90,q.text90);QCOMPARE(p.signed_storage,q.signed_storage);}
     for(const auto &[key,m]:expected.storage_maps){const auto &n=actual.storage_maps.at(key);QCOMPARE(m.id,n.id);QCOMPARE(m.version,n.version);for(unsigned gi=0;gi<2;++gi){const auto &a=m.groups[gi],&b=n.groups[gi];QCOMPARE(a.instances,b.instances);QCOMPARE(a.stride,b.stride);QCOMPARE(a.last_section,b.last_section);QVERIFY(a.offsets==b.offsets);for(unsigned si=0;si<7;++si){QVERIFY(a.sections[si].fields==b.sections[si].fields);QCOMPARE(a.sections[si].items.size(),b.sections[si].items.size());for(unsigned i=0;i<a.sections[si].items.size();++i){QCOMPARE(a.sections[si].items[i].id,b.sections[si].items[i].id);QCOMPARE(a.sections[si].items[i].width,b.sections[si].items[i].width);}}}}
-    const auto saved=read_file(target);QVERIFY_EXCEPTION_THROWN(write_catalog_database(before,target),std::runtime_error);QVERIFY(read_file(target)==saved);QVERIFY(bundled_catalog_bytes()==before);
+    const auto saved=read_file(target);QVERIFY_THROWS_EXCEPTION(std::runtime_error,write_catalog_database(before,target));QVERIFY(read_file(target)==saved);QVERIFY(bundled_catalog_bytes()==before);
     auto rnd=qEnvironmentVariable("DFREERNET_TEST_RND_PATH");if(!rnd.isEmpty()){const auto decoded=RndDecoder().decode(read_file(rnd.toStdString()));auto extra=target.parent_path()/"rnd.sqlite3";write_catalog_database(decoded,extra);QCOMPARE(read_catalog_database(extra).parameters.size(),expected.parameters.size());}
   }
   void embeddedAssetsAndDocumentEditing(){
@@ -36,8 +36,12 @@ private slots:
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
+    QVERIFY(window.windowTitle().contains(QStringLiteral(DFREERNET_VERSION)));
     auto *aboutAction=window.findChild<QAction*>("command57664");
     QVERIFY(aboutAction);
+    auto *helpMenu=qobject_cast<QMenu*>(aboutAction->parent());
+    QVERIFY(helpMenu);
+    QCOMPARE(window.menuBar()->actions().last(),helpMenu->menuAction());
     QString aboutHeading,aboutContact;
     QTimer::singleShot(0,&window,[&]{
       auto *dialog=window.findChild<QDialog*>("aboutDialog");
@@ -106,6 +110,16 @@ private slots:
     QVERIFY(!loadColumns->isEnabled());
     table->setColumnWidth(0,175);
     saveColumns->trigger();
+    table->setColumnWidth(0,181);
+    moduleAction->trigger();
+    table->setColumnWidth(0,202);
+    profileAction->trigger();
+    QCOMPARE(table->columnWidth(0),181);
+    moduleAction->trigger();
+    QCOMPARE(table->columnWidth(0),202);
+    profileAction->trigger();
+    QTest::qWait(300);
+    QVERIFY(QSettings().contains("ui/columns/v1/modules"));
     auto *tree=window.findChild<QTreeWidget*>("groups");
     QCOMPARE(tree->topLevelItemCount(),9);
     QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
@@ -190,7 +204,12 @@ private slots:
     QVERIFY(QSettings().contains("ui/columns/v1/hierarchy"));
     Window restarted(settings.logDirectory);
     restarted.show();
+    QCOMPARE(restarted.windowTitle(),QStringLiteral("dfreernet ")+QStringLiteral(DFREERNET_VERSION));
     QCOMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(1),555);
+    restarted.findChild<QAction*>("profileTableView")->trigger();
+    QCOMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(0),181);
+    restarted.placeOnSecondary();
+    QTRY_COMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(0),181);
     restarted.close();
   }
 };

@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.1.0 — 2026-11-12
+
+- Keep pending column layouts for every view while switching views quickly.
+- Rebuild the launcher executable when source files are newer, avoiding a stale UI after updates.
+- Replace deprecated Qt test assertions and resolve the GCC catalog-loader indentation warning.
+- Show the version in the main title and startup warning; place Help last on the menu bar.
+
 ## 1.0.0 — 2026-11-12
 
 - Save, load and reset column layouts separately for every table view.

@@ -108,8 +108,8 @@ private slots:
     QCOMPARE(languages().savedLanguage(), QString("de_DE"));
     languages().setLanguage("en_US", true);
     QCOMPARE(languages().savedLanguage(), QString("en_US"));
-    QVERIFY_EXCEPTION_THROWN(languages().setLanguage("fr_FR"),
-                             std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,
+                             languages().setLanguage("fr_FR"));
   }
   void germanStartupAndStandardButtons() {
     languages().setLanguage("de_DE");
@@ -357,7 +357,7 @@ private slots:
     QVERIFY(!w->heartbeatReceiving());
     auto *action = w->findChild<QAction*>("hazardBlinkAction");
     QVERIFY(action);
-    QVERIFY_EXCEPTION_THROWN(w->requestBlinkCycle(),UiError);
+    QVERIFY_THROWS_EXCEPTION(UiError,w->requestBlinkCycle());
     QVERIFY(!action->isChecked());
     QVERIFY(!w->blinkCycle_->active());
     QVERIFY(QApplication::activeModalWidget() == nullptr);
@@ -445,7 +445,7 @@ private slots:
       for(qint64 value=low;value<=high&&value-low<256;++value){
         bool present=false;for(const auto &choice:choices)present|=choice.value==value;
         if(present)continue;
-        QVERIFY_EXCEPTION_THROWN(encode_parameter_value(p,v,QString::number(value).toStdU16String(),w->catalog_),std::runtime_error);
+        QVERIFY_THROWS_EXCEPTION(std::runtime_error,encode_parameter_value(p,v,QString::number(value).toStdU16String(),w->catalog_));
         holeFound=true;break;
       }
       if(holeFound)break;
@@ -538,13 +538,13 @@ private slots:
     QVERIFY(w->model()->data(index,Qt::FontRole).value<QFont>().bold());
     auto files=controller_write_plan(original,*w->document(),w->catalog_,AccessLevel::OEM);
     QCOMPARE(files.size(),std::size_t(1));
-    QVERIFY_EXCEPTION_THROWN(controller_write_plan(original,*w->document(),w->catalog_,AccessLevel::Therapist),std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,controller_write_plan(original,*w->document(),w->catalog_,AccessLevel::Therapist));
     auto bad=*w->document();bad.comments.push_back(u"unauthorized metadata");
-    QVERIFY_EXCEPTION_THROWN(controller_write_plan(original,bad,w->catalog_,AccessLevel::Factory),std::runtime_error);
-    QVERIFY_EXCEPTION_THROWN(w->startControllerWrite("can0",temp_.path()+"/never",false),std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,controller_write_plan(original,bad,w->catalog_,AccessLevel::Factory));
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->startControllerWrite("can0",temp_.path()+"/never",false));
     QVERIFY(!QFileInfo::exists(temp_.path()+"/never"));
     w->setAccess(AccessLevel::Therapist);
-    QVERIFY_EXCEPTION_THROWN(w->startControllerWrite("can0",temp_.path()+"/never",true),std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->startControllerWrite("can0",temp_.path()+"/never",true));
     QVERIFY(!QFileInfo::exists(temp_.path()+"/never"));
     w->setAccess(AccessLevel::OEM);
     w->saveAs(temp_.path()+"/red-saved.R-net");
@@ -718,18 +718,18 @@ private slots:
     auto w = make();
     w->openDocument(fixture_);
     auto source = w->document()->write();
-    QVERIFY_EXCEPTION_THROWN(w->saveAs(fixture_), std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->saveAs(fixture_));
     QVERIFY(w->document()->write() == source);
     auto invalid = temp_.path() + "/invalid.R-net";
     QFile f(invalid);
     QVERIFY(f.open(QIODevice::WriteOnly));
     f.write("invalid");
     f.close();
-    QVERIFY_EXCEPTION_THROWN(w->openDocument(invalid), std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->openDocument(invalid));
     QVERIFY(w->document()->write() == source);
     int index = firstSpeed(*w);
-    QVERIFY_EXCEPTION_THROWN(w->applyEdit(index, "999999999999999999999999"),
-                             std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,
+                             w->applyEdit(index, "999999999999999999999999"));
     QVERIFY(w->document()->write() == source);
     auto destination = temp_.path() + "/externally-modified.R-net";
     w->saveAs(destination);
@@ -737,7 +737,7 @@ private slots:
     QVERIFY(external.open(QIODevice::WriteOnly));
     external.write("external change");
     external.close();
-    QVERIFY_EXCEPTION_THROWN(w->save(), std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->save());
     QVERIFY(external.open(QIODevice::ReadOnly));
     QCOMPARE(external.readAll(), QByteArray("external change"));
   }
@@ -773,7 +773,7 @@ private slots:
     auto text = f.readAll();
     QCOMPARE(text.count('\n'), 9);
     QVERIFY(text.contains("Maximum Forward Speed"));
-    QVERIFY_EXCEPTION_THROWN(w->exportCsv(target), std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,w->exportCsv(target));
     w->showResources();
     QCOMPARE(w->model()->rowCount(), 1454);
   }
@@ -802,9 +802,8 @@ private slots:
     auto w = make();
     auto destination = qEnvironmentVariable("RNET_QT_CONFIG_OUTPUT");
     QVERIFY(!destination.isEmpty());
-    QVERIFY_EXCEPTION_THROWN(
-        w->startControllerRead("rnetcfg0", destination, false),
-        std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error,
+        w->startControllerRead("rnetcfg0", destination, false));
     QVERIFY(w->process_ == nullptr);
     w->openDocument(fixture_);
     w->applyEdit(firstSpeed(*w), "86");

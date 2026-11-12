@@ -58,7 +58,7 @@ private slots:
     QCOMPARE(loaded.liveSignalIntervalSeconds, 23);
     QCOMPARE(loaded.liveSignalDurationSeconds, 7);
     settings.liveSignalDurationSeconds = 23;
-    QVERIFY_EXCEPTION_THROWN(settings.validated(), std::runtime_error);
+    QVERIFY_THROWS_EXCEPTION(std::runtime_error, settings.validated());
 
     SettingsDialog dialog(defaults);
     dialog.findChild<QCheckBox*>("settingsLiveSignal")->setChecked(true);
@@ -79,8 +79,8 @@ private slots:
     auto s=original();s.canInterface="vcan42";s.accessLevel=1;s.monitor="primary";s.heartbeatTimeoutMs=750;s=s.validated();s.save();
     auto loaded=AppSettings::load();QCOMPARE(loaded.canInterface,s.canInterface);QCOMPARE(loaded.backupDirectory,s.backupDirectory);QCOMPARE(loaded.accessLevel,1);QCOMPARE(loaded.heartbeatTimeoutMs,750);
     auto a=loaded.newBackupDirectory("rnet-config"),b=loaded.newBackupDirectory("rnet-config");QVERIFY(a!=b);QVERIFY(a.startsWith(s.backupDirectory+'/'));QVERIFY(!QFileInfo::exists(a));
-    s.canInterface="bad/name";QVERIFY_EXCEPTION_THROWN(s.validated(),std::runtime_error);
-    s=original();s.backupDirectory="relative";QVERIFY_EXCEPTION_THROWN(s.validated(),std::runtime_error);
+    s.canInterface="bad/name";QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
+    s=original();s.backupDirectory="relative";QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
   }
   void verticalTabsCancelApplyAndLiveTranslation(){
     SettingsDialog cancelled(original());cancelled.show();

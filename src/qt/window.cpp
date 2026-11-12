@@ -459,6 +459,8 @@ void Window::buildUi() {
       guarded([this,code] { commitPendingValueEditor(); languages().setLanguage(code, true); });
     });
   }
+  menuBar()->removeAction(helpMenu->menuAction());
+  menuBar()->addAction(helpMenu->menuAction());
   auto *central = new QWidget(this);
   auto *layout = new QVBoxLayout(central);
   layout->setContentsMargins(12, 10, 12, 8);
@@ -1245,7 +1247,7 @@ void Window::loadDocument(const QString &name, bool replacementApproved) {
 void Window::updateTitle() {
   setWindowTitle(
       (document_ ? QFileInfo(documentPath_).fileName() + "[*] — " : QString()) +
-      "dfreernet");
+      "dfreernet " + QStringLiteral(DFREERNET_VERSION));
   setWindowModified(document_ && document_->write() != saved_);
 }
 void Window::updateActions() {
@@ -1344,47 +1346,43 @@ void Window::resetColumnOrder(){
 void Window::restoreSavedColumns(){
   const auto key=columnLayoutKey();
   if(key.isEmpty())return;
-  const auto state=pendingColumnKey_==key?pendingColumnState_:
+  const auto pending=pendingColumnStates_.find(key);
+  const auto state=pending!=pendingColumnStates_.end()?pending->second:
       QSettings().value(key).toByteArray();
   if(!state.isEmpty())table_->horizontalHeader()->restoreState(state);
 }
 void Window::queueColumnSave(){
   if(!columnLayoutReady_||columnLayoutBusy_)return;
-  pendingColumnKey_=columnLayoutKey();
-  pendingColumnState_=table_->horizontalHeader()->saveState();
+  pendingColumnStates_[columnLayoutKey()]=table_->horizontalHeader()->saveState();
   columnSaveTimer_->start();
 }
 void Window::flushColumnSave(){
-  if(pendingColumnKey_.isEmpty())return;
+  if(pendingColumnStates_.empty())return;
   if(columnSaveTimer_)columnSaveTimer_->stop();
   QSettings settings;
-  settings.setValue(pendingColumnKey_,pendingColumnState_);
+  for(const auto &[key,state]:pendingColumnStates_)settings.setValue(key,state);
   settings.sync();
   if(settings.status()!=QSettings::NoError){
-    log("COLUMN_LAYOUT_SAVE_FAILED "+pendingColumnKey_);
+    log("COLUMN_LAYOUT_SAVE_FAILED");
     return;
   }
-  pendingColumnKey_.clear();
-  pendingColumnState_.clear();
+  pendingColumnStates_.clear();
   if(saveColumnsAction_)updateActions();
 }
 void Window::saveColumns(){
   const auto key=columnLayoutKey();
   if(key.isEmpty())return;
-  columnSaveTimer_->stop();
-  pendingColumnKey_.clear();pendingColumnState_.clear();
-  QSettings settings;
-  settings.setValue(key,table_->horizontalHeader()->saveState());
-  settings.sync();
-  if(settings.status()!=QSettings::NoError)
+  pendingColumnStates_[key]=table_->horizontalHeader()->saveState();
+  flushColumnSave();
+  if(!pendingColumnStates_.empty())
     throw UiError(QCoreApplication::translate("RNet","Could not save column layout"));
   updateActions();
 }
 void Window::loadColumns(){
   const auto key=columnLayoutKey();
   if(key.isEmpty())return;
-  columnSaveTimer_->stop();
-  pendingColumnKey_.clear();pendingColumnState_.clear();
+  pendingColumnStates_.erase(key);
+  flushColumnSave();
   const auto state=QSettings().value(key).toByteArray();
   if(state.isEmpty()||!table_->horizontalHeader()->restoreState(state))
     throw UiError(QCoreApplication::translate("RNet","No valid saved column layout"));
@@ -1394,8 +1392,8 @@ void Window::loadColumns(){
 void Window::resetColumns(){
   const auto key=columnLayoutKey();
   if(key.isEmpty())return;
-  columnSaveTimer_->stop();
-  pendingColumnKey_.clear();pendingColumnState_.clear();
+  pendingColumnStates_.erase(key);
+  flushColumnSave();
   QSettings settings;
   settings.remove(key);
   settings.sync();

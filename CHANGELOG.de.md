@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.1.0 — 12. November 2026
+
+- Ausstehende Spaltenlayouts aller Ansichten auch beim schnellen Ansichtswechsel erhalten.
+- Das Startskript baut bei neueren Quelldateien neu, damit keine veraltete Oberfläche gestartet wird.
+- Veraltete Qt-Testmakros ersetzt und die GCC-Einrückungswarnung im Katalog-Lader behoben.
+- Version in Fenstertitel und Startwarnung ergänzt; Hilfe am rechten Ende der Menüleiste platziert.
+
 ## 1.0.0 — 12. November 2026
 
 - Spalteneinstellungen für alle Tabellenansichten getrennt speichern, laden und zurücksetzen.

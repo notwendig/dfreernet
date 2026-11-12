@@ -1279,12 +1279,12 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Der Controller hat das Schreiben bestätigt, das Rücklesen ist aber noch nicht verifiziert. Die Änderungen können bereits aktiv sein. Nicht erneut schreiben; den Controller zum Prüfen lesen.</translation>
         </message>
         <message>
-            <source>dfreernet — Warning and disclaimer</source>
-            <translation>dfreernet — Warnung und Haftungsausschluss</translation>
+            <source>dfreernet %1 — Warning and disclaimer</source>
+            <translation>dfreernet %1 — Warnung und Haftungsausschluss</translation>
         </message>
         <message>
-            <source>Read before using dfreernet</source>
-            <translation>Vor der Verwendung von dfreernet lesen</translation>
+            <source>Read before using dfreernet %1</source>
+            <translation>Vor der Verwendung von dfreernet %1 lesen</translation>
         </message>
         <message>
             <source>Warning and disclaimer</source>

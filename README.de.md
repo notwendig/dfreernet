@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.0.0
+## Version 1.1.0
 
-Diese Version ergänzt dauerhaft gespeicherte Spaltenlayouts für alle Tabellenansichten und zeigt im Über-Dialog Name, Kontakt und Projektlink. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version erhält Spaltenlayouts beim schnellen Ansichtswechsel, baut den Launcher bei geänderten Quellen neu und zeigt die Version im Fenstertitel und in der Startwarnung. „Hilfe“ steht am rechten Ende der Menüleiste. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Schnellstart
 

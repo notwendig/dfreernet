@@ -5,7 +5,8 @@
 namespace rnet::qt {
 StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
   setObjectName("startupNotice");
-  setWindowTitle(QCoreApplication::translate("RNet","Warning and disclaimer"));
+  setWindowTitle(QCoreApplication::translate("RNet","dfreernet %1 — Warning and disclaimer")
+      .arg(QStringLiteral(DFREERNET_VERSION)));
   setWindowIcon(uiIcon(Icon::App));
   setWindowModality(Qt::ApplicationModal);
   setSizeGripEnabled(true);
@@ -13,7 +14,9 @@ StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
   auto *header=new QHBoxLayout;
   auto *symbol=new QLabel;symbol->setPixmap(style()->standardIcon(QStyle::SP_MessageBoxWarning).pixmap(48,48));
   symbol->setAccessibleName(QCoreApplication::translate("RNet","Warning"));header->addWidget(symbol,0,Qt::AlignTop);
-  auto *title=new QLabel(QCoreApplication::translate("RNet","Read before using dfreernet"));
+  auto *title=new QLabel(QCoreApplication::translate("RNet","Read before using dfreernet %1")
+      .arg(QStringLiteral(DFREERNET_VERSION)));
+  title->setObjectName("startupTitle");
   auto font=title->font();font.setPointSizeF(font.pointSizeF()*1.35);font.setBold(true);title->setFont(font);title->setWordWrap(true);
   header->addSpacing(12);header->addWidget(title,1);layout->addLayout(header);
   auto tr=[](const char *source){return QCoreApplication::translate("RNet",source).toHtmlEscaped();};

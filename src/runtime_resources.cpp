@@ -53,7 +53,12 @@ std::u16string text(const QVariant &v){return v.toString().toStdU16String();}
 ParameterCatalog loadCatalog(const QString &path={}){
   Database d(path);ParameterCatalog c;
   auto info=d.query("SELECT schema,parameter_offset,parameter_end,storage_map_offset,storage_map_end FROM catalog_info WHERE format_version=1");
-  if(!info.next())throw std::runtime_error("Catalog metadata missing");c.schema=info.value(0).toUInt();c.parameter_offset=info.value(1).toULongLong();c.parameter_end=info.value(2).toULongLong();c.storage_map_offset=info.value(3).toULongLong();c.storage_map_end=info.value(4).toULongLong();
+  if(!info.next())throw std::runtime_error("Catalog metadata missing");
+  c.schema=info.value(0).toUInt();
+  c.parameter_offset=info.value(1).toULongLong();
+  c.parameter_end=info.value(2).toULongLong();
+  c.storage_map_offset=info.value(3).toULongLong();
+  c.storage_map_end=info.value(4).toULongLong();
   auto p=d.query("SELECT key,id,extra84,flag24,signed_storage,flag70,flag71,extra8c,flagb0 FROM parameters ORDER BY key");
   while(p.next()){ParameterDefinition v;v.key=p.value(0).toUInt();v.id=p.value(1).toUInt();v.extra84=p.value(2).toUInt();v.flag24=p.value(3).toBool();v.signed_storage=p.value(4).toBool();v.flag70=p.value(5).toBool();v.flag71=p.value(6).toBool();v.extra8c=p.value(7).toUInt();v.flagb0=p.value(8).toBool();c.parameters.emplace(v.key,std::move(v));}
   auto t=d.query("SELECT parameter_key,kind,ordinal,text FROM parameter_texts");

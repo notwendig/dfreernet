@@ -168,8 +168,7 @@ private:
   QTableView *table_ = nullptr,*accessTable_=nullptr;
   QTimer *columnSaveTimer_=nullptr;
   bool columnLayoutBusy_=false,columnLayoutReady_=false;
-  QString pendingColumnKey_;
-  QByteArray pendingColumnState_;
+  std::map<QString,QByteArray> pendingColumnStates_;
   QLineEdit *search_ = nullptr;
   QPlainTextEdit *details_ = nullptr;
   QLabel *banner_ = nullptr;

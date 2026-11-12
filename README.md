@@ -10,9 +10,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.0.0
+## Version 1.1.0
 
-This version adds persistent column layouts for every table view and shows the author, contact and project link in About. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version preserves column layouts when switching views quickly, rebuilds the launcher when sources change, and shows the version in the main title and startup warning. The Help menu is last on the menu bar. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
 ## Quick start
 
