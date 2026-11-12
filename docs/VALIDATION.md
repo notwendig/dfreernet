@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 10 November 2026. Application: dfreernet 0.1.0, native Linux / Qt 6.
+Status: 12 November 2026. Application: dfreernet 0.2.0, native Linux / Qt 6.
 
 ## Hardware scope
 

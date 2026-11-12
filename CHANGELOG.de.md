@@ -2,7 +2,9 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
-## Unveröffentlicht
+## 0.2.0 — 12. November 2026
+
+- Umschaltbare Kategorien- und Profilansicht ergänzt: links Allgemein oder Profil 1–8 auswählen, rechts nur deren Parameter anzeigen.
 
 - Sichtbar ausgeschalteten Warnblinker vor Start bestätigen, Zyklus bei verlorenem CAN-Empfang stoppen und gespeicherte Aktivierung beim Start nicht fortsetzen. Ein passiver 31-Minuten-Test zeigte, dass die Umschaltbefehle das Abschalten nicht verhindern.
 

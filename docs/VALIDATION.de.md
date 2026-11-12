@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 10. November 2026. Anwendung: dfreernet 0.1.0, natives Linux / Qt 6.
+Stand: 12. November 2026. Anwendung: dfreernet 0.2.0, natives Linux / Qt 6.
 
 ## Hardwareumfang
 

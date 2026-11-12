@@ -2,7 +2,9 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
-## Unreleased
+## 0.2.0 — 2026-11-12
+
+- Add switchable category and profile parameter views; the profile tree selects Common or Profile 1–8, with only that profile's values in the table.
 
 - Require visible hazard-OFF confirmation, stop on lost CAN reception, and never resume a saved light cycle at startup. A 31-minute passive test showed the toggles do not prevent wheelchair sleep.
 

@@ -24,7 +24,8 @@ class WindowTest final : public QObject {
   QString fixture_ = root_ + "/tests/fixtures/user-documents/CS16110708.R-net";
   std::unique_ptr<Window> make() {
     auto defaults=AppSettings::defaults();
-    defaults.canInterface="rnetOffline";defaults.keepAwake=false;defaults.showAllParameters=false; // Never bind a physical interface in offline UI tests.
+    defaults.canInterface="rnetOffline";defaults.keepAwake=false;defaults.showAllParameters=false;
+    defaults.profileTableView=false; // Never bind a physical interface in offline UI tests.
     defaults.workingDirectory=temp_.path()+"/documents";defaults.backupDirectory=temp_.path()+"/backups";
     defaults.exportDirectory=temp_.path()+"/exports";defaults.logDirectory=temp_.path()+"/logs";defaults.save();
     languages().setLanguage("en_US");
@@ -44,6 +45,51 @@ class WindowTest final : public QObject {
     return -1;
   }
 private slots:
+  void profileTableSwitchAndEdit() {
+    auto w=make();w->openDocument(fixture_);
+    const int valueIndex=firstSpeed(*w);
+    QVERIFY(valueIndex>=0);
+    QString original;
+    for(const auto &row:w->model()->rows)
+      if(row.valueIndex==valueIndex)original=row.value;
+    QVERIFY(!original.isEmpty());
+    auto *profileAction=w->findChild<QAction*>("profileTableView");
+    auto *listAction=w->findChild<QAction*>("hierarchicalListView");
+    QVERIFY(profileAction&&listAction);
+    profileAction->trigger();
+    QVERIFY(profileAction->isChecked());
+    auto *tree=w->findChild<QTreeWidget*>("groups");
+    QCOMPARE(tree->topLevelItemCount(),9);
+    QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
+    QCOMPARE(tree->topLevelItem(8)->text(0),QString("Profile 8"));
+    tree->setCurrentItem(tree->topLevelItem(1));
+    QCOMPARE(w->filter()->group,QString("profile1"));
+    int targetRow=-1;
+    for(int row=0;row<w->model()->rowCount();++row)
+      if(w->model()->rows[std::size_t(row)].valueIndex==valueIndex){
+        targetRow=row;break;
+      }
+    QVERIFY(targetRow>=0);
+    auto cell=w->model()->index(targetRow,2);
+    QCOMPARE(cell.data().toString(),original);
+    QVERIFY(cell.flags()&Qt::ItemIsEditable);
+    auto *table=w->findChild<QTableView*>("parameters");
+    table->setCurrentIndex(w->filter()->mapFromSource(cell));
+    QVERIFY(w->edit_->isEnabled());
+    w->applyEdit(valueIndex,"86");
+    bool changed=false;
+    for(int row=0;row<w->model()->rowCount();++row){
+        auto index=w->model()->index(row,2);
+        if(w->model()->rows[std::size_t(row)].valueIndex!=valueIndex)continue;
+        QCOMPARE(index.data().toString(),QString("86"));
+        QCOMPARE(index.data(Qt::ForegroundRole).value<QColor>(),QColor(Qt::red));
+        changed=true;
+    }
+    QVERIFY(changed);
+    listAction->trigger();
+    QVERIFY(listAction->isChecked());
+    QCOMPARE(w->model()->rowCount(),w->valueCount());
+  }
   void initTestCase() {
     QCoreApplication::setOrganizationName("RNetTests");
     QCoreApplication::setApplicationName("RNetQtTests");

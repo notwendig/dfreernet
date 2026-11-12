@@ -35,10 +35,17 @@ struct Row {
   bool changed = false;
   Icon icon = Icon::None;
   bool unread = false;
+  struct Cell {
+    QString value, detail;
+    int valueIndex = -1;
+    bool changed = false;
+  };
+  std::vector<Cell> cells{};
 };
 class TableModel final : public QAbstractTableModel {
 public:
   std::vector<Row> rows;
+  bool profileLayout = false;
   QStringList headings{"Parameter ID", "Parameter", "Stored raw value",
                        "Profile / element"};
   using QAbstractTableModel::QAbstractTableModel;
@@ -54,11 +61,18 @@ public:
   std::function<bool(int)> canEdit;
   Qt::ItemFlags flags(const QModelIndex &index) const override {
     auto result=QAbstractTableModel::flags(index);
-    if(index.isValid()&&index.row()<int(rows.size())&&index.column()==2&&canEdit&&canEdit(rows.at(index.row()).valueIndex))
+    int valueIndex=-1;
+    if(index.isValid()&&index.row()<int(rows.size())){
+      const auto &row=rows.at(index.row());
+      if(profileLayout&&index.column()>=2&&index.column()<headings.size()-1)
+        valueIndex=row.cells.at(std::size_t(index.column()-2)).valueIndex;
+      else if(!profileLayout&&index.column()==2)valueIndex=row.valueIndex;
+    }
+    if(canEdit&&canEdit(valueIndex))
       result|=Qt::ItemIsEditable;
     return result;
   }
-  void replace(std::vector<Row>, QStringList);
+  void replace(std::vector<Row>, QStringList, bool profiles=false);
 };
 class Filter final : public QSortFilterProxyModel {
 public:
@@ -141,6 +155,7 @@ private:
   QString sleepStatus_;
   CanHeartbeatIndicator *heartbeat_=nullptr;
   QAction *detailsAction_=nullptr;
+  QAction *listViewAction_=nullptr,*profileViewAction_=nullptr;
   AccessLevel access_ = AccessLevel::Dealer;
   TableModel *model_ = nullptr;
   Filter *proxy_ = nullptr;
@@ -183,8 +198,10 @@ private:
   void applyPreferences();
   void updateSleepStatus();
   void buildGroups();
+  void buildProfileGroups(const QString &selection);
   void resetGroup(bool);
   void renderValues(bool preserveContext=false);
+  void renderProfileValues(bool preserveContext);
   void updateDocumentBanner();
   void editSelected();
   void commitPendingValueEditor();

@@ -25,6 +25,7 @@ AppSettings AppSettings::load(){
   s.keepAwake=q.value("ui/keepAwake",true).toBool();
   s.toolbarIconsOnly = q.value("ui/toolbarIconsOnly", s.toolbarIconsOnly).toBool();
   s.showAllParameters=q.value("ui/showAllParameters",true).toBool();
+  s.profileTableView=q.value("ui/profileTableView",false).toBool();
   s.liveSignalEnabled=false; // Never resume an uncertain toggle state after restart.
   // Convert saved minute settings before applying any newer second values.
   int intervalMinutes = s.liveSignalIntervalSeconds / 60;
@@ -45,6 +46,7 @@ void AppSettings::save()const{
   q.setValue("paths/working",workingDirectory);q.setValue("paths/backups",backupDirectory);q.setValue("paths/exports",exportDirectory);
   q.setValue("paths/logs",logDirectory);
   q.setValue("ui/showAllParameters",showAllParameters);
+  q.setValue("ui/profileTableView",profileTableView);
   q.setValue("can/liveSignalEnabled", false); // Session-only light experiment.
   q.setValue("can/liveSignalIntervalSeconds", liveSignalIntervalSeconds);
   q.setValue("can/liveSignalDurationSeconds", liveSignalDurationSeconds);

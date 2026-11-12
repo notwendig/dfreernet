@@ -10,9 +10,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 0.1.0
+## Version 0.2.0
 
-This tag marks the first private source snapshot. It is an experimental development build, not a validated product release. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version adds a switchable profile view with Common and Profiles 1–8 in the left tree and only the selected profile's parameters in the right table. It remains an experimental development build. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
 ## Quick start
 
@@ -35,6 +35,8 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 
 - Read controller configuration and preserve received payloads, including unsupported blocks.
 - Show parameters supported by the installed catalog and the received file version; filter by access level.
+- Switch under Views between the existing category list and a profile view. The profile view lists Common and Profiles 1–8 on the left and shows only the selected profile's parameters on the right. Both views use the same read values, search, access filter and editors.
+- The Hierarchical list and Profile table buttons are also visible beside the search field.
 - Edit supported raw values using validated boolean, selection, number and text editors. Pending changes appear red and bold.
 - Open and save `.R-net` files; export displayed information.
 - File → Import RND catalog… validates an RND file and exports its tables to a new SQLite database. The built-in catalog is not switched automatically.

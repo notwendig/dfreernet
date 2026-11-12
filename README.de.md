@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 0.1.0
+## Version 0.2.0
 
-Dieser Tag kennzeichnet den ersten privaten Quelltextstand. Es handelt sich um eine experimentelle Entwicklungsversion, nicht um eine validierte Produktfreigabe. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version ergänzt eine umschaltbare Profilansicht: links Allgemein und Profil 1–8, rechts nur die Parameter des ausgewählten Profils. Sie bleibt eine experimentelle Entwicklungsversion. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Schnellstart
 
@@ -35,6 +35,8 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 
 - Controllerkonfiguration lesen und empfangene Nutzdaten einschließlich unbekannter Blöcke erhalten.
 - Zum installierten Katalog und zur gelesenen Dateiversion passende Parameter anzeigen und nach Berechtigung filtern.
+- Unter Ansichten zwischen der bisherigen Kategorienliste und der Profilansicht wechseln. Die Profilansicht zeigt links Allgemein und Profil 1–8; rechts stehen nur die Parameter des ausgewählten Profils. Beide Ansichten nutzen dieselben gelesenen Werte, Suche, Berechtigungen und Editoren.
+- Die Schaltflächen „Hierarchische Liste“ und „Profiltabelle“ stehen auch direkt neben dem Suchfeld.
 - Unterstützte Rohwerte mit geprüften Ja/Nein-, Auswahl-, Zahlen- und Texteditoren bearbeiten; Änderungen erscheinen rot und fett.
 - `.R-net`-Dateien öffnen und speichern; angezeigte Informationen exportieren.
 - Datei → RND-Katalog importieren… prüft eine RND-Datei und schreibt deren Tabellen in eine neue SQLite-Datenbank. Der eingebettete Katalog wird nicht automatisch gewechselt.

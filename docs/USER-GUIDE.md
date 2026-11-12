@@ -39,6 +39,8 @@ Received files are saved in a new unique subfolder of the configured backup dire
 
 ## Edit parameters and save files
 
+Under **Views**, choose **Hierarchical list** for the existing category display or **Profile table**. In the profile view, select Common or Profile 1–8 in the left tree; the right table shows that selection's parameters. Unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in both views. The choice is remembered.
+
 Use search and the group tree to narrow the display. Double-click or press F2 in the raw-value column to open the appropriate editor: boolean, selection, integer or text. Bounds, step size and text encoding are checked. Unresolved special types remain read-only. Escape discards the current edit.
 
 Changes appear red and bold. Undo restores earlier values. Save file and Write file as save a working copy; this does not transfer values to the controller or confirm a controller write.

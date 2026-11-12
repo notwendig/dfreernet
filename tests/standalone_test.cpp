@@ -33,7 +33,48 @@ private slots:
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
-    auto values=read_values(before,catalog);int index=-1;for(std::size_t i=0;i<values.size();++i)if(values[i].parameter==68){index=int(i);break;}QVERIFY(index>=0);window.applyEdit(index,values[index].number?"0":"1");
+    auto values=read_values(before,catalog);int index=-1;for(std::size_t i=0;i<values.size();++i)if(values[i].parameter==68){index=int(i);break;}QVERIFY(index>=0);
+    auto *profileAction=window.findChild<QAction*>("profileTableView");
+    auto *listAction=window.findChild<QAction*>("hierarchicalListView");
+    QVERIFY(profileAction&&listAction);
+    auto *profileButton=window.findChild<QToolButton*>("profileTableButton");
+    auto *listButton=window.findChild<QToolButton*>("hierarchicalListButton");
+    QVERIFY(profileButton&&listButton);
+    QVERIFY(profileButton->isVisible()&&listButton->isVisible());
+    QCOMPARE(profileButton->defaultAction(),profileAction);
+    profileAction->trigger();
+    QVERIFY(profileButton->isChecked());
+    auto *tree=window.findChild<QTreeWidget*>("groups");
+    QCOMPARE(tree->topLevelItemCount(),9);
+    QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
+    QCOMPARE(tree->topLevelItem(8)->text(0),QString("Profile 8"));
+    QCOMPARE(window.filter()->group,QString("common"));
+    bool found=false;
+    for(int row=0;row<window.model()->rowCount();++row)
+      {
+        const auto cell=window.model()->index(row,2);
+        if(window.model()->rows[std::size_t(row)].valueIndex!=index)continue;
+        QCOMPARE(cell.data().toString(),QString::number(values[index].number));
+        found=true;
+      }
+    QVERIFY(found);
+    window.applyEdit(index,values[index].number?"0":"1");
+    found=false;
+    for(int row=0;row<window.model()->rowCount();++row)
+      {
+        const auto cell=window.model()->index(row,2);
+        if(window.model()->rows[std::size_t(row)].valueIndex!=index)continue;
+        QCOMPARE(cell.data(Qt::ForegroundRole).value<QColor>(),QColor(Qt::red));
+        QVERIFY(cell.data(Qt::FontRole).value<QFont>().bold());
+        found=true;
+      }
+    QVERIFY(found);
+    tree->setCurrentItem(tree->topLevelItem(1));
+    QCOMPARE(window.filter()->group,QString("profile1"));
+    for(int row=0;row<window.filter()->rowCount();++row)
+      QCOMPARE(window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())].group,QString("profile1"));
+    listAction->trigger();
+    QVERIFY(window.model()->rowCount()>=window.valueCount());
     auto target=temp.path()+"/after.R-net";window.saveAs(target);auto after=RnetDocument::read(read_file(target.toStdString()));QVERIFY(!controller_write_plan(before,after,catalog,AccessLevel::OEM).empty());window.openDocument(target);QVERIFY(window.document()->write()==after.write());
     window.showResources();QCOMPARE(window.model()->rowCount(),1454);
     QVERIFY(window.findChild<QAction*>("command40040"));

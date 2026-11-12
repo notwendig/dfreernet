@@ -30,7 +30,7 @@ public:
   std::function<void(int,const QString&)> commit;
   using QStyledItemDelegate::QStyledItemDelegate;
   QWidget *createEditor(QWidget *parent,const QStyleOptionViewItem &,const QModelIndex &index) const override {
-    if(index.column()!=2 || !factory)return nullptr;
+    if(!(index.flags()&Qt::ItemIsEditable) || !factory)return nullptr;
     auto *editor=factory(index.data(Qt::UserRole).toInt(),parent);
     if(!editor)return nullptr;
     editor->setProperty("valueIndex",index.data(Qt::UserRole));
@@ -79,7 +79,7 @@ public:
 protected:
   void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override {
     QStyledItemDelegate::initStyleOption(option,index);
-    if (index.column()==2 && index.data(Qt::FontRole).value<QFont>().bold() &&
+    if (index.data(Qt::FontRole).value<QFont>().bold() &&
         index.data(Qt::ForegroundRole).value<QColor>()==QColor(Qt::red))
       option->palette.setColor(QPalette::HighlightedText,Qt::red);
   }
@@ -124,6 +124,30 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
   if (!i.isValid() || i.row() >= int(rows.size()))
     return {};
   const auto &r = rows[std::size_t(i.row())];
+  if(profileLayout){
+    const bool valueColumn=i.column()>=2&&i.column()<headings.size()-1;
+    const auto *cell=valueColumn?&r.cells.at(std::size_t(i.column()-2)):nullptr;
+    if(role==Qt::UserRole)return cell?cell->valueIndex:-1;
+    if(role==Qt::DecorationRole&&i.column()==1&&r.icon!=Icon::None)return uiIcon(r.icon);
+    if(r.unread&&i.column()!=headings.size()-1&&role==Qt::ForegroundRole)return QColor(Qt::gray);
+    if(i.column()==headings.size()-1&&r.requiredAccess>=0&&r.requiredAccess<=3){
+      if(role==Qt::BackgroundRole)return accessColor(r.requiredAccess);
+      if(role==Qt::ForegroundRole)return QColor(r.requiredAccess>=2?Qt::white:Qt::black);
+    }
+    if(cell&&cell->changed){
+      if(role==Qt::ForegroundRole)return QColor(Qt::red);
+      if(role==Qt::FontRole){QFont font;font.setBold(true);return font;}
+    }
+    if(role==Qt::ToolTipRole)return cell&&!cell->detail.isEmpty()?cell->detail:r.detail;
+    if(role!=Qt::DisplayRole)return {};
+    if(i.column()==0)return r.id;
+    if(i.column()==1)return r.name;
+    if(cell)return cell->value;
+    if(i.column()==headings.size()-1&&r.requiredAccess>=0)
+      return QString::number(r.requiredAccess)+" · "+
+          QCoreApplication::translate("RNet",access_level_name(AccessLevel(r.requiredAccess)));
+    return {};
+  }
   if (role == Qt::UserRole) return r.valueIndex;
   if (role == Qt::DecorationRole && i.column()==1 && r.icon!=Icon::None) return uiIcon(r.icon);
   if(r.unread&&i.column()!=4&&role==Qt::ForegroundRole)return QColor(Qt::gray);
@@ -162,10 +186,11 @@ QVariant TableModel::headerData(int i, Qt::Orientation o, int role) const {
              ? QVariant(headings[i])
              : QVariant();
 }
-void TableModel::replace(std::vector<Row> r, QStringList h) {
+void TableModel::replace(std::vector<Row> r, QStringList h, bool profiles) {
   beginResetModel();
   rows = std::move(r);
   headings = std::move(h);
+  profileLayout=profiles;
   endResetModel();
 }
 void Filter::refilter() {
@@ -178,7 +203,8 @@ bool Filter::filterAcceptsRow(int row, const QModelIndex &) const {
   return (r.requiredAccess < 0 || access_allows(unsigned(r.requiredAccess), access)) &&
          (group.isEmpty() || r.group == group ||
           r.group.startsWith(group + '~')) &&
-         (query.isEmpty() || (r.id + ' ' + r.name + ' ' + r.value)
+         (query.isEmpty() || (r.id + ' ' + r.name + ' ' + r.value +
+             [&r] {QString values;for(const auto &cell:r.cells)values+=' '+cell.value;return values;}())
                                  .contains(query, Qt::CaseInsensitive));
 }
 Window::Window(const QString &output,
@@ -300,6 +326,24 @@ void Window::buildUi() {
   connect(blinkAction_,&QAction::triggered,this,[this](bool checked){if(!checked){settings_.liveSignalEnabled=false;QSettings().setValue("can/liveSignalEnabled",false);blinkCycle_->stop();return;}blinkAction_->setChecked(false);guarded([this]{requestBlinkCycle();});});
   auto *view = menuBar()->addMenu(QT_TRANSLATE_NOOP("RNet", "&Views"));
   add(view, QT_TRANSLATE_NOOP("RNet", "Read parameter values"), Values);
+  auto *layoutGroup=new QActionGroup(this);layoutGroup->setExclusive(true);
+  listViewAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Hierarchical list"));
+  profileViewAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Profile table"));
+  listViewAction_->setObjectName("hierarchicalListView");
+  profileViewAction_->setObjectName("profileTableView");
+  for(auto *action:{listViewAction_,profileViewAction_}){
+    action->setCheckable(true);layoutGroup->addAction(action);
+  }
+  listViewAction_->setChecked(!settings_.profileTableView);
+  profileViewAction_->setChecked(settings_.profileTableView);
+  connect(listViewAction_,&QAction::triggered,this,[this]{
+    guarded([this]{commitPendingValueEditor();settings_.profileTableView=false;
+      QSettings().setValue("ui/profileTableView",false);renderValues();});
+  });
+  connect(profileViewAction_,&QAction::triggered,this,[this]{
+    guarded([this]{commitPendingValueEditor();settings_.profileTableView=true;
+      QSettings().setValue("ui/profileTableView",true);renderValues();});
+  });
   add(view, "Repository-Dateien", Repository);
   add(view, QT_TRANSLATE_NOOP("RNet", "Bundled resource texts"), Resources);
   view->addSeparator();
@@ -366,6 +410,18 @@ void Window::buildUi() {
       QT_TRANSLATE_NOOP("RNet", "Search parameters by name, ID, or raw value"));
   search_->setClearButtonEnabled(true);
   searchBar->addWidget(search_, 1);
+  auto *listViewButton=new QToolButton;
+  listViewButton->setObjectName("hierarchicalListButton");
+  listViewButton->setDefaultAction(listViewAction_);
+  listViewButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  listViewButton->setAutoRaise(false);
+  searchBar->addWidget(listViewButton);
+  auto *profileViewButton=new QToolButton;
+  profileViewButton->setObjectName("profileTableButton");
+  profileViewButton->setDefaultAction(profileViewAction_);
+  profileViewButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  profileViewButton->setAutoRaise(false);
+  searchBar->addWidget(profileViewButton);
   edit_ = new QPushButton(QT_TRANSLATE_NOOP("RNet", "Edit value…"));
   edit_->setObjectName("editValue");
   edit_->setIcon(uiIcon(Icon::Edit));
@@ -449,7 +505,7 @@ void Window::buildUi() {
                 item ? item->data(0, Qt::UserRole).toString() : QString();
             proxy_->refilter();
           });
-  connect(table_->selectionModel(), &QItemSelectionModel::currentRowChanged,
+  connect(table_->selectionModel(), &QItemSelectionModel::currentChanged,
           this, [this] { selected(); });
   connect(edit_, &QPushButton::clicked, this,
           [this] { guarded([this] { editSelected(); }); });
@@ -505,9 +561,10 @@ void Window::retranslateUi() {
       expanded.insert((*item)->data(0, Qt::UserRole).toString());
   const auto current = proxy_->mapToSource(table_->currentIndex());
   int row = current.isValid() ? current.row() : -1;
+  int valueIndex = current.isValid() ? current.data(Qt::UserRole).toInt() : -1;
   int column = table_->horizontalHeader()->sortIndicatorSection();
   auto order = table_->horizontalHeader()->sortIndicatorOrder();
-  std::array<int, 5> widths{};
+  std::vector<int> widths(std::size_t(model_->columnCount()));
   for (int i = 0; i < model_->columnCount(); ++i)
     widths[i] = table_->columnWidth(i);
   int scroll = table_->verticalScrollBar()->value();
@@ -541,10 +598,18 @@ void Window::retranslateUi() {
       tree_->setCurrentItem(*item);
   }
   table_->sortByColumn(column, order);
-  for (int i = 0; i < model_->columnCount(); ++i)
+  for (int i = 0; i < model_->columnCount()&&i<int(widths.size()); ++i)
     table_->setColumnWidth(i, widths[i]);
-  if (row >= 0 && row < model_->rowCount())
-    table_->setCurrentIndex(proxy_->mapFromSource(model_->index(row, 0)));
+  bool restored=false;
+  if(valueIndex>=0)
+    for(int candidate=0;candidate<model_->rowCount()&&!restored;++candidate)
+      for(int cell=0;cell<model_->columnCount()-1;++cell)
+        if(model_->index(candidate,cell).data(Qt::UserRole).toInt()==valueIndex){
+          table_->setCurrentIndex(proxy_->mapFromSource(model_->index(candidate,cell)));
+          restored=true;break;
+        }
+  if(!restored&&row>=0&&row<model_->rowCount())
+    table_->setCurrentIndex(proxy_->mapFromSource(model_->index(row,0)));
   table_->verticalScrollBar()->setValue(scroll);
   if (monitorFd_ >= 0)
     cancel_->setText(QCoreApplication::translate("RNet", "Stop capture"));
@@ -591,6 +656,32 @@ void Window::buildGroups() {
   root->setExpanded(true);
   tree_->setCurrentItem(root);
 }
+void Window::buildProfileGroups(const QString &selection) {
+  const QSignalBlocker blocked(tree_);
+  tree_->clear();
+  QTreeWidgetItem *selected=nullptr;
+  for(int scope=0;scope<=8;++scope){
+    const QString key=scope?QStringLiteral("profile%1").arg(scope):QStringLiteral("common");
+    const QString label=scope?QString(QCoreApplication::translate("RNet","Profile %1")).arg(scope):
+        QCoreApplication::translate("RNet","Common");
+    auto *item=new QTreeWidgetItem(tree_,{label});
+    item->setData(0,Qt::UserRole,key);
+    item->setIcon(0,uiIcon(scope?Icon::Settings:Icon::Catalog));
+    if(scope>0){
+      bool loaded=false;
+      for(const auto &value:values_)if(value.group&&int(value.profile)+1==scope){
+        loaded=true;break;
+      }
+      if(!loaded)item->setForeground(0,QBrush(Qt::gray));
+    }
+    if(key==(selection.isEmpty()?QStringLiteral("common"):selection))selected=item;
+  }
+  tree_->setVisible(true);
+  if(!selected)selected=tree_->topLevelItem(0);
+  tree_->setCurrentItem(selected);
+  proxy_->group=selected->data(0,Qt::UserRole).toString();
+  proxy_->refilter();
+}
 void Window::resetGroup(bool show) {
   if (show)
     buildGroups();
@@ -603,6 +694,7 @@ void Window::resetGroup(bool show) {
 void Window::showCatalog() {
   view_ = View::Catalog;
   valuesView_ = false;
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   std::vector<Row> rows;
   for (const auto &entry : catalog_.parameters) {
     const auto &p = entry.second;
@@ -634,10 +726,12 @@ void Window::showCatalog() {
   updateActions();
 }
 void Window::renderValues(bool preserveContext) {
+  if(settings_.profileTableView){renderProfileValues(preserveContext);return;}
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   const auto query=search_->text(),group=proxy_->group;
   const auto current=proxy_->mapToSource(table_->currentIndex());
-  const int selectedValue=current.isValid()?model_->rows.at(current.row()).valueIndex:-1;
-  const int selectedColumn=current.isValid()?current.column():2;
+  const int selectedValue=current.isValid()?current.data(Qt::UserRole).toInt():-1;
+  const int selectedColumn=current.isValid()&&!model_->profileLayout?current.column():2;
   const int sortColumn=table_->horizontalHeader()->sortIndicatorSection();
   const auto sortOrder=table_->horizontalHeader()->sortIndicatorOrder();
   const int scroll=table_->verticalScrollBar()->value();
@@ -741,6 +835,130 @@ void Window::renderValues(bool preserveContext) {
   }
   updateActions();
 }
+void Window::renderProfileValues(bool preserveContext) {
+  const auto query=search_->text(),group=proxy_->group;
+  const auto current=proxy_->mapToSource(table_->currentIndex());
+  const int selectedValue=current.isValid()?current.data(Qt::UserRole).toInt():-1;
+  const int sortColumn=table_->horizontalHeader()->sortIndicatorSection();
+  const auto sortOrder=table_->horizontalHeader()->sortIndicatorOrder();
+  const int scroll=table_->verticalScrollBar()->value();
+  view_=View::Values;valuesView_=true;
+  int profileCount=0;
+  for(const auto &value:values_)if(value.group)profileCount=std::max(profileCount,int(value.profile)+1);
+  std::vector<Row> rows;
+  std::map<std::tuple<unsigned,unsigned,int>,int> occurrences;
+  std::map<std::tuple<unsigned,unsigned,int>,std::size_t> rowNumbers;
+  std::vector<std::string> baselineWarnings;
+  auto baselineValues=document_?
+      read_values(RnetDocument::read(controllerBaseline_),catalog_,&baselineWarnings):
+      std::vector<DocumentValue>{};
+  for(std::size_t i=0;i<values_.size();++i){
+    const auto &v=values_[i];
+    const auto &p=catalog_.parameters.at(v.parameter);
+    const auto &f=document_->files[v.file];
+    const int cellNumber=v.group?int(v.profile)+1:0;
+    const auto occurrence=occurrences[{v.parameter,v.element,cellNumber}]++;
+    const auto key=std::make_tuple(v.parameter,v.element,occurrence);
+    auto found=rowNumbers.find(key);
+    if(found==rowNumbers.end()){
+      Row row;
+      row.id=QString::number(v.parameter);
+      row.name=fromU16(p.name());
+      if(v.element)row.name+=QStringLiteral(" / %1").arg(v.element+1);
+      row.group=fromU16(p.text88);
+      row.detail=fromU16(p.help());
+      row.requiredAccess=int(p.metadata[1]>>5);
+      row.icon=parameterIcon(p,catalog_);
+      row.cells.resize(std::size_t(profileCount+1));
+      found=rowNumbers.emplace(key,rows.size()).first;
+      rows.push_back(std::move(row));
+    }
+    auto &cell=rows.at(found->second).cells.at(std::size_t(cellNumber));
+    cell.value=v.numeric?QString::number(v.number):fromU16(v.text);
+    cell.valueIndex=int(i);
+    cell.changed=i>=baselineValues.size()||v.number!=baselineValues[i].number||
+                 v.text!=baselineValues[i].text;
+    cell.detail=fromU16(p.help())+
+        QString(QCoreApplication::translate("RNet",
+          "\n\nStored raw value; no unit conversion.\nFile %1, version %2\nSection %3, byte offset %4, width %5\nAccess level: %6"))
+          .arg(hex(f.id)).arg(f.version).arg(v.section+1).arg(v.offset)
+          .arg(v.width).arg(QCoreApplication::translate(
+              "RNet",access_level_name(AccessLevel(p.metadata[1]>>5))));
+  }
+  if(settings_.showAllParameters){
+    QSet<unsigned> present;for(const auto &value:values_)present.insert(value.parameter);
+    for(const auto &[id,p]:catalog_.parameters){
+      if(present.contains(id))continue;
+      Row row;
+      row.id=QString::number(id);row.name=fromU16(p.name());
+      row.group=fromU16(p.text88);row.detail=fromU16(p.help());
+      row.requiredAccess=int(p.metadata[1]>>5);
+      row.icon=parameterIcon(p,catalog_);row.unread=true;
+      row.cells.resize(std::size_t(profileCount+1));
+      row.cells.front().value=QCoreApplication::translate("RNet","Not read");
+      rows.push_back(std::move(row));
+    }
+  }
+  std::vector<Row> scoped;
+  scoped.reserve(rows.size()*9);
+  for(int scope=0;scope<=8;++scope){
+    const QString key=scope?QStringLiteral("profile%1").arg(scope):QStringLiteral("common");
+    for(const auto &source:rows){
+      const Row::Cell *cell=scope<int(source.cells.size())?
+          &source.cells[std::size_t(scope)]:nullptr;
+      if((!cell||cell->valueIndex<0)&&!settings_.showAllParameters)continue;
+      Row row;
+      row.id=source.id;row.name=source.name;
+      row.value=cell&&cell->valueIndex>=0?cell->value:
+          QCoreApplication::translate("RNet","Not read");
+      row.location=cell&&cell->valueIndex>=0?
+          QString::number(values_.at(std::size_t(cell->valueIndex)).element+1):QStringLiteral("—");
+      row.group=key;
+      row.detail=cell&&!cell->detail.isEmpty()?cell->detail:source.detail;
+      row.valueIndex=cell?cell->valueIndex:-1;
+      row.requiredAccess=source.requiredAccess;
+      row.changed=cell&&cell->changed;
+      row.icon=source.icon;
+      row.unread=row.valueIndex<0;
+      scoped.push_back(std::move(row));
+    }
+  }
+  model_->replace(std::move(scoped),
+      {QCoreApplication::translate("RNet","Parameter ID"),
+       QCoreApplication::translate("RNet","Parameter"),
+       QCoreApplication::translate("RNet","Stored raw value"),
+       QCoreApplication::translate("RNet","Element"),
+       QCoreApplication::translate("RNet","Access level")});
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+  search_->clear();
+  buildProfileGroups(preserveContext?group:QStringLiteral("common"));
+  for(int col=0;col<model_->columnCount();++col)table_->setColumnHidden(col,false);
+  table_->setColumnWidth(0,130);table_->setColumnWidth(1,480);
+  table_->setColumnWidth(2,200);table_->setColumnWidth(3,100);
+  table_->setColumnWidth(4,160);
+  table_->sortByColumn(1,Qt::AscendingOrder);
+  if(document_)updateDocumentBanner();
+  else banner_->setText(QCoreApplication::translate(
+      "RNet","No configuration has been read. Read the controller or open an R-net file."));
+  QString details=documentPath_;
+  if(!warnings_.empty())
+    details+=QString(QCoreApplication::translate("RNet",
+        "\n\n%1 file version(s) preserved as complete raw data, not yet interpreted as individual values."))
+        .arg(warnings_.size());
+  details_->setPlainText(details);
+  if(preserveContext){
+    search_->setText(query);
+    for(QTreeWidgetItemIterator item(tree_);*item;++item)
+      if((*item)->data(0,Qt::UserRole).toString()==group)tree_->setCurrentItem(*item);
+    if(sortColumn>=0&&sortColumn<model_->columnCount())table_->sortByColumn(sortColumn,sortOrder);
+    for(int row=0;row<model_->rowCount();++row)
+      if(model_->rows[row].valueIndex==selectedValue&&selectedValue>=0){
+        table_->setCurrentIndex(proxy_->mapFromSource(model_->index(row,2)));break;
+      }
+    table_->verticalScrollBar()->setValue(scroll);
+  }
+  updateActions();
+}
 void Window::updateDocumentBanner() {
   bool snapshot = false;
   for (const auto &c : document_->comments)
@@ -762,6 +980,7 @@ void Window::showRepository() {
   view_ = View::Repository;
   if (!document_)
     return;
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   updateDocumentBanner();
   valuesView_ = false;
   std::vector<Row> rows;
@@ -792,6 +1011,7 @@ void Window::showRepository() {
 }
 void Window::showResources() {
   view_ = View::Resources;
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   banner_->setText(QCoreApplication::translate(
       "RNet",
       "Bundled application text resources. Controller data is not changed."));
@@ -848,7 +1068,7 @@ void Window::updateActions() {
   if (current.isValid()) {
     auto source = proxy_->mapToSource(current);
     if (source.isValid() && source.row() < int(model_->rows.size()))
-      index = model_->rows[std::size_t(source.row())].valueIndex;
+      index = source.data(Qt::UserRole).toInt();
   }
   bool editable = false;
   if (valuesView_ && document_ && index >= 0 && index < int(values_.size())) {
@@ -891,7 +1111,7 @@ void Window::updateActions() {
 void Window::selected() {
   auto current = proxy_->mapToSource(table_->currentIndex());
   if (current.isValid() && current.row() < int(model_->rows.size()))
-    details_->setPlainText(model_->rows[std::size_t(current.row())].detail);
+    details_->setPlainText(current.data(Qt::ToolTipRole).toString());
   updateActions();
 }
 void Window::setAccess(AccessLevel level) {
@@ -903,8 +1123,12 @@ void Window::setAccess(AccessLevel level) {
   proxy_->access = level;
   const auto query = search_->text();
   if (view_ == View::Values || view_ == View::Catalog) {
-    buildGroups();
-    proxy_->group.clear();
+    if(view_==View::Values&&settings_.profileTableView)
+      buildProfileGroups(proxy_->group);
+    else{
+      buildGroups();
+      proxy_->group.clear();
+    }
     search_->setText(query);
   }
   proxy_->refilter();
@@ -952,8 +1176,7 @@ void Window::editSelected() {
   auto source = proxy_->mapToSource(table_->currentIndex());
   if (!source.isValid())
     return;
-  const auto row = model_->rows[std::size_t(source.row())];
-  int index = row.valueIndex;
+  int index = source.data(Qt::UserRole).toInt();
   if (index < 0)
     return;
   const auto &v = values_.at(index);
@@ -1645,6 +1868,7 @@ void Window::stopMonitor(bool show) {
     showMonitorCapture();
 }
 void Window::showMonitorCapture(bool record) {
+  table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   view_ = View::Monitor;
   valuesView_ = false;
   std::vector<Row> rows;

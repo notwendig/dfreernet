@@ -4,6 +4,14 @@
     <context>
         <name>RNet</name>
         <message>
+            <source>Hierarchical list</source>
+            <translation>Hierarchische Liste</translation>
+        </message>
+        <message>
+            <source>Profile table</source>
+            <translation>Profiltabelle</translation>
+        </message>
+        <message>
             <location filename="../src/qt/window.cpp" line="563" />
             <source>
 

@@ -11,7 +11,7 @@ struct AppSettings {
   int liveSignalDurationSeconds = 60;
   int accessLevel=1,monitorSeconds=10,undoLimit=100,toolbarIconSize=24,itemIconSize=18,fontSize=0,heartbeatTimeoutMs=1500;
   bool toolbarIconsOnly = false;
-  bool showAllParameters=true,liveSignalEnabled=false;
+  bool showAllParameters=true,liveSignalEnabled=false,profileTableView=false;
   bool maximized=true,showDetails=true,heartbeatEnabled=true,keepAwake=true;
   static AppSettings defaults();
   static AppSettings load();
