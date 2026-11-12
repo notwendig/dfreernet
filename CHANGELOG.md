@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 0.2.2 — 2026-11-12
+
+- Add a third parameter view grouped by catalog module.
+- Combine catalog unit, scale and raw limits after the value; pin the colored access column at the right.
+- Wrap long column titles across two lines.
+
 ## 0.2.1 — 2026-11-12
 
 - Add F1 context help for the selected parameter using the bundled catalog text described by the R-net PC Programmer guide.

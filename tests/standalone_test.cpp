@@ -62,7 +62,9 @@ private slots:
     QVERIFY(shownContext.contains(QString::number(values[index].number)));
     auto *profileAction=window.findChild<QAction*>("profileTableView");
     auto *listAction=window.findChild<QAction*>("hierarchicalListView");
-    QVERIFY(profileAction&&listAction);
+    auto *moduleAction=window.findChild<QAction*>("moduleGroupView");
+    auto *fixedAccess=window.findChild<QTableView*>("fixedAccessColumn");
+    QVERIFY(profileAction&&listAction&&moduleAction&&fixedAccess);
     auto *profileButton=window.findChild<QToolButton*>("profileTableButton");
     auto *listButton=window.findChild<QToolButton*>("hierarchicalListButton");
     QVERIFY(profileButton&&listButton);
@@ -75,12 +77,15 @@ private slots:
     QCOMPARE(tree->topLevelItem(0)->text(0),QString("Common"));
     QCOMPARE(tree->topLevelItem(8)->text(0),QString("Profile 8"));
     QCOMPARE(window.filter()->group,QString("common"));
-    QCOMPARE(window.model()->headings.at(4),QString("Module / group"));
-    QCOMPARE(window.model()->headings.at(5),QString("Unit"));
-    QCOMPARE(window.model()->headings.at(6),QString("Scale (catalog)"));
-    QCOMPARE(window.model()->headings.at(7),QString("Raw min"));
-    QCOMPARE(window.model()->headings.at(8),QString("Raw max"));
-    QCOMPARE(window.model()->headings.at(9),QString("Access level"));
+    QCOMPARE(window.model()->headings.at(3),QString::fromUtf8("Unit · Scale · Min–Max"));
+    QCOMPARE(window.model()->headerData(3,Qt::Horizontal).toString(),QString::fromUtf8("Unit · Scale\nMin–Max"));
+    QCOMPARE(window.model()->headings.at(5),QString("Module / group"));
+    QCOMPARE(window.model()->headerData(5,Qt::Horizontal).toString(),QString("Module /\ngroup"));
+    QCOMPARE(window.model()->headings.at(6),QString("Access level"));
+    QVERIFY(table->isColumnHidden(6));
+    QVERIFY(fixedAccess->isVisible());
+    QVERIFY(!fixedAccess->isColumnHidden(6));
+    QCOMPARE(fixedAccess->model(),table->model());
     bool found=false;
     for(int row=0;row<window.model()->rowCount();++row)
       {
@@ -89,11 +94,8 @@ private slots:
         QCOMPARE(cell.data().toString(),QString::number(values[index].number));
         auto expectedModule=fromU16(catalog.parameters.at(values[index].parameter).text88);
         expectedModule.replace('~',QStringLiteral(" / "));
-        QCOMPARE(window.model()->index(row,4).data().toString(),expectedModule);
-        QCOMPARE(window.model()->index(row,5).data().toString(),QString("—"));
-        QCOMPARE(window.model()->index(row,6).data().toString(),QString("1:1"));
-        QCOMPARE(window.model()->index(row,7).data().toString(),QString("0"));
-        QCOMPARE(window.model()->index(row,8).data().toString(),QString("1"));
+        QCOMPARE(window.model()->index(row,5).data().toString(),expectedModule);
+        QCOMPARE(window.model()->index(row,3).data().toString(),QString::fromUtf8("— · 1:1 · 0–1"));
         found=true;
       }
     QVERIFY(found);
@@ -112,7 +114,21 @@ private slots:
     QCOMPARE(window.filter()->group,QString("profile1"));
     for(int row=0;row<window.filter()->rowCount();++row)
       QCOMPARE(window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())].group,QString("profile1"));
+    moduleAction->trigger();
+    QVERIFY(moduleAction->isChecked());
+    QVERIFY(QSettings().value("ui/moduleGroupView").toBool());
+    QCOMPARE(window.model()->headings.at(3),QString::fromUtf8("Unit · Scale · Min–Max"));
+    QVERIFY(tree->topLevelItem(0)->childCount()>0);
+    auto *moduleItem=tree->topLevelItem(0)->child(0);
+    tree->setCurrentItem(moduleItem);
+    QCOMPARE(window.filter()->group,moduleItem->data(0,Qt::UserRole).toString());
+    QVERIFY(window.filter()->rowCount()>0);
+    for(int row=0;row<window.filter()->rowCount();++row)
+      QCOMPARE(window.model()->rows[std::size_t(window.filter()->mapToSource(window.filter()->index(row,0)).row())].group,window.filter()->group);
+    QVERIFY(table->isColumnHidden(window.model()->columnCount()-1));
+    QVERIFY(!fixedAccess->isColumnHidden(window.model()->columnCount()-1));
     listAction->trigger();
+    QVERIFY(!QSettings().value("ui/moduleGroupView").toBool());
     QVERIFY(window.model()->rowCount()>=window.valueCount());
     auto target=temp.path()+"/after.R-net";window.saveAs(target);auto after=RnetDocument::read(read_file(target.toStdString()));QVERIFY(!controller_write_plan(before,after,catalog,AccessLevel::OEM).empty());window.openDocument(target);QVERIFY(window.document()->write()==after.write());
     window.showResources();QCOMPARE(window.model()->rowCount(),1454);

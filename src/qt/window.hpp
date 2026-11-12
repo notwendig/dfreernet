@@ -42,7 +42,7 @@ struct Row {
   };
   std::vector<Cell> cells{};
   QString module{};
-  QString unit{},scale{},minimum{},maximum{};
+  QString unit{},scale{},minimum{},maximum{},metadataSummary{};
 };
 class TableModel final : public QAbstractTableModel {
 public:
@@ -159,12 +159,12 @@ private:
   CanHeartbeatIndicator *heartbeat_=nullptr;
   QAction *detailsAction_=nullptr;
   QAction *parameterHelpAction_=nullptr;
-  QAction *listViewAction_=nullptr,*profileViewAction_=nullptr;
+  QAction *listViewAction_=nullptr,*profileViewAction_=nullptr,*moduleViewAction_=nullptr;
   AccessLevel access_ = AccessLevel::Dealer;
   TableModel *model_ = nullptr;
   Filter *proxy_ = nullptr;
   QTreeWidget *tree_ = nullptr;
-  QTableView *table_ = nullptr;
+  QTableView *table_ = nullptr,*accessTable_=nullptr;
   QLineEdit *search_ = nullptr;
   QPlainTextEdit *details_ = nullptr;
   QLabel *banner_ = nullptr;
@@ -203,6 +203,8 @@ private:
   void updateSleepStatus();
   void buildGroups();
   void buildProfileGroups(const QString &selection);
+  void buildModuleGroups(const QString &selection);
+  void syncAccessColumn();
   void resetGroup(bool);
   void renderValues(bool preserveContext=false);
   void renderProfileValues(bool preserveContext);

@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 0.2.2 — 12. November 2026
+
+- Dritte Parameteransicht nach Katalogmodulen ergänzt.
+- Katalogeinheit, Skala und Rohwertgrenzen nach dem Wert zusammengefasst; farbige Berechtigung rechts fixiert.
+- Lange Spaltentitel zweizeilig dargestellt.
+
 ## 0.2.1 — 12. November 2026
 
 - F1-Parameterhilfe mit eingebettetem Katalogtext gemäß der Anleitung „R-net PC Programmer“ ergänzt.

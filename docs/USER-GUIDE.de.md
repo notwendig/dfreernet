@@ -39,11 +39,11 @@ Empfangene Dateien werden in einem neuen eindeutigen Unterordner des Sicherungso
 
 ## Parameter bearbeiten und Dateien speichern
 
-Unter **Ansichten** zwischen **Hierarchische Liste** (bisherige Kategorien) und **Profiltabelle** wechseln. In der Profilansicht links Allgemein oder Profil 1–8 auswählen; rechts erscheinen nur die Parameter dieser Auswahl. Ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in beiden Ansichten. Die Auswahl wird gespeichert.
+Unter **Ansichten** zwischen **Hierarchische Liste**, **Profiltabelle** und **Modulgruppen** wechseln. Die Profilansicht bietet links Allgemein und Profil 1–8. Die Modulansicht gruppiert nach den ersten beiden Teilen des Katalogpfads. Rechts erscheinen die Parameter der Auswahl. Ungelesene Parameter sind grau, wenn sie in den Einstellungen aktiviert sind. Suche, Berechtigungsfilter und CSV-Export funktionieren in allen drei Ansichten. Die Auswahl wird gespeichert.
 
 Die Spalte „Modul / Gruppe“ unterscheidet gleich benannte Parameter verschiedener R-net-Module. Ein Zusatz wie „/ 2“ bezeichnet das zweite Element beziehungsweise den zweiten Kanal.
 
-„Einheit“ stammt aus Symbol und Vorsatz des Katalogs. „Skala“ zeigt dessen zwei Skalierungsfelder als `a:b`; „Rohwert min.“ und „Rohwert max.“ sind gespeicherte numerische Kataloggrenzen. Diese Spalten beschreiben Metadaten und rechnen den gespeicherten Rohwert nicht in technische Einheiten um.
+Die Spalte direkt nach dem Rohwert fasst Einheit, Skala und Rohwert-Minimum/-Maximum zusammen (`Einheit · a:b · min–max`). Der Spaltentitel ist zweizeilig; die Werte bleiben einzeilig. Der Tooltip benennt jedes Feld. Die Einheit stammt aus Symbol und Vorsatz des Katalogs; die numerischen Grenzen sind rohe Katalogwerte. Diese Metadaten rechnen den gespeicherten Rohwert nicht in technische Einheiten um. Die farbige Berechtigung bleibt beim horizontalen Scrollen rechts fest sichtbar.
 
 Suche und Gruppenbaum begrenzen die Anzeige. Doppelklick oder F2 in der Rohwertspalte öffnet einen zum Parameter passenden Editor: Ja/Nein, Auswahl, Ganzzahl oder Text. Grenzen, Schrittweite und Textkodierung werden geprüft. Ungeklärte Sondertypen bleiben schreibgeschützt. Escape verwirft die laufende Eingabe.
 

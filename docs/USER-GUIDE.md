@@ -39,11 +39,11 @@ Received files are saved in a new unique subfolder of the configured backup dire
 
 ## Edit parameters and save files
 
-Under **Views**, choose **Hierarchical list** for the existing category display or **Profile table**. In the profile view, select Common or Profile 1–8 in the left tree; the right table shows that selection's parameters. Unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in both views. The choice is remembered.
+Under **Views**, choose **Hierarchical list**, **Profile table**, or **Module groups**. The profile tree offers Common and Profile 1–8. The module tree groups parameters by the first two parts of their catalog path. The right table shows the selected group. Unread parameters are gray when enabled in Settings. Search, access filtering and CSV export work in all three views. The choice is remembered.
 
 The profile table's Module / group column distinguishes identically named parameters belonging to different R-net modules. A suffix such as “/ 2” denotes the second element or channel.
 
-Unit comes from the catalog symbol and prefix. Scale shows the catalog's two scale fields as `a:b`; Raw min and Raw max are the catalog's stored numeric limits. These columns describe metadata and do not convert the stored raw value into engineering units.
+The column immediately after the raw value combines unit, scale and raw minimum/maximum (`unit · a:b · min–max`). The column title uses two lines; cell values remain on one line. The tooltip labels each field. Unit comes from the catalog symbol and prefix; the numeric limits are raw catalog values. These metadata do not convert the stored raw value into engineering units. The colored access column remains fixed on the right during horizontal scrolling.
 
 Use search and the group tree to narrow the display. Double-click or press F2 in the raw-value column to open the appropriate editor: boolean, selection, integer or text. Bounds, step size and text encoding are checked. Unresolved special types remain read-only. Escape discards the current edit.
 

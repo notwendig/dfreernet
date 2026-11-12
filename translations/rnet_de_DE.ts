@@ -12,6 +12,22 @@
             <translation>Modul / Gruppe</translation>
         </message>
         <message>
+            <source>Module groups</source>
+            <translation>Modulgruppen</translation>
+        </message>
+        <message>
+            <source>All modules</source>
+            <translation>Alle Module</translation>
+        </message>
+        <message>
+            <source>Unit · Scale · Min–Max</source>
+            <translation>Einheit · Skala · Min–Max</translation>
+        </message>
+        <message>
+            <source>Unit: %1&#10;Scale: %2&#10;Raw min: %3&#10;Raw max: %4&#10;Catalog metadata; no unit conversion.</source>
+            <translation>Einheit: %1&#10;Skala: %2&#10;Rohwert min.: %3&#10;Rohwert max.: %4&#10;Katalogmetadaten; keine Einheitenumrechnung.</translation>
+        </message>
+        <message>
             <source>Unit</source>
             <translation>Einheit</translation>
         </message>

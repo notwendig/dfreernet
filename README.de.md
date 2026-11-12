@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 0.2.1
+## Version 0.2.2
 
-Diese Version ergänzt F1-Parameterhilfe sowie Modul-, Einheiten-, Katalogskalen- und Rohwertgrenzen-Spalten in der Profilansicht. Sie bleibt eine experimentelle Entwicklungsversion. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version ergänzt eine Modulgruppenansicht, fasst Einheit, Skala und Rohwertgrenzen in einer Spalte zusammen, hält die farbige Berechtigung beim Scrollen sichtbar und bricht lange Spaltentitel um. Sie bleibt eine experimentelle Entwicklungsversion. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Schnellstart
 
@@ -35,10 +35,10 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 
 - Controllerkonfiguration lesen und empfangene Nutzdaten einschließlich unbekannter Blöcke erhalten.
 - Zum installierten Katalog und zur gelesenen Dateiversion passende Parameter anzeigen und nach Berechtigung filtern.
-- Unter Ansichten zwischen der bisherigen Kategorienliste und der Profilansicht wechseln. Die Profilansicht zeigt links Allgemein und Profil 1–8; rechts stehen nur die Parameter des ausgewählten Profils. Beide Ansichten nutzen dieselben gelesenen Werte, Suche, Berechtigungen und Editoren.
-- Die Schaltflächen „Hierarchische Liste“ und „Profiltabelle“ stehen auch direkt neben dem Suchfeld.
+- Unter Ansichten zwischen Kategorienliste, Profilansicht und Modulgruppen wechseln. Die Profilansicht zeigt links Allgemein und Profil 1–8; die Modulansicht gruppiert nach Katalogmodulen. Alle Ansichten nutzen dieselben gelesenen Werte, Suche, Berechtigungen und Editoren.
+- Die drei Ansichtsschaltflächen stehen direkt neben dem Suchfeld.
 - Die Profilansicht zeigt das zugehörige Modul und die Gruppe; gleich benannte Parameter mit unterschiedlichen IDs bleiben unterscheidbar.
-- Zusätzlich zeigt sie Katalogeinheit, Skalierungsfelder und Rohwert-Minimum/-Maximum. Eine ungeprüfte Umrechnung in technische Einheiten erfolgt nicht.
+- Eine kompakte Spalte direkt nach dem Rohwert zeigt Katalogeinheit, Skalierungsfelder und Rohwert-Minimum/-Maximum. Die farbige Berechtigung bleibt rechts auch beim horizontalen Scrollen sichtbar. Eine ungeprüfte Umrechnung in technische Einheiten erfolgt nicht.
 - Unterstützte Rohwerte mit geprüften Ja/Nein-, Auswahl-, Zahlen- und Texteditoren bearbeiten; Änderungen erscheinen rot und fett.
 - F1 auf einem ausgewählten Parameter öffnet den eingebetteten R-net-Hilfetext mit ID, Profil, Rohwert und Berechtigung.
 - `.R-net`-Dateien öffnen und speichern; angezeigte Informationen exportieren.

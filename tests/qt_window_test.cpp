@@ -25,7 +25,7 @@ class WindowTest final : public QObject {
   std::unique_ptr<Window> make() {
     auto defaults=AppSettings::defaults();
     defaults.canInterface="rnetOffline";defaults.keepAwake=false;defaults.showAllParameters=false;
-    defaults.profileTableView=false; // Never bind a physical interface in offline UI tests.
+    defaults.profileTableView=false;defaults.moduleGroupView=false; // Never bind a physical interface in offline UI tests.
     defaults.workingDirectory=temp_.path()+"/documents";defaults.backupDirectory=temp_.path()+"/backups";
     defaults.exportDirectory=temp_.path()+"/exports";defaults.logDirectory=temp_.path()+"/logs";defaults.save();
     languages().setLanguage("en_US");
@@ -231,7 +231,7 @@ private slots:
     for(int i=0;i<w->model()->rowCount();++i)if(w->model()->rows[i].unread){unread=i;break;}QVERIFY(unread>=0);QVERIFY(!(w->model()->flags(w->model()->index(unread,2))&Qt::ItemIsEditable));
     auto plan=controller_write_plan(*w->document(),*w->document(),w->catalog_,AccessLevel::Dealer);QVERIFY(plan.empty());
     w->settings_.showAllParameters=false;w->showValues();QCOMPARE(w->model()->rowCount(),w->valueCount());QVERIFY(w->document()->write()==bytes);
-    w->settings_.showAllParameters=true;w->showValues();w->setAccess(AccessLevel::Therapist);for(int i=0;i<w->filter()->rowCount();++i)QVERIFY(w->filter()->index(i,4).data().toString().startsWith("0"));
+    w->settings_.showAllParameters=true;w->showValues();w->setAccess(AccessLevel::Therapist);for(int i=0;i<w->filter()->rowCount();++i)QVERIFY(w->filter()->index(i,5).data().toString().startsWith("0"));
   }
   void coloredDongleStatusTracksRolesAndLanguage(){
     auto w=make();auto *label=w->findChild<QLabel*>("dongleStatus");QVERIFY(label);const QString colors[]{"#ffeb3b","#4caf50","#1976d2","#d32f2f"};
@@ -583,7 +583,7 @@ private slots:
     auto w = make();
     w->openDocument(root_ + "/tests/fixtures/pid68-before-full.R-net");
     auto original = w->document()->write();
-    QCOMPARE(w->model()->columnCount(), 5);
+    QCOMPARE(w->model()->columnCount(), 6);
     const QColor colors[]{QColor("#FFEB3B"), QColor("#4CAF50"),
                            QColor("#1976D2"), QColor("#D32F2F")};
     int last = -1;
@@ -594,7 +594,7 @@ private slots:
       QVERIFY(count >= last);
       last = count;
       for (int row = 0; row < count; ++row) {
-        auto index = w->filter()->mapToSource(w->filter()->index(row, 4));
+        auto index = w->filter()->mapToSource(w->filter()->index(row, 5));
         const auto &r = w->model()->rows.at(index.row());
         QVERIFY(r.requiredAccess >= 0 && r.requiredAccess <= int(level));
         QCOMPARE(w->model()->data(index, Qt::BackgroundRole).value<QColor>(),
@@ -609,8 +609,8 @@ private slots:
     QCOMPARE(w->filter()->rowCount(), 1);
     languages().setLanguage("de_DE");
     QCoreApplication::sendPostedEvents(nullptr, QEvent::LanguageChange);
-    QCOMPARE(w->model()->headings[4], QString("Berechtigung"));
-    QVERIFY(w->filter()->data(w->filter()->index(0, 4)).toString().contains("Händler"));
+    QCOMPARE(w->model()->headings[5], QString("Berechtigung"));
+    QVERIFY(w->filter()->data(w->filter()->index(0, 5)).toString().contains("Händler"));
     QCOMPARE(w->document()->write(), original);
     QVERIFY(w->process_ == nullptr);
     languages().setLanguage("en_US");

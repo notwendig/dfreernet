@@ -116,6 +116,22 @@ bool implemented(unsigned id) {
          id == 57603 || id == 57604 || id == 57643 || id == 32844 ||
          id == 32831 || id == 32939 || id == 32803 || id == 32804;
 }
+void fillMetadata(Row &row,const ParameterDefinition &parameter,bool numeric){
+  auto prefix=fromU16(parameter.option_texts[0]);
+  if(prefix==QStringLiteral("u"))prefix=QString::fromUtf8("µ");
+  row.unit=prefix+fromU16(parameter.option_texts[2]);
+  if(row.unit.isEmpty())row.unit=QStringLiteral("—");
+  row.scale=parameter.metadata[8]&&parameter.metadata[9]?
+      QStringLiteral("%1:%2").arg(parameter.metadata[8]).arg(parameter.metadata[9]):QStringLiteral("—");
+  if(numeric){
+    row.minimum=QString::number(parameter.signed_storage?
+        qint64(qint32(parameter.metadata[4])):qint64(parameter.metadata[4]));
+    row.maximum=QString::number(parameter.signed_storage?
+        qint64(qint32(parameter.metadata[5])):qint64(parameter.metadata[5]));
+  }else row.minimum=row.maximum=QStringLiteral("—");
+  row.metadataSummary=QStringLiteral("%1 · %2 · %3–%4")
+      .arg(row.unit,row.scale,row.minimum,row.maximum);
+}
 } // namespace
 QString fromU16(const std::u16string &s) {
   return QString::fromStdU16String(s);
@@ -162,12 +178,10 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
     if (role == Qt::FontRole) {QFont font; font.setBold(true); return font;}
   }
   if (role == Qt::ToolTipRole){
-    if(headings.size()==10&&i.column()==4)return r.module;
-    if(headings.size()==10&&i.column()==6)
-      return QCoreApplication::translate("RNet",
-          "Catalog scale fields only; a display conversion has not been verified.");
-    if(headings.size()==10&&(i.column()==7||i.column()==8))
-      return QCoreApplication::translate("RNet","Raw catalog limit; no unit conversion.");
+    if((headings.size()==6||headings.size()==7)&&i.column()==3)
+      return QCoreApplication::translate("RNet","Unit: %1\nScale: %2\nRaw min: %3\nRaw max: %4\nCatalog metadata; no unit conversion.")
+          .arg(r.unit,r.scale,r.minimum,r.maximum);
+    if(headings.size()==7&&i.column()==5)return r.module;
     return r.detail;
   }
   if (role != Qt::DisplayRole)
@@ -183,29 +197,30 @@ QVariant TableModel::data(const QModelIndex &i, int role) const {
   case 2:
     return r.value;
   case 3:
+    if(headings.size()==6||headings.size()==7)return r.metadataSummary;
     return r.location;
   case 4:
-    if(headings.size()==10)return r.module;
+    if(headings.size()==6||headings.size()==7)return r.location;
     break;
   case 5:
-    if(headings.size()==10)return r.unit;
-    break;
-  case 6:
-    if(headings.size()==10)return r.scale;
-    break;
-  case 7:
-    if(headings.size()==10)return r.minimum;
-    break;
-  case 8:
-    if(headings.size()==10)return r.maximum;
+    if(headings.size()==7)return r.module;
     break;
   }
   return {};
 }
 QVariant TableModel::headerData(int i, Qt::Orientation o, int role) const {
-  return role == Qt::DisplayRole && o == Qt::Horizontal && i < headings.size()
-             ? QVariant(headings[i])
-             : QVariant();
+  if(role!=Qt::DisplayRole||o!=Qt::Horizontal||i<0||i>=headings.size())return {};
+  QString title=headings[i];
+  if(title==QCoreApplication::translate("RNet","Unit · Scale · Min–Max"))
+    title.replace(QStringLiteral(" · Min"),QStringLiteral("\nMin"));
+  else if(title==QCoreApplication::translate("RNet","Stored raw value")){
+    const int breakAt=title.lastIndexOf(' ');
+    if(breakAt>=0)title.replace(breakAt,1,QStringLiteral("\n"));
+  }
+  else if(title==QCoreApplication::translate("RNet","Profile / element")||
+          title==QCoreApplication::translate("RNet","Module / group"))
+    title.replace(QStringLiteral(" / "),QStringLiteral(" /\n"));
+  return title;
 }
 void TableModel::replace(std::vector<Row> r, QStringList h, bool profiles) {
   beginResetModel();
@@ -350,20 +365,27 @@ void Window::buildUi() {
   auto *layoutGroup=new QActionGroup(this);layoutGroup->setExclusive(true);
   listViewAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Hierarchical list"));
   profileViewAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Profile table"));
+  moduleViewAction_=view->addAction(QT_TRANSLATE_NOOP("RNet","Module groups"));
   listViewAction_->setObjectName("hierarchicalListView");
   profileViewAction_->setObjectName("profileTableView");
-  for(auto *action:{listViewAction_,profileViewAction_}){
+  moduleViewAction_->setObjectName("moduleGroupView");
+  for(auto *action:{listViewAction_,profileViewAction_,moduleViewAction_}){
     action->setCheckable(true);layoutGroup->addAction(action);
   }
-  listViewAction_->setChecked(!settings_.profileTableView);
+  listViewAction_->setChecked(!settings_.profileTableView&&!settings_.moduleGroupView);
   profileViewAction_->setChecked(settings_.profileTableView);
+  moduleViewAction_->setChecked(settings_.moduleGroupView);
   connect(listViewAction_,&QAction::triggered,this,[this]{
-    guarded([this]{commitPendingValueEditor();settings_.profileTableView=false;
-      QSettings().setValue("ui/profileTableView",false);renderValues();});
+    guarded([this]{commitPendingValueEditor();settings_.profileTableView=false;settings_.moduleGroupView=false;
+      QSettings q;q.setValue("ui/profileTableView",false);q.setValue("ui/moduleGroupView",false);renderValues();});
   });
   connect(profileViewAction_,&QAction::triggered,this,[this]{
-    guarded([this]{commitPendingValueEditor();settings_.profileTableView=true;
-      QSettings().setValue("ui/profileTableView",true);renderValues();});
+    guarded([this]{commitPendingValueEditor();settings_.profileTableView=true;settings_.moduleGroupView=false;
+      QSettings q;q.setValue("ui/profileTableView",true);q.setValue("ui/moduleGroupView",false);renderValues();});
+  });
+  connect(moduleViewAction_,&QAction::triggered,this,[this]{
+    guarded([this]{commitPendingValueEditor();settings_.profileTableView=false;settings_.moduleGroupView=true;
+      QSettings q;q.setValue("ui/profileTableView",false);q.setValue("ui/moduleGroupView",true);renderValues();});
   });
   add(view, "Repository-Dateien", Repository);
   add(view, QT_TRANSLATE_NOOP("RNet", "Bundled resource texts"), Resources);
@@ -452,6 +474,12 @@ void Window::buildUi() {
   profileViewButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
   profileViewButton->setAutoRaise(false);
   searchBar->addWidget(profileViewButton);
+  auto *moduleViewButton=new QToolButton;
+  moduleViewButton->setObjectName("moduleGroupButton");
+  moduleViewButton->setDefaultAction(moduleViewAction_);
+  moduleViewButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  moduleViewButton->setAutoRaise(false);
+  searchBar->addWidget(moduleViewButton);
   edit_ = new QPushButton(QT_TRANSLATE_NOOP("RNet", "Edit value…"));
   edit_->setObjectName("editValue");
   edit_->setIcon(uiIcon(Icon::Edit));
@@ -497,10 +525,33 @@ void Window::buildUi() {
   table_->setAlternatingRowColors(true);
   table_->setIconSize(QSize(18,18));
   table_->setSortingEnabled(true);
+  table_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   table_->verticalHeader()->hide();
   table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
   table_->horizontalHeader()->setStretchLastSection(true);
-  horizontal->addWidget(table_);
+  auto *tableContainer=new QWidget;
+  auto *tableLayout=new QHBoxLayout(tableContainer);
+  tableLayout->setContentsMargins(0,0,0,0);
+  tableLayout->setSpacing(0);
+  tableLayout->addWidget(table_,1);
+  accessTable_=new QTableView;
+  accessTable_->setObjectName("fixedAccessColumn");
+  accessTable_->setModel(proxy_);
+  accessTable_->setFixedWidth(165);
+  accessTable_->setSelectionMode(QAbstractItemView::NoSelection);
+  accessTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  accessTable_->setFocusPolicy(Qt::NoFocus);
+  accessTable_->setAlternatingRowColors(true);
+  accessTable_->verticalHeader()->hide();
+  accessTable_->horizontalHeader()->setStretchLastSection(true);
+  accessTable_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+  accessTable_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  tableLayout->addWidget(accessTable_);
+  connect(table_->verticalScrollBar(),&QScrollBar::valueChanged,
+          accessTable_->verticalScrollBar(),&QScrollBar::setValue);
+  connect(accessTable_->verticalScrollBar(),&QScrollBar::valueChanged,
+          table_->verticalScrollBar(),&QScrollBar::setValue);
+  horizontal->addWidget(tableContainer);
   horizontal->setStretchFactor(1, 1);
   horizontal->setSizes({310, 950});
   vertical->addWidget(horizontal);
@@ -724,6 +775,31 @@ void Window::buildProfileGroups(const QString &selection) {
   proxy_->group=selected->data(0,Qt::UserRole).toString();
   proxy_->refilter();
 }
+void Window::buildModuleGroups(const QString &selection){
+  const QSignalBlocker blocked(tree_);
+  tree_->clear();
+  auto *root=new QTreeWidgetItem(tree_,{QCoreApplication::translate("RNet","All modules")});
+  root->setData(0,Qt::UserRole,QString());
+  root->setIcon(0,uiIcon(Icon::Catalog));
+  QSet<QString> seen;
+  QTreeWidgetItem *selected=root;
+  for(const auto &row:model_->rows){
+    if(row.requiredAccess>=0&&!access_allows(unsigned(row.requiredAccess),access_))continue;
+    if(row.group.isEmpty()||seen.contains(row.group))continue;
+    seen.insert(row.group);
+    QString label=row.group;label.replace('~',QStringLiteral(" / "));
+    auto *item=new QTreeWidgetItem(root,{label});
+    item->setData(0,Qt::UserRole,row.group);
+    item->setIcon(0,uiIcon(Icon::Settings));
+    if(row.group==selection)selected=item;
+  }
+  root->sortChildren(0,Qt::AscendingOrder);
+  root->setExpanded(true);
+  tree_->setVisible(true);
+  tree_->setCurrentItem(selected);
+  proxy_->group=selected->data(0,Qt::UserRole).toString();
+  proxy_->refilter();
+}
 void Window::resetGroup(bool show) {
   if (show)
     buildGroups();
@@ -783,12 +859,12 @@ void Window::renderValues(bool preserveContext) {
   view_ = View::Values;
   valuesView_ = true;
   if (!document_&&!settings_.showAllParameters) {
-    model_->replace(
-        {}, {QCoreApplication::translate("RNet", "Parameter ID"), "Parameter",
+    model_->replace({}, {QCoreApplication::translate("RNet", "Parameter ID"), "Parameter",
              QCoreApplication::translate("RNet", "Read raw value"),
+             QCoreApplication::translate("RNet", "Unit · Scale · Min–Max"),
              QCoreApplication::translate("RNet", "Profile / element"),
              QCoreApplication::translate("RNet", "Access level")});
-    resetGroup(true);
+    if(settings_.moduleGroupView)buildModuleGroups({});else resetGroup(true);
     table_->setColumnHidden(2, false);
     table_->setColumnHidden(3, false);
     banner_->setText(QCoreApplication::translate(
@@ -830,25 +906,37 @@ void Window::renderValues(bool preserveContext) {
                     i >= baselineValues.size() || v.number != baselineValues[i].number ||
                     v.text != baselineValues[i].text});
     rows.back().icon=parameterIcon(p,catalog_);
+    fillMetadata(rows.back(),p,v.numeric);
+    if(settings_.moduleGroupView){
+      rows.back().module=rows.back().group;
+      rows.back().module.replace('~',QStringLiteral(" / "));
+      rows.back().group=rows.back().group.section('~',0,1);
+    }
   }
   if(settings_.showAllParameters){
     QSet<unsigned> present;for(const auto &value:values_)present.insert(value.parameter);
     for(const auto &[id,p]:catalog_.parameters){
       if(present.contains(id))continue;
       Row row{QString::number(id),fromU16(p.name()),QCoreApplication::translate("RNet","Not read"),QStringLiteral("—"),fromU16(p.text88),fromU16(p.help()),-1,int(p.metadata[1]>>5)};
-      row.icon=parameterIcon(p,catalog_);row.unread=true;rows.push_back(std::move(row));
+      row.icon=parameterIcon(p,catalog_);row.unread=true;
+      fillMetadata(row,p,p.metadata[4]||p.metadata[5]||p.metadata[9]);
+      if(settings_.moduleGroupView){row.module=row.group;row.module.replace('~',QStringLiteral(" / "));row.group=row.group.section('~',0,1);}
+      rows.push_back(std::move(row));
     }
   }
   model_->replace(std::move(rows),
                   {QCoreApplication::translate("RNet", "Parameter ID"),
                    "Parameter",
                    QCoreApplication::translate("RNet", "Stored raw value"),
+                   QCoreApplication::translate("RNet", "Unit · Scale · Min–Max"),
                    QCoreApplication::translate("RNet", "Profile / element"),
              QCoreApplication::translate("RNet", "Access level")});
-  resetGroup(true);
+  if(settings_.moduleGroupView)buildModuleGroups(preserveContext?group:QString());
+  else resetGroup(true);
   table_->setColumnHidden(2, false);
   table_->setColumnHidden(3, false);
-  table_->setColumnWidth(4, 180);
+  table_->setColumnWidth(3,240);
+  table_->setColumnWidth(4,180);
   table_->setColumnWidth(0, 130);
   table_->setColumnWidth(1, 620);
   table_->setColumnWidth(2, 200);
@@ -959,22 +1047,10 @@ void Window::renderProfileValues(bool preserveContext) {
       row.module=source.group;
       row.module.replace('~',QStringLiteral(" / "));
       const auto &parameter=catalog_.parameters.at(row.id.toUInt());
-      auto prefix=fromU16(parameter.option_texts[0]);
-      if(prefix==QStringLiteral("u"))prefix=QString::fromUtf8("µ");
-      row.unit=prefix+fromU16(parameter.option_texts[2]);
-      if(row.unit.isEmpty())row.unit=QStringLiteral("—");
-      if(parameter.metadata[8]&&parameter.metadata[9])
-        row.scale=QStringLiteral("%1:%2").arg(parameter.metadata[8]).arg(parameter.metadata[9]);
-      else row.scale=QStringLiteral("—");
       const bool numeric=cell&&cell->valueIndex>=0?
           values_.at(std::size_t(cell->valueIndex)).numeric:
           (parameter.metadata[4]||parameter.metadata[5]||parameter.metadata[9]);
-      if(numeric){
-        row.minimum=QString::number(parameter.signed_storage?
-            qint64(qint32(parameter.metadata[4])):qint64(parameter.metadata[4]));
-        row.maximum=QString::number(parameter.signed_storage?
-            qint64(qint32(parameter.metadata[5])):qint64(parameter.metadata[5]));
-      }else row.minimum=row.maximum=QStringLiteral("—");
+      fillMetadata(row,parameter,numeric);
       row.detail=cell&&!cell->detail.isEmpty()?cell->detail:source.detail;
       row.valueIndex=cell?cell->valueIndex:-1;
       row.requiredAccess=source.requiredAccess;
@@ -988,22 +1064,17 @@ void Window::renderProfileValues(bool preserveContext) {
       {QCoreApplication::translate("RNet","Parameter ID"),
        QCoreApplication::translate("RNet","Parameter"),
        QCoreApplication::translate("RNet","Stored raw value"),
+       QCoreApplication::translate("RNet","Unit · Scale · Min–Max"),
        QCoreApplication::translate("RNet","Element"),
        QCoreApplication::translate("RNet","Module / group"),
-       QCoreApplication::translate("RNet","Unit"),
-       QCoreApplication::translate("RNet","Scale (catalog)"),
-       QCoreApplication::translate("RNet","Raw min"),
-       QCoreApplication::translate("RNet","Raw max"),
        QCoreApplication::translate("RNet","Access level")});
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   search_->clear();
   buildProfileGroups(preserveContext?group:QStringLiteral("common"));
   for(int col=0;col<model_->columnCount();++col)table_->setColumnHidden(col,false);
   table_->setColumnWidth(0,130);table_->setColumnWidth(1,480);
-  table_->setColumnWidth(2,200);table_->setColumnWidth(3,100);
-  table_->setColumnWidth(4,300);table_->setColumnWidth(5,85);
-  table_->setColumnWidth(6,120);table_->setColumnWidth(7,110);
-  table_->setColumnWidth(8,110);table_->setColumnWidth(9,160);
+  table_->setColumnWidth(2,200);table_->setColumnWidth(3,240);
+  table_->setColumnWidth(4,100);table_->setColumnWidth(5,300);
   table_->sortByColumn(1,Qt::AscendingOrder);
   if(document_)updateDocumentBanner();
   else banner_->setText(QCoreApplication::translate(
@@ -1131,6 +1202,7 @@ void Window::updateTitle() {
   setWindowModified(document_ && document_->write() != saved_);
 }
 void Window::updateActions() {
+  syncAccessColumn();
   int index = -1;
   auto current = table_->currentIndex();
   if (current.isValid()) {
@@ -1182,6 +1254,21 @@ void Window::updateActions() {
                    ? QCoreApplication::translate("RNet", " | CAN task running")
                    : QCoreApplication::translate(
                          "RNet", " | Controller not connected")));
+}
+void Window::syncAccessColumn(){
+  if(!accessTable_)return;
+  const bool show=(view_==View::Values||view_==View::Catalog)&&model_->columnCount()>0;
+  const int headerHeight=table_->horizontalHeader()->fontMetrics().lineSpacing()*2+12;
+  table_->horizontalHeader()->setFixedHeight(headerHeight);
+  accessTable_->horizontalHeader()->setFixedHeight(headerHeight);
+  accessTable_->setVisible(show);
+  if(!show)return;
+  const int accessColumn=model_->columnCount()-1;
+  for(int column=0;column<model_->columnCount();++column)
+    accessTable_->setColumnHidden(column,column!=accessColumn);
+  table_->setColumnHidden(accessColumn,true);
+  accessTable_->setColumnWidth(accessColumn,160);
+  accessTable_->verticalScrollBar()->setValue(table_->verticalScrollBar()->value());
 }
 void Window::selected() {
   auto current = proxy_->mapToSource(table_->currentIndex());
@@ -1250,6 +1337,8 @@ void Window::setAccess(AccessLevel level) {
   if (view_ == View::Values || view_ == View::Catalog) {
     if(view_==View::Values&&settings_.profileTableView)
       buildProfileGroups(proxy_->group);
+    else if(view_==View::Values&&settings_.moduleGroupView)
+      buildModuleGroups(proxy_->group);
     else{
       buildGroups();
       proxy_->group.clear();

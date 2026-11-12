@@ -10,9 +10,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 0.2.1
+## Version 0.2.2
 
-This version adds F1 parameter help and module, unit, catalog-scale and raw-limit columns to the profile view. It remains an experimental development build. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version adds a module-group view, combines unit, scale and raw limits in one column, keeps the colored access level visible while scrolling, and wraps long column titles. It remains an experimental development build. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
 ## Quick start
 
@@ -35,10 +35,10 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 
 - Read controller configuration and preserve received payloads, including unsupported blocks.
 - Show parameters supported by the installed catalog and the received file version; filter by access level.
-- Switch under Views between the existing category list and a profile view. The profile view lists Common and Profiles 1–8 on the left and shows only the selected profile's parameters on the right. Both views use the same read values, search, access filter and editors.
-- The Hierarchical list and Profile table buttons are also visible beside the search field.
+- Switch under Views between the category list, profile view, and module groups. The profile view lists Common and Profiles 1–8; the module view groups parameters by their catalog module. All use the same read values, search, access filter and editors.
+- All three view buttons are visible beside the search field.
 - The profile table identifies the source module/group, so parameters with the same name but different IDs remain distinguishable.
-- The profile table also shows catalog unit, scale fields, and raw minimum/maximum. It does not apply an unverified engineering-unit conversion.
+- One compact column after the raw value shows catalog unit, scale fields, and raw minimum/maximum. The colored access column stays visible on the right while scrolling horizontally. No unverified engineering-unit conversion is applied.
 - Edit supported raw values using validated boolean, selection, number and text editors. Pending changes appear red and bold.
 - Press F1 on a selected parameter to open its bundled R-net catalog help text with ID, profile, raw value and access context.
 - Open and save `.R-net` files; export displayed information.
