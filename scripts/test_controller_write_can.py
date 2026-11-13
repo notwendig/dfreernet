@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Two-file controller writer, partial failure and stale-plan test on private vcan."""
 from pathlib import Path
+from build_mode import build_dir
 import binascii,csv,json,os,socket,struct,subprocess,tempfile,time
 root=Path(__file__).resolve().parents[1]
 assert os.getuid()==0
@@ -8,7 +9,7 @@ assert {x['ifname'] for x in json.loads(subprocess.check_output(['ip','-j','link
 for args in [('set','lo','up'),('add','rnetw0','type','vcan'),('set','rnetw0','up')]:subprocess.run(['ip','link',*args],check=True)
 base=Path(tempfile.mkdtemp(prefix='rnet-multiple-write-',dir='/tmp'))
 fixtures=base/'fixtures'
-subprocess.run([str(root/'build-native/rnet_write_plan_test'),str(root/'tests/fixtures/pid68-before-full.R-net'),'--bundled',str(fixtures),'--with-enum'],check=True)
+subprocess.run([str(build_dir(root)/'rnet_write_plan_test'),str(root/'tests/fixtures/pid68-before-full.R-net'),'--bundled',str(fixtures),'--with-enum'],check=True)
 rows=list(csv.DictReader((fixtures/'files.csv').open()));assert len(rows)==2
 original={int(r['id']):(fixtures/(r['id']+'-before.bin')).read_bytes() for r in rows}
 desired={int(r['id']):(fixtures/(r['id']+'-after.bin')).read_bytes() for r in rows}
@@ -34,7 +35,7 @@ for mode in ['normal','post_write_18','interleaved_requests','missing_status_rep
             data=payload[read_offset:read_offset+8];read_offset+=len(data);last=read_offset==len(payload)
             send((0x792<<18)|((3 if last else 2)<<16)|read_sequence,data);read_sequence+=1
     log=(base/(mode+'.log')).open('wb')
-    app=subprocess.Popen([str(root/'build-native/rnet_program_controller'),'rnetw0',str(fixtures/'before.R-net'),str(fixtures/'desired.R-net'),str(out),'--stationary-confirmed','--access-level=2'],stdout=log,stderr=subprocess.STDOUT)
+    app=subprocess.Popen([str(build_dir(root)/'rnet_program_controller'),'rnetw0',str(fixtures/'before.R-net'),str(fixtures/'desired.R-net'),str(out),'--stationary-confirmed','--access-level=2'],stdout=log,stderr=subprocess.STDOUT)
     try:
         deadline=time.monotonic()+25
         while app.poll() is None and time.monotonic()<deadline:

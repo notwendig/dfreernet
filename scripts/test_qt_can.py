@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Qt receive-only integration test; must run in a fresh network namespace."""
 from pathlib import Path
+from build_mode import build_dir
 import json,os,subprocess
 root=Path(__file__).resolve().parents[1]
 assert os.getuid()==0
@@ -8,7 +9,7 @@ assert {x['ifname'] for x in json.loads(subprocess.check_output(['ip','-j','link
 for args in [('set','lo','up'),('add','rnetqt0','type','vcan'),('set','rnetqt0','up')]:
     subprocess.run(['ip','link',*args],check=True)
 env=dict(os.environ,QT_QPA_PLATFORM='offscreen',RNET_QT_TEST_CAN='rnetqt0')
-subprocess.run([str(root/'build-native/rnet_qt_test'),'monitorOnPrivateVcan'],env=env,check=True,timeout=15)
+subprocess.run([str(build_dir(root)/'rnet_qt_test'),'monitorOnPrivateVcan'],env=env,check=True,timeout=15)
 # Exactly eight frames from the test sender; the application emitted no CAN frames.
 stats=json.loads(subprocess.check_output(['ip','-j','-statistics','link','show','rnetqt0']))[0]
 assert stats['stats64']['tx']['packets']==8,stats

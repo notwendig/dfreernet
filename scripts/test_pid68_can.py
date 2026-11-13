@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Native PID68 writer on a fresh private vcan. Never run on physical CAN."""
 from pathlib import Path
+from build_mode import build_dir
 import binascii,json,os,socket,struct,subprocess,tempfile,time,sys
 qt="--qt" in sys.argv
 controller="--controller" in sys.argv or qt
@@ -9,7 +10,7 @@ assert os.getuid()==0
 assert {x['ifname'] for x in json.loads(subprocess.check_output(['ip','-j','link','show']))}=={'lo'}
 for args in [('set','lo','up'),('add','rnetw0','type','vcan'),('set','rnetw0','up')]:subprocess.run(['ip','link',*args],check=True)
 directory=Path(tempfile.mkdtemp(prefix='rnet-pid68-vcan-',dir='/tmp'))
-subprocess.run([str(root/'build-native/rnet_pid68_socket_policy_test'),'rnetw0',str(root/'tests/fixtures/pid68-before-v22.bin'),str(directory)],check=True)
+subprocess.run([str(build_dir(root)/'rnet_pid68_socket_policy_test'),'rnetw0',str(root/'tests/fixtures/pid68-before-v22.bin'),str(directory)],check=True)
 stats=json.loads(subprocess.check_output(['ip','-j','-statistics','link','show','rnetw0']))[0]
 assert stats['stats64']['tx']['packets']==0,'A policy-rejected frame reached CAN'
 before=(root/'tests/fixtures/pid68-before-v22.bin').read_bytes();assert len(before)==623 and before[16]==0
@@ -17,7 +18,7 @@ expected=bytearray(before);expected[16]=1;expected[10:12]=struct.pack('<H',~sum(
 file=before;staged=bytearray();owner=0;writing=False;allocated=False;read_offset=0;read_sequence=1;write_sequence=1;version_set=type_set=attrs_set=False;commits=0;requests=0
 source=root/'tests/fixtures/pid68-before-full.R-net';source_data=source.read_bytes();output=(directory/'qt-write/output' if qt else directory/'program')
 # Insufficient selected dongle level must fail before even opening SocketCAN.
-denied=subprocess.run([str(root/'build-native/rnet_program_pid68'),'rnetw0',str(root.parent),str(source),str(directory/'denied'),'--stationary-confirmed','--pid68=1','--access-level=0'],capture_output=True,text=True)
+denied=subprocess.run([str(build_dir(root)/'rnet_program_pid68'),'rnetw0',str(root.parent),str(source),str(directory/'denied'),'--stationary-confirmed','--pid68=1','--access-level=0'],capture_output=True,text=True)
 assert denied.returncode and 'exceeds selected Dongle access level' in denied.stderr
 assert not (directory/'denied/can.log').exists()
 assert json.loads(subprocess.check_output(['ip','-j','-statistics','link','show','rnetw0']))[0]['stats64']['tx']['packets']==0
@@ -26,7 +27,7 @@ offset=source_data.find(before);assert offset>=0 and source_data.count(before)==
 expected_doc=source_data[:offset]+expected+source_data[offset+len(before):]
 desired=directory/'desired.R-net';desired.write_bytes(expected_doc)
 if controller:
-    denied=subprocess.run([str(root/'build-native/rnet_program_controller'),'rnetw0',str(root.parent),str(source),str(desired),str(directory/'denied-controller'),'--stationary-confirmed','--access-level=0'],capture_output=True,text=True)
+    denied=subprocess.run([str(build_dir(root)/'rnet_program_controller'),'rnetw0',str(root.parent),str(source),str(desired),str(directory/'denied-controller'),'--stationary-confirmed','--access-level=0'],capture_output=True,text=True)
     assert denied.returncode and 'exceeds selected Dongle access level' in denied.stderr
     assert not (directory/'denied-controller').exists()
 server=socket.socket(socket.AF_CAN,socket.SOCK_RAW,socket.CAN_RAW);server.bind(('rnetw0',));server.settimeout(.1)
@@ -42,8 +43,8 @@ def readwindow():
         data=file[read_offset:read_offset+8];read_offset+=len(data);last=read_offset==len(file)
         send((0x792<<18)|((3 if last else 2)<<16)|read_sequence,data);read_sequence+=1
 with (directory/'client.log').open('wb') as log:
-    command=([str(root/'build-native/rnet_program_controller'),'rnetw0',str(root.parent),str(source),str(desired),str(output),'--stationary-confirmed','--access-level=2'] if controller else [str(root/'build-native/rnet_program_pid68'),'rnetw0',str(root.parent),str(source),str(output),'--stationary-confirmed','--pid68=1','--access-level=2'])
-    if qt:command=[str(root/'build-native/rnet_qt_test'),'vcanControllerWrite']
+    command=([str(build_dir(root)/'rnet_program_controller'),'rnetw0',str(root.parent),str(source),str(desired),str(output),'--stationary-confirmed','--access-level=2'] if controller else [str(build_dir(root)/'rnet_program_pid68'),'rnetw0',str(root.parent),str(source),str(output),'--stationary-confirmed','--pid68=1','--access-level=2'])
+    if qt:command=[str(build_dir(root)/'rnet_qt_test'),'vcanControllerWrite']
     env=dict(os.environ,QT_QPA_PLATFORM='offscreen',RNET_QT_WRITE_TEST_DIR=str(directory))
     app=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,env=env)
 try:

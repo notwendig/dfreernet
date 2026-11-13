@@ -12,7 +12,9 @@ scripts/test.sh
 scripts/run.sh --language en_US
 ```
 
-CMake target and binary: `dfreernet`, `build-native/dfreernet`. Build configuration: `RelWithDebInfo`; scripts use two build jobs. Compiler warnings are enabled for native source targets. For manual CMake use, provide the same Qt modules and use an out-of-source build.
+CMake target and binaries: `dfreernet`, `build/RELEASE/dfreernet` and `build/DEBUG/dfreernet`. `scripts/build.sh` defaults to RELEASE (`RelWithDebInfo`); `scripts/build.sh DEBUG` uses CMake `Debug`. Set `DFREERNET_BUILD_MODE=DEBUG` for launch, test, package, and Python integration scripts. Scripts use two build jobs. Compiler warnings are enabled for native source targets. For manual CMake use, provide the same Qt modules and use an out-of-source build.
+
+In VSCodium, reload the window and select the **DEBUG** or **RELEASE** configure preset in the CMake Tools project status panel. Its Build, Test, Debug and Launch controls then use the corresponding `build/` directory.
 
 Native runtime resources are embedded from checked project files in `resources/`. CMake runs `scripts/embed_resources.py`, which checks their pinned SHA256 values and creates a C++ translation unit. The main program requires explicit acceptance of its startup warning before constructing the document/controller UI. `--quit-after` can reject this warning for UI checks; it cannot accept it.
 
@@ -25,9 +27,8 @@ Native runtime resources are embedded from checked project files in `resources/`
 | `src/can_reader.*`, `src/can_writer.*`, `src/can_socket.*` | Bounded controller transport and read/write state machines |
 | `src/program_controller.cpp` | Controller-write helper used by the Qt application |
 | `tests/` | Offline tests, SocketCAN test programs and private fixtures |
-| `scripts/` | Current build/launch/check scripts and retained investigation utilities |
+| `scripts/` | Build, launch, packaging, virtual CAN checks and fixture/catalog generation |
 | `translations/rnet_de_DE.ts` | German Qt Linguist catalog; English source language |
-| `docs/history/` | Archived chronological project notes; may describe superseded implementations |
 
 Internal `rnet_*` library/helper names, the `RNet` Qt translation context, `.R-net` document extension and historical evidence filenames are retained for compatibility. They are not the displayed product name.
 
@@ -48,6 +49,8 @@ English (US) is the source language; German uses a compiled Qt `.qm` resource. A
 The title bar contains `dfreernet <version>` or `filename — dfreernet <version>`. The Qt application display name is short to avoid a second expanded product title being appended by the platform. The subtitle remains in documentation and the About dialog.
 
 ## Verification
+
+GitHub Actions runs the fixture-free `scripts/test.sh` suite for both RELEASE and DEBUG in a Fedora 44 container. The job uses an offscreen Qt platform and does not access physical CAN hardware. Local private-fixture and virtual-CAN tests remain separate.
 
 ```bash
 scripts/test.sh

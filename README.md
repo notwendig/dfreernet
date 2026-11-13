@@ -39,6 +39,7 @@ Requires Linux, a C++17 compiler, CMake 3.21+, Ninja, Python 3, zlib development
 
 ```bash
 scripts/build.sh
+scripts/build.sh DEBUG  # separate debug build
 scripts/run.sh
 # Open a saved configuration:
 scripts/run.sh --document '/absolute/path/configuration.R-net'
@@ -46,7 +47,7 @@ scripts/run.sh --document '/absolute/path/configuration.R-net'
 scripts/test.sh
 ```
 
-The native executable is `build-native/dfreernet`. The launcher works from this checkout at any location. For a relocatable local application directory, run `scripts/package.sh`, then start `dist/dfreernet/bin/dfreernet`. Copy the complete directory, including its controller helper programs. The target machine needs Qt 6.10+ including the Sql module/QSQLITE driver, and zlib installed; no Wine or original programmer is needed.
+The native executables are `build/RELEASE/dfreernet` (default) and `build/DEBUG/dfreernet`. Set `DFREERNET_BUILD_MODE=DEBUG` for `scripts/run.sh`, `scripts/test.sh`, `scripts/package.sh`, or Python integration scripts. The launcher works from this checkout at any location. For a relocatable local application directory, run `scripts/package.sh`, then start `dist/dfreernet/bin/dfreernet`. Copy the complete directory, including its controller helper programs. The target machine needs Qt 6.10+ including the Sql module/QSQLITE driver, and zlib installed; no Wine or original programmer is needed.
 
 A warning and disclaimer appears at every interactive start. Choose Continue deliberately to enter the application. The interface defaults to US English; German is available through Language or **Edit → Settings → General**. Existing preferences from the former “R-net Qt” application are copied once when no dfreernet preferences exist.
 
@@ -84,13 +85,13 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 ```text
 src/             Native core, SocketCAN tools and Qt interface
 translations/    Qt Linguist German catalog; English source strings
-scripts/         Build, launch, verification and investigation tools
+scripts/         Build, launch, packaging, virtual CAN checks and catalog tools
 tests/           Automated tests; private reference fixtures stay local
 resources/       Pinned SQLite catalog and resource provenance
 docs/            Current bilingual documentation
 analysis/        Private captures, reports and screenshots (generated)
 checkpoints/     Recoverable source snapshots (local)
-build-native/    Generated native build, including dfreernet
+build/           Generated DEBUG and RELEASE builds
 ```
 
 Historical investigation files, local checkpoints, controller captures, personal configurations and build outputs remain outside Git. The repository contains the native application sources and the pinned runtime catalog; the bundled derived data are excluded from the code license.

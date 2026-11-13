@@ -12,7 +12,9 @@ scripts/test.sh
 scripts/run.sh --language de_DE
 ```
 
-CMake-Ziel und Programmdatei: `dfreernet`, `build-native/dfreernet`. Buildkonfiguration: `RelWithDebInfo`; die Skripte verwenden zwei parallele Buildaufträge. Compilerwarnungen sind für native Quelltextziele aktiviert. Bei manuellem CMake-Aufruf dieselben Qt-Module und ein separates Buildverzeichnis verwenden.
+CMake-Ziel und Programmdateien: `dfreernet`, `build/RELEASE/dfreernet` und `build/DEBUG/dfreernet`. `scripts/build.sh` verwendet standardmäßig RELEASE (`RelWithDebInfo`); `scripts/build.sh DEBUG` verwendet CMake `Debug`. Mit `DFREERNET_BUILD_MODE=DEBUG` nutzen Start-, Test-, Paket- und Python-Integrationsskripte den Debug-Build. Die Skripte verwenden zwei parallele Buildaufträge. Compilerwarnungen sind für native Quelltextziele aktiviert. Bei manuellem CMake-Aufruf dieselben Qt-Module und ein separates Buildverzeichnis verwenden.
+
+In VSCodium das Fenster neu laden und im Projektstatus von CMake Tools das Configure-Preset **DEBUG** oder **RELEASE** wählen. „Build“, „Test“, „Debug“ und „Launch“ verwenden dann das entsprechende `build/`-Verzeichnis.
 
 Native Laufzeitressourcen werden aus geprüften Projektdateien unter `resources/` eingebettet. CMake startet `scripts/embed_resources.py`, das deren feste SHA256-Werte prüft und eine C++-Datei erzeugt. Das Hauptprogramm verlangt die ausdrückliche Zustimmung zur Startwarnung, bevor es die Dokument-/Controlleroberfläche erzeugt. `--quit-after` darf die Warnung für Oberflächenprüfungen ablehnen, aber nicht bestätigen.
 
@@ -25,9 +27,8 @@ Native Laufzeitressourcen werden aus geprüften Projektdateien unter `resources/
 | `src/can_reader.*`, `src/can_writer.*`, `src/can_socket.*` | Begrenzter Controllertransport und Lese-/Schreibzustandsautomaten |
 | `src/program_controller.cpp` | Controller-Schreibhilfe der Qt-Anwendung |
 | `tests/` | Offline-Tests, SocketCAN-Testprogramme und private Referenzdaten |
-| `scripts/` | Aktuelle Build-/Start-/Prüfskripte sowie erhaltene Untersuchungswerkzeuge |
+| `scripts/` | Build, Start, Paketierung, virtuelle CAN-Prüfungen und Fixture-/Katalogerzeugung |
 | `translations/rnet_de_DE.ts` | Deutscher Qt-Linguist-Katalog; englische Quellsprache |
-| `docs/history/` | Historische chronologische Notizen; können überholte Implementierungen beschreiben |
 
 Interne `rnet_*`-Bibliotheks-/Hilfsprogrammnamen, der Qt-Übersetzungskontext `RNet`, die Endung `.R-net` und historische Nachweisdateinamen bleiben aus Kompatibilitätsgründen erhalten. Sie sind nicht der angezeigte Produktname.
 
@@ -48,6 +49,8 @@ US-Englisch ist die Quellsprache; Deutsch verwendet eine kompilierte Qt-`.qm`-Re
 Die Titelleiste zeigt `dfreernet <Version>` beziehungsweise `Dateiname — dfreernet <Version>`. Der Qt-Anzeigename bleibt kurz, damit die Plattform keinen zweiten ausgeschriebenen Produkttitel anhängt. Der Untertitel steht weiterhin in Dokumentation und Über-Dialog.
 
 ## Prüfung
+
+GitHub Actions führt die referenzdatenfreie Suite `scripts/test.sh` für RELEASE und DEBUG in einem Fedora-44-Container aus. Qt läuft ohne Bildschirm; der Job greift nicht auf physische CAN-Hardware zu. Lokale Tests mit privaten Referenzdaten und virtuellem CAN bleiben getrennt.
 
 ```bash
 scripts/test.sh

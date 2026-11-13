@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 from pathlib import Path
+from build_mode import build_dir
 
 project=Path(__file__).resolve().parents[1]
 source=Path(sys.argv[1]) if len(sys.argv)>1 else Path('/home/juergen/Projects/AndroidStudioProjects/open-rnet')
@@ -44,7 +45,7 @@ for name in ['programmer_dump_file_july2017.pcapng','programmer_write_file_july2
     provenance['captures'].append({'path':str(path.relative_to(source)),'sha256':digest(raw),'total_frames':total,'selected_frames':len(records),'fixture':output,'fixture_sha256':digest(encoded)})
 for relative in ['docs/POP_PROTOCOL.md','docs/RNET_PROGRAMMER_PROTOCOL.md','docs/RNET_CONFIG_FILE_FORMAT.md','docs/RNET_PROTOCOL_SPECIFICATION.md','tools/rnet_programmer.py','tools/rnet_pop_shell.py','tools/rnet_config_parser.py']:
     data=(source/relative).read_bytes();provenance['references'].append({'path':relative,'sha256':digest(data)})
-runner=project/'build-native/rnet_open_rnet_test'
+runner=build_dir(project)/'rnet_open_rnet_test'
 run=subprocess.run([str(runner),str(project.parent/'RNet Programmer6 OEM.exe'),str(project.parent/'Generic_V33_1_1245.rnd'),str(target),'--record'],capture_output=True,text=True,check=True)
 store(target/'corpus.tsv',run.stdout.encode())
 (project/'analysis/open-rnet-provenance.json').write_text(json.dumps(provenance,indent=2,ensure_ascii=False)+'\n')

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    container: fedora:44
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - name: Install build dependencies
+        run: >-
+          dnf -y --setopt=install_weak_deps=False install
+          gcc-c++ cmake ninja-build python3 git file ripgrep dbus-daemon
+          qt6-qtbase-devel qt6-qtbase-gui qt6-qttools-devel qt6-linguist
+          zlib-ng-compat-devel
+
+      - uses: actions/checkout@v7
+
+      - name: Build and test RELEASE
+        run: scripts/test.sh
+
+      - name: Build and test DEBUG
+        env:
+          DFREERNET_BUILD_MODE: DEBUG
+        run: scripts/test.sh

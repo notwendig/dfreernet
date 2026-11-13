@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the identification-only utility on private vcan, never hardware."""
 from pathlib import Path
+from build_mode import build_dir
 import json,os,socket,struct,subprocess,tempfile,time
 root=Path(__file__).resolve().parents[1]
 assert os.getuid()==0
@@ -10,7 +11,7 @@ server=socket.socket(socket.AF_CAN,socket.SOCK_RAW,socket.CAN_RAW);server.bind((
 directory=Path(tempfile.mkdtemp(prefix='rnet-serial-test-',dir='/tmp'))
 known={0:0x9a1cc2c4,2:0xdf21466e,3:0x1234567887654321};seen=[]
 with (directory/'query.log').open('wb') as output:
-    app=subprocess.Popen([str(root/'build-native/rnet_serial_query'),'rnetserial0'],stdout=output,stderr=subprocess.STDOUT)
+    app=subprocess.Popen([str(build_dir(root)/'rnet_serial_query'),'rnetserial0'],stdout=output,stderr=subprocess.STDOUT)
 try:
     deadline=time.monotonic()+10
     while app.poll() is None and time.monotonic()<deadline:

@@ -4,6 +4,7 @@
 Only this test's fake server emits response fixtures. Never run on hardware.
 """
 from pathlib import Path
+from build_mode import build_dir
 import binascii,json,os,socket,struct,subprocess,tempfile,time
 root=Path(__file__).resolve().parents[1]
 assert os.getuid()==0
@@ -30,9 +31,9 @@ def window():
 with (directory/'client.log').open('wb') as log:
     if os.environ.get('RNET_CONFIG_QT_FRONTEND')=='1':
         env=dict(os.environ,QT_QPA_PLATFORM='offscreen',RNET_QT_CONFIG_CAN='rnetcfg0',RNET_QT_CONFIG_OUTPUT=str(output))
-        app=subprocess.Popen([str(root/'build-native/rnet_qt_test'),'configurationOnPrivateVcan'],env=env,stdout=log,stderr=subprocess.STDOUT)
+        app=subprocess.Popen([str(build_dir(root)/'rnet_qt_test'),'configurationOnPrivateVcan'],env=env,stdout=log,stderr=subprocess.STDOUT)
     else:
-        app=subprocess.Popen([str(root/'build-native/rnet_config_read'),'rnetcfg0',str(root.parent),str(output),str(root/'tests/fixtures/original-reference-default.R-net'),'read'],stdout=log,stderr=subprocess.STDOUT)
+        app=subprocess.Popen([str(build_dir(root)/'rnet_config_read'),'rnetcfg0',str(root.parent),str(output),str(root/'tests/fixtures/original-reference-default.R-net'),'read'],stdout=log,stderr=subprocess.STDOUT)
 try:
     deadline=time.monotonic()+25
     while app.poll() is None and time.monotonic()<deadline:

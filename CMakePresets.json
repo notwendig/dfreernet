@@ -1,0 +1,35 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "DEBUG",
+      "displayName": "DEBUG (GCC)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/DEBUG",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "RELEASE",
+      "displayName": "RELEASE (GCC)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/RELEASE",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "DEBUG", "configurePreset": "DEBUG", "jobs": 2 },
+    { "name": "RELEASE", "configurePreset": "RELEASE", "jobs": 2 }
+  ],
+  "testPresets": [
+    { "name": "DEBUG", "configurePreset": "DEBUG", "output": { "outputOnFailure": true } },
+    { "name": "RELEASE", "configurePreset": "RELEASE", "output": { "outputOnFailure": true } }
+  ]
+}

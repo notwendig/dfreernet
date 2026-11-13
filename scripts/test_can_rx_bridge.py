@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests receive forwarding and TX rejection on a namespace-private vcan only."""
 from pathlib import Path
+from build_mode import build_dir
 import json
 import os
 import socket
@@ -18,7 +19,7 @@ subprocess.run(['ip','link','add','rnetrx0','type','vcan'],check=True)
 subprocess.run(['ip','link','set','rnetrx0','up'],check=True)
 directory=Path(tempfile.mkdtemp(prefix='rnet-rx-test-',dir='/tmp'))
 with (directory/'bridge.log').open('wb') as log:
-    bridge=subprocess.Popen([str(root/'build-native/rnet_can_rx_bridge'),'rnetrx0'],stdout=log,stderr=subprocess.STDOUT)
+    bridge=subprocess.Popen([str(build_dir(root)/'rnet_can_rx_bridge'),'rnetrx0'],stdout=log,stderr=subprocess.STDOUT)
 try:
     udp=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);udp.settimeout(2);udp.connect(('127.0.0.1',39010))
     sender=socket.socket(socket.AF_CAN,socket.SOCK_RAW,socket.CAN_RAW);sender.bind(('rnetrx0',))

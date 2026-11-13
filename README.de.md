@@ -39,6 +39,7 @@ Benötigt werden Linux, ein C++17-Compiler, CMake ab 3.21, Ninja, Python 3, zlib
 
 ```bash
 scripts/build.sh
+scripts/build.sh DEBUG  # getrennter Debug-Build
 scripts/run.sh
 # Gespeicherte Konfiguration öffnen:
 scripts/run.sh --document '/absoluter/pfad/konfiguration.R-net'
@@ -46,7 +47,7 @@ scripts/run.sh --document '/absoluter/pfad/konfiguration.R-net'
 scripts/test.sh
 ```
 
-Die Programmdatei heißt `build-native/dfreernet`. Das Startskript funktioniert unabhängig vom Ort dieses Projekts. `scripts/package.sh` erstellt ein verschiebbares lokales Programmverzeichnis; Start mit `dist/dfreernet/bin/dfreernet`. Das vollständige Verzeichnis einschließlich Controller-Hilfsprogrammen kopieren. Auf dem Zielrechner müssen Qt ab 6.10 einschließlich Sql-Modul/QSQLITE-Treiber und zlib installiert sein; Wine und Originalprogramm werden nicht benötigt.
+Die Programmdateien liegen unter `build/RELEASE/dfreernet` (Standard) und `build/DEBUG/dfreernet`. Mit `DFREERNET_BUILD_MODE=DEBUG` nutzen `scripts/run.sh`, `scripts/test.sh`, `scripts/package.sh` und Python-Integrationstests den Debug-Build. Das Startskript funktioniert unabhängig vom Ort dieses Projekts. `scripts/package.sh` erstellt ein verschiebbares lokales Programmverzeichnis; Start mit `dist/dfreernet/bin/dfreernet`. Das vollständige Verzeichnis einschließlich Controller-Hilfsprogrammen kopieren. Auf dem Zielrechner müssen Qt ab 6.10 einschließlich Sql-Modul/QSQLITE-Treiber und zlib installiert sein; Wine und Originalprogramm werden nicht benötigt.
 
 Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst die bewusste Auswahl von „Fortfahren“ öffnet die Anwendung. Standardsprache ist US-Englisch; Deutsch ist unter Sprache beziehungsweise **Bearbeiten → Einstellungen → Allgemein** verfügbar. Vorhandene Einstellungen der früheren Anwendung „R-net Qt“ werden einmalig übernommen, sofern noch keine dfreernet-Einstellungen existieren.
 
@@ -84,13 +85,13 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 ```text
 src/             Nativer Kern, SocketCAN-Werkzeuge und Qt-Oberfläche
 translations/    Deutscher Qt-Linguist-Katalog; englische Quelltexte
-scripts/         Build, Start, Prüfungen und Untersuchungswerkzeuge
+scripts/         Build, Start, Paketierung, virtuelle CAN-Tests und Katalogwerkzeuge
 tests/           Automatisierte Tests; private Referenzdaten bleiben lokal
 resources/       Geprüfter SQLite-Katalog und Datenherkunft
 docs/            Aktuelle zweisprachige Dokumentation
 analysis/        Private Mitschnitte, Berichte und Screenshots (generiert)
 checkpoints/     Wiederherstellbare lokale Sicherungen
-build-native/    Generierter nativer Build einschließlich dfreernet
+build/           Generierte DEBUG- und RELEASE-Builds
 ```
 
 Historische Untersuchungen, lokale Sicherungen, Controller-Mitschnitte, persönliche Konfigurationen und Build-Ausgaben bleiben außerhalb von Git. Das Repository enthält den Quellcode der nativen Anwendung und den festgelegten Laufzeitkatalog; die eingebetteten abgeleiteten Daten sind von der Codelizenz ausgenommen.
