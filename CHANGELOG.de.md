@@ -4,7 +4,13 @@
 
 ## Unveröffentlicht
 
-- Den fortlaufenden CAN-Mitschnitt rechts neben dem gesamten unteren Bereich sichtbar halten; Vorgangsprotokolle links öffnen und Details sowie Protokoll getrennt in der Höhe verstellen.
+## 1.2.1 — 13. November 2026
+
+- Fortlaufenden CAN-Mitschnitt neben Details und Vorgangsprotokoll anzeigen; Fenstergrößen getrennt einstellen.
+- Verlauf und gruppierte Zählung für den passiven CAN-Mitschnitt ergänzen.
+- Passive CAN-Live-Ansichten für alle zehn Menüpunkte unter Werkzeuge → Systemtests ergänzen.
+- Breite des CAN-Fensters und der CAN-Tabellenspalten einstellbar machen; Fensterbreite speichern.
+
 ## 1.2.0 — 13. November 2026
 
 - Einstellungen für bevorzugten Monitor und maximierten Start entfernt; Fensterposition, Größe und Maximierungszustand wiederherstellen und die Startwarnung auf demselben Bildschirm öffnen.

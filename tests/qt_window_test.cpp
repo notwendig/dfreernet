@@ -656,7 +656,7 @@ private slots:
     QVERIFY(w->document()->write() == source);
     QVERIFY(read_file(fixture_.toStdString()) == source);
   }
-  void editorDialogThroughMouse() {
+  void editButtonUsesTableDelegate() {
     auto w = make();
     w->openDocument(fixture_);
     int index = firstSpeed(*w);
@@ -671,15 +671,13 @@ private slots:
         w->filter()->mapFromSource(w->model()->index(row, 0)));
     auto *button = w->findChild<QPushButton *>("editValue");
     QVERIFY(button->isEnabled());
-    QTimer::singleShot(50, w.get(), [] {
-      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
-      if(dialog&&dialog->objectName()=="parameterValueDialog") {
-        dialog->findChild<QLineEdit*>("numberValueEditor")->setText("86");
-        dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();
-      }
-    });
     QTest::mouseClick(button, Qt::LeftButton);
-    QVERIFY(w->isWindowModified());
+    QTRY_VERIFY(table->findChild<QLineEdit*>("numberValueEditor"));
+    auto *editor=table->findChild<QLineEdit*>("numberValueEditor");
+    editor->setText("86");
+    QTest::keyClick(editor,Qt::Key_Return);
+    QTRY_VERIFY(w->isWindowModified());
+    QTRY_VERIFY(!table->findChild<QWidget*>("parameterValueEditor"));
     w->undo();
     QVERIFY(!w->isWindowModified());
   }
@@ -699,15 +697,12 @@ private slots:
         w->filter()->mapFromSource(w->model()->index(row, 0)));
     auto *edit = w->findChild<QPushButton *>("editValue");
     QVERIFY(edit->isEnabled());
-    QTimer::singleShot(50, w.get(), [] {
-      if(auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget())) {
-        auto *choice=dialog->findChild<QComboBox*>("choiceValueEditor");
-        if(choice){choice->setCurrentIndex(choice->findData(QVariant::fromValue(qlonglong(1))));
-          dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Ok)->click();}
-      }
-    });
     QTest::mouseClick(edit, Qt::LeftButton);
-    QVERIFY(w->isWindowModified());
+    QTRY_VERIFY(table->findChild<QComboBox*>("choiceValueEditor"));
+    auto *choice=table->findChild<QComboBox*>("choiceValueEditor");
+    choice->setCurrentIndex(choice->findData(QVariant::fromValue(qlonglong(1))));
+    QTest::keyClick(choice,Qt::Key_Return);
+    QTRY_VERIFY(w->isWindowModified());
     QCOMPARE(w->model()->rows[std::size_t(row)].value, QString("1"));
     QVERIFY(w->process_ == nullptr);
     w->undo();
@@ -866,7 +861,6 @@ private slots:
     frame.data[1] = 2;
     frame.data[2] = 3;
     QCOMPARE(::write(fd, &frame, sizeof(frame)), ssize_t(sizeof(frame)));
-    ::close(fd);
     QTRY_VERIFY_WITH_TIMEOUT(liveDump->toPlainText().contains("123 [3] 01 02 03"),2000);
     QTRY_VERIFY_WITH_TIMEOUT(!w->monitoring(), 2000);
     QVERIFY(w->liveDumpFd_>=0);
@@ -874,8 +868,86 @@ private slots:
     QCOMPARE(w->receivedFrames(), quint64(1));
     QCOMPARE(w->model()->rowCount(), 1);
     QCOMPARE(w->model()->rows[0].value, QString("01 02 03"));
+    auto *mode=w->findChild<QComboBox*>("liveCanDumpMode");
+    QVERIFY(mode);
+    QCOMPARE(mode->currentIndex(),0);
+    QCOMPARE(mode->itemText(0),QString("Verlauf"));
+    QCOMPARE(mode->itemText(1),QString("Zählung"));
+    auto *counts=w->findChild<QTableWidget*>("liveCanCount");
+    QVERIFY(counts);
+    mode->setCurrentIndex(1);
+    QTRY_COMPARE(counts->rowCount(),1);
+    QVERIFY(counts->isVisible());QVERIFY(!liveDump->isVisible());
+    QCOMPARE(counts->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(counts->item(0,1)->text(),QString("123"));
+    QVERIFY(counts->item(0,1)->textAlignment()&Qt::AlignRight);
+    QCOMPARE(counts->item(0,2)->text(),QString("[3] 01 02 03"));
+    frame.data[0]=4;
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    QTRY_COMPARE(counts->item(0,0)->text(),QString("00000002"));
+    QCOMPARE(counts->item(0,2)->text(),QString("[3] 04 02 03"));
+    frame.can_id=0x124;
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    QTRY_COMPARE(counts->rowCount(),2);
+    QCOMPARE(counts->item(1,0)->text(),QString("00000001"));
+    QCOMPARE(counts->item(1,1)->text(),QString("124"));
+    mode->setCurrentIndex(0);
+    QVERIFY(liveDump->isVisible());QVERIFY(!counts->isVisible());
+    QCOMPARE(liveDump->toPlainText().split('\n').size(),3);
+    QVERIFY(liveDump->toPlainText().contains("123 [3] 01 02 03"));
+    QVERIFY(liveDump->toPlainText().contains("123 [3] 04 02 03"));
     languages().setLanguage("en_US");
     QCoreApplication::sendPostedEvents(nullptr, QEvent::LanguageChange);
+    QCOMPARE(mode->itemText(0),QString("Follow"));
+    QCOMPARE(mode->itemText(1),QString("Count"));
+    for(unsigned command:{32956u,32955u,32957u,33390u,33343u,
+                          33208u,33392u,33395u,32817u,33107u}){
+      auto *action=w->findChild<QAction*>("command"+QString::number(command));
+      QVERIFY(action&&action->isEnabled());
+      action->trigger();
+      auto *dialog=w->findChild<QDialog*>("systemTestDialog");
+      QVERIFY(dialog&&dialog->isVisible());
+      QCOMPARE(w->systemTestCommand_,command);
+    }
+    auto *testDump=w->findChild<QTableWidget*>("systemTestFrames");
+    auto *testInfo=w->findChild<QLabel*>("systemTestInfo");
+    QVERIFY(testDump&&testInfo);
+    w->findChild<QAction*>("command33395")->trigger();
+    QVERIFY(testInfo->text().contains("No verified decoder"));
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    QTRY_COMPARE(testDump->rowCount(),1);
+    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(testDump->item(0,1)->text(),QString("124"));
+    QVERIFY(testDump->item(0,1)->textAlignment()&Qt::AlignRight);
+    QCOMPARE(testDump->item(0,2)->text(),QString("[3] 04 02 03"));
+    w->findChild<QAction*>("command32956")->trigger();
+    QVERIFY(testInfo->text().contains("documented CAN frame"));
+    frame.can_id=CAN_EFF_FLAG|0x0c140000;
+    frame.can_dlc=1;frame.data[0]=0xc0;
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    QTRY_COMPARE(testDump->rowCount(),1);
+    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(testDump->item(0,1)->text(),QString("0C140000"));
+    QCOMPARE(testDump->item(0,2)->text(),QString("[1] C0"));
+    w->findChild<QAction*>("command32957")->trigger();
+    frame.can_id=CAN_EFF_FLAG|0x03c30f0f;
+    frame.can_dlc=8;std::fill_n(frame.data,8,0x87);
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    QTRY_COMPARE(testDump->rowCount(),1);
+    QCOMPARE(testDump->item(0,1)->text(),QString("03C30F0F"));
+    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    for(unsigned command:{32817u,33107u}){
+      w->findChild<QAction*>("command"+QString::number(command))->trigger();
+      frame.can_id=CAN_EFF_FLAG|0x02000100;
+      frame.can_dlc=2;frame.data[0]=10;frame.data[1]=246;
+      QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+      QTRY_COMPARE(testDump->rowCount(),1);
+      QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+      QCOMPARE(testDump->item(0,1)->text(),QString("02000100"));
+      QCOMPARE(testDump->item(0,2)->text(),QString("[2] 0A F6"));
+      QCOMPARE(testInfo->text(),QString("Raw joystick axes: X=10, Y=-10"));
+    }
+    ::close(fd);
     QTRY_COMPARE(w->model()->headings[2], QString("Latest payload"));
     QVERIFY(!w->monitoring());
     QCOMPARE(w->receivedFrames(), quint64(1));

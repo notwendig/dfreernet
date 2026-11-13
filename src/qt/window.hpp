@@ -10,13 +10,17 @@
 #include <QPointer>
 #include <QProcess>
 #include <QSortFilterProxyModel>
+#include <QStringList>
 #include <functional>
 #include <memory>
 class QTreeWidget;
 class QTreeWidgetItem;
 class QTableView;
+class QTableWidget;
 class QLineEdit;
 class QPlainTextEdit;
+class QDialog;
+class QComboBox;
 class QLabel;
 class QPushButton;
 class QAction;
@@ -174,8 +178,23 @@ private:
   QPlainTextEdit *details_ = nullptr;
   QSplitter *mainSplitter_ = nullptr;
   QSplitter *detailsTaskSplitter_ = nullptr;
+  QSplitter *bottomSplitter_ = nullptr;
   QPlainTextEdit *canDump_ = nullptr;
+  QTableWidget *canCountTable_ = nullptr;
   QLabel *canDumpHeader_ = nullptr;
+  QComboBox *canDumpMode_ = nullptr;
+  QStringList liveDumpLines_;
+  struct LiveDumpCount {
+    quint64 frames = 0;
+    QString payload;
+    unsigned dlc = 0;
+  };
+  std::map<QString,LiveDumpCount> liveDumpCounts_;
+  QPointer<QDialog> systemTestDialog_;
+  QTableWidget *systemTestTable_ = nullptr;
+  QLabel *systemTestInfo_ = nullptr;
+  unsigned systemTestCommand_ = 0;
+  std::map<QString,LiveDumpCount> systemTestCounts_;
   QLabel *banner_ = nullptr;
   QPushButton *edit_ = nullptr;
   QPushButton *undoButton_ = nullptr;
@@ -254,6 +273,10 @@ private:
   void configureLiveCanDump(const QString &interface);
   void ensureLiveCanDump();
   void receiveLiveCanDump();
+  void refreshLiveCanDump();
+  void showSystemTest(unsigned);
+  void refreshSystemTest();
+  void populateCountTable(QTableWidget *,const std::map<QString,LiveDumpCount> &);
   void closeLiveCanDump();
   void stopMonitor(bool show = true);
   void hardwareInfo();

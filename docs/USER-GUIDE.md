@@ -47,7 +47,7 @@ The profile table's Module / group column distinguishes identically named parame
 
 The column immediately after the raw value combines unit, scale and raw minimum/maximum (`unit · a:b · min–max`). The column title uses two lines; cell values remain on one line. The tooltip labels each field. Unit comes from the catalog symbol and prefix; the numeric limits are raw catalog values. These metadata do not convert the stored raw value into engineering units. The colored access column remains fixed on the right during horizontal scrolling.
 
-Use search and the group tree to narrow the display. Double-click or press F2 in the raw-value column to open the appropriate editor: boolean, selection, integer or text. Bounds, step size and text encoding are checked. Unresolved special types remain read-only. Escape discards the current edit.
+Use search and the group tree to narrow the display. Double-click or press F2 in the raw-value column. You can also select an editable parameter and click **Edit value…**. Both open the same editor in the table: boolean, selection, integer or text. Press Enter to apply or Escape to discard the edit. Bounds, step size and text encoding are checked. Unresolved special types remain read-only.
 
 Select a parameter and press **F1** (or **Help → Parameter help**) to see its embedded catalog help text together with the ID, group, profile, raw value and access level. The R-net PC Programmer guide describes this per-parameter help in section 3.3.2. The help window works without the original programmer installation.
 
@@ -79,9 +79,11 @@ The heart at the right of the status bar pulses red while recent complete `0x03C
 
 Serial queries and CAN monitoring use the saved interface. A serial number does not automatically establish a reliable module name.
 
-The panel below the fixed access column continuously displays received CAN frames with reception time, interface, ID, DLC and payload. It starts with the app, reconnects when the selected interface returns, never transmits, and keeps at most 2000 display lines. **Controller → Monitor CAN…** remains a separate timed capture summary.
+The panel below the fixed access column receives CAN frames continuously. **Follow** shows the latest 2000 frames with reception time, interface, ID, DLC and payload. **Count** groups them by ID and frame type in a table: column 0 is an eight-digit counter, followed by a right-aligned CAN ID and the latest payload. Switching back restores the recent frame list. Counts reset when the selected interface changes. The receiver reconnects when that interface returns and never transmits. **Controller → Monitor CAN…** remains a separate timed capture summary.
 
-Drag the horizontal divider above the lower panes to change their height. When a task log is open, a second divider on the left adjusts details and task log independently; the CAN dump stays visible on the right down to the status bar. Both divider positions are saved when the app closes.
+**Tools → System Tests** opens passive live views for all ten listed tests. Each table has the same eight-digit counter in column 0 and right-aligned CAN ID in column 1. PM, JSM, Joystick Status and Intermediate XY select documented CAN frame families; the joystick views show raw X/Y bytes as signed values. The other module views show unassigned raw bus traffic because their status encoding is not verified. Counts begin when a view opens and reset when switching tests. These views do not reproduce the original programmer's full diagnostic fields and send no requests. The [R-net Programmer manual](https://medema.no/files/Programmer%20k%C3%B8restole/R-net_PC_Programmer_OEM.pdf) describes the original tests.
+
+Drag the horizontal divider above the lower panes to change their height. The vertical divider beside the CAN dump adjusts its width. Drag the CAN table headers to resize columns. When a task log is open, another divider on the left adjusts details and task log independently. Divider positions are saved when the app closes.
 
 ## Troubleshooting
 

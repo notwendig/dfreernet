@@ -1299,6 +1299,30 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>CAN-Mitschnitt · %1 (nur Empfang)</translation>
         </message>
         <message>
+            <source>Follow</source>
+            <translation>Verlauf</translation>
+        </message>
+        <message>
+            <source>Count</source>
+            <translation>Zählung</translation>
+        </message>
+        <message>
+            <source>CAN dump mode</source>
+            <translation>CAN-Mitschnittmodus</translation>
+        </message>
+        <message>
+            <source>Passive observations on %1. Only documented CAN frame families are shown; values are not a complete module test.</source>
+            <translation>Passive Beobachtungen auf %1. Es werden nur dokumentierte CAN-Frame-Familien gezeigt; die Werte ersetzen keinen vollständigen Modultest.</translation>
+        </message>
+        <message>
+            <source>Passive raw CAN traffic on %1. No verified decoder exists for this module; frames below are not attributed to it.</source>
+            <translation>Passiver roher CAN-Verkehr auf %1. Für dieses Modul liegt kein geprüfter Decoder vor; die folgenden Frames werden ihm nicht zugeordnet.</translation>
+        </message>
+        <message>
+            <source>Raw joystick axes: X=%1, Y=%2</source>
+            <translation>Rohe Joystickachsen: X=%1, Y=%2</translation>
+        </message>
+        <message>
             <source>Continuous passive CAN reception; no CAN frames are sent.</source>
             <translation>Fortlaufender passiver CAN-Empfang; es werden keine CAN-Nachrichten gesendet.</translation>
         </message>

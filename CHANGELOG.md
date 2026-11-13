@@ -4,7 +4,13 @@
 
 ## Unreleased
 
-- Keep the continuous CAN dump visible beside the full lower area while task logs open on the left; allow independent height adjustment of details and task log.
+## 1.2.1 — 2026-11-13
+
+- Keep the continuous CAN dump beside details and task logs, with independently adjustable pane sizes.
+- Add follow and grouped count modes to the receive-only CAN dump.
+- Add passive live CAN views for all ten Tools → System Tests entries.
+- Make the CAN dump pane and CAN table columns adjustable; save the pane width.
+
 ## 1.2.0 — 2026-11-13
 
 - Remove the preferred-monitor and start-maximized settings; restore the main window's saved position, size and maximized state, and open the warning on the same screen.

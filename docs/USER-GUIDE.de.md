@@ -47,7 +47,7 @@ Die Spalte „Modul / Gruppe“ unterscheidet gleich benannte Parameter verschie
 
 Die Spalte direkt nach dem Rohwert fasst Einheit, Skala und Rohwert-Minimum/-Maximum zusammen (`Einheit · a:b · min–max`). Der Spaltentitel ist zweizeilig; die Werte bleiben einzeilig. Der Tooltip benennt jedes Feld. Die Einheit stammt aus Symbol und Vorsatz des Katalogs; die numerischen Grenzen sind rohe Katalogwerte. Diese Metadaten rechnen den gespeicherten Rohwert nicht in technische Einheiten um. Die farbige Berechtigung bleibt beim horizontalen Scrollen rechts fest sichtbar.
 
-Suche und Gruppenbaum begrenzen die Anzeige. Doppelklick oder F2 in der Rohwertspalte öffnet einen zum Parameter passenden Editor: Ja/Nein, Auswahl, Ganzzahl oder Text. Grenzen, Schrittweite und Textkodierung werden geprüft. Ungeklärte Sondertypen bleiben schreibgeschützt. Escape verwirft die laufende Eingabe.
+Suche und Gruppenbaum begrenzen die Anzeige. Doppelklick oder F2 in der Rohwertspalte oder die Schaltfläche **Wert bearbeiten…** für einen ausgewählten editierbaren Parameter öffnet denselben Editor in der Tabelle: Ja/Nein, Auswahl, Ganzzahl oder Text. Enter übernimmt, Escape verwirft die Eingabe. Grenzen, Schrittweite und Textkodierung werden geprüft. Ungeklärte Sondertypen bleiben schreibgeschützt.
 
 Einen Parameter auswählen und **F1** drücken (oder **Hilfe → Parameterhilfe**), um seinen eingebetteten Kataloghilfetext mit ID, Gruppe, Profil, Rohwert und Berechtigung zu sehen. Die Anleitung „R-net PC Programmer“ beschreibt diese Parameterhilfe in Abschnitt 3.3.2. Das Hilfefenster funktioniert ohne Originalinstallation.
 
@@ -79,9 +79,11 @@ Rechts in der Statusleiste pulsiert das Herz rot, wenn aktuelle vollständige Ge
 
 Seriennummernabfrage und CAN-Monitor verwenden die gespeicherte Schnittstelle. Eine Seriennummer ist nicht automatisch ein zuverlässig ermittelter Modulname.
 
-Unter der fixierten Berechtigungsspalte zeigt ein Fenster fortlaufend empfangene CAN-Nachrichten mit Empfangszeit, Schnittstelle, Kennung, DLC und Nutzdaten. Es startet mit der App, verbindet sich nach Wiederkehr der gewählten Schnittstelle erneut, sendet nichts und hält höchstens 2000 Anzeigezeilen vor. **Controller → CAN beobachten…** bleibt eine getrennte, zeitlich begrenzte Zusammenfassung.
+Unter der fixierten Berechtigungsspalte empfängt ein Fenster fortlaufend CAN-Nachrichten. **Verlauf** zeigt die letzten 2000 Frames mit Empfangszeit, Schnittstelle, Kennung, DLC und Nutzdaten. **Zählung** gruppiert nach Kennung und Frame-Typ in einer Tabelle: Spalte 0 ist ein achtstelliger Zähler, gefolgt von einer rechtsbündigen CAN-ID und den letzten Nutzdaten. Beim Zurückschalten erscheint wieder der jüngste Verlauf. Bei einem Wechsel der gewählten Schnittstelle beginnen die Zähler neu. Der Empfänger verbindet sich nach Wiederkehr der Schnittstelle erneut und sendet nichts. **Controller → CAN beobachten…** bleibt eine getrennte, zeitlich begrenzte Zusammenfassung.
 
-Der waagerechte Trenngriff über den unteren Fenstern verändert deren Höhe. Bei geöffnetem Vorgangsprotokoll verstellt ein zweiter Trenngriff links Details und Protokoll getrennt; der CAN-Mitschnitt bleibt rechts bis zur Statusleiste sichtbar. Beide Trennerpositionen werden beim Schließen gespeichert.
+**Werkzeuge → Systemtests** öffnet passive Live-Ansichten für alle zehn Menüpunkte. Jede Tabelle hat denselben achtstelligen Zähler in Spalte 0 und eine rechtsbündige CAN-ID in Spalte 1. PM, JSM, Joystickstatus und Zwischenwerte XY filtern dokumentierte CAN-Frame-Familien; die Joystickansichten zeigen rohe X/Y-Bytes als vorzeichenbehaftete Werte. Die übrigen Modulansichten zeigen nicht zugeordneten rohen Busverkehr, da dessen Statuskodierung nicht geprüft ist. Beim Öffnen oder Wechseln eines Tests beginnen die Zähler neu. Diese Ansichten bilden die vollständigen Diagnosefelder des Originalprogramms nicht nach und senden keine Anfragen. Das [R-net-Programmer-Handbuch](https://medema.no/files/Programmer%20k%C3%B8restole/R-net_PC_Programmer_OEM.pdf) beschreibt die Originaltests.
+
+Der waagerechte Trenngriff über den unteren Fenstern verändert deren Höhe. Der senkrechte Trenngriff links vom CAN-Mitschnitt verändert dessen Breite. Die Spalten in den CAN-Tabellen lassen sich an den Kopfzeilen ziehen. Bei geöffnetem Vorgangsprotokoll verstellt ein weiterer Trenngriff links Details und Protokoll getrennt. Die Trennerpositionen werden beim Schließen gespeichert.
 
 ## Bei Problemen
 

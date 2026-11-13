@@ -25,6 +25,28 @@ QColor accessColor(int level){
   static const QColor colors[]{QColor("#FFEB3B"),QColor("#4CAF50"),QColor("#1976D2"),QColor("#D32F2F")};
   return level>=0&&level<4?colors[level]:QColor(Qt::gray);
 }
+void setCountHeaders(QTableWidget *table){
+  table->setHorizontalHeaderLabels({QCoreApplication::translate("RNet","Count"),
+      QStringLiteral("CAN ID"),QCoreApplication::translate("RNet","Latest payload")});
+}
+QTableWidget *makeCountTable(QWidget *parent,const char *name,const QFont &font){
+  auto *table=new QTableWidget(parent);
+  table->setObjectName(name);
+  table->setColumnCount(3);
+  setCountHeaders(table);
+  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setSelectionMode(QAbstractItemView::NoSelection);
+  table->setFocusPolicy(Qt::NoFocus);
+  table->verticalHeader()->hide();
+  table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+  table->horizontalHeader()->setStretchLastSection(false);
+  table->setColumnWidth(0,105);
+  table->setColumnWidth(1,115);
+  table->setColumnWidth(2,280);
+  table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+  table->setFont(font);
+  return table;
+}
 class ChangedValueDelegate final : public QStyledItemDelegate {
 public:
   std::function<ParameterValueEditor*(int,QWidget*)> factory;
@@ -115,7 +137,36 @@ QString csv(QString s) {
 bool implemented(unsigned id) {
   return id == 57665 || id == 57664 || id == 57636 || id == 57601 ||
          id == 57603 || id == 57604 || id == 57643 || id == 32844 ||
-         id == 32831 || id == 32939 || id == 32803 || id == 32804;
+         id == 32831 || id == 32939 || id == 32803 || id == 32804 ||
+         id == 32956 || id == 32955 || id == 32957 || id == 33390 ||
+         id == 33343 || id == 33208 || id == 33392 || id == 33395 ||
+         id == 32817 || id == 33107;
+}
+bool isSystemTestCommand(unsigned id){
+  switch(id){
+  case 32956: case 32955: case 32957: case 33390: case 33343:
+  case 33208: case 33392: case 33395: case 32817: case 33107:
+    return true;
+  default:return false;
+  }
+}
+bool systemTestFrame(unsigned command, unsigned id, bool extended){
+  const auto family=[id,extended](unsigned value){
+    return extended&&(id&0xfffff0ffu)==value;
+  };
+  switch(command){
+  case 32956: // PM: observed heartbeat, current and battery families.
+    return family(0x0c140000)||family(0x14300000)||family(0x1c0c0000)||
+           (extended&&id==0x0c280000);
+  case 32957: // JSM: heartbeat, joystick and speed-setting families.
+    return (!extended&&id==0x00e)||
+           (extended&&(id==0x03c30f0f||family(0x02000000)||family(0x0a040000)));
+  case 32817:
+  case 33107:
+    return family(0x02000000);
+  default:
+    return true; // No verified module-specific decoder: show raw bus traffic.
+  }
 }
 void fillMetadata(Row &row,const ParameterDefinition &parameter,bool numeric){
   auto prefix=fromU16(parameter.option_texts[0]);
@@ -590,21 +641,35 @@ void Window::buildUi() {
   auto *bottomLayout=new QHBoxLayout(bottomContainer);
   bottomLayout->setContentsMargins(0,0,0,0);
   bottomLayout->setSpacing(0);
+  bottomSplitter_=new QSplitter(Qt::Horizontal,bottomContainer);
+  bottomSplitter_->setObjectName("bottomSplitter");
+  bottomSplitter_->setHandleWidth(10);
+  bottomSplitter_->setChildrenCollapsible(false);
+  bottomSplitter_->setStyleSheet("QSplitter::handle:horizontal { background: palette(midlight); border-left: 1px solid palette(mid); border-right: 1px solid palette(mid); }");
+  bottomLayout->addWidget(bottomSplitter_);
   detailsTaskSplitter_=new QSplitter(Qt::Vertical);
   detailsTaskSplitter_->setObjectName("detailsTaskSplitter");
   detailsTaskSplitter_->setHandleWidth(10);
   detailsTaskSplitter_->setChildrenCollapsible(false);
   detailsTaskSplitter_->setStyleSheet("QSplitter::handle:vertical { background: palette(midlight); border-top: 1px solid palette(mid); border-bottom: 1px solid palette(mid); }");
   detailsTaskSplitter_->addWidget(details_);
-  bottomLayout->addWidget(detailsTaskSplitter_,1);
+  bottomSplitter_->addWidget(detailsTaskSplitter_);
   auto *dumpContainer=new QWidget;
-  dumpContainer->setFixedWidth(250);
+  dumpContainer->setMinimumWidth(220);
   auto *dumpLayout=new QVBoxLayout(dumpContainer);
   dumpLayout->setContentsMargins(4,0,0,0);
   dumpLayout->setSpacing(2);
   canDumpHeader_=new QLabel;
   canDumpHeader_->setObjectName("liveCanDumpHeader");
   dumpLayout->addWidget(canDumpHeader_);
+  canDumpMode_=new QComboBox;
+  canDumpMode_->setObjectName("liveCanDumpMode");
+  canDumpMode_->addItem(QCoreApplication::translate("RNet","Follow"));
+  canDumpMode_->addItem(QCoreApplication::translate("RNet","Count"));
+  canDumpMode_->setAccessibleName(QCoreApplication::translate("RNet","CAN dump mode"));
+  dumpLayout->addWidget(canDumpMode_);
+  connect(canDumpMode_,qOverload<int>(&QComboBox::currentIndexChanged),this,
+          [this]{refreshLiveCanDump();});
   canDump_=new QPlainTextEdit;
   canDump_->setObjectName("liveCanDump");
   canDump_->setReadOnly(true);
@@ -614,7 +679,15 @@ void Window::buildUi() {
   dumpFont.setPointSize(qMax(8,dumpFont.pointSize()-1));
   canDump_->setFont(dumpFont);
   dumpLayout->addWidget(canDump_,1);
-  bottomLayout->addWidget(dumpContainer);
+  canCountTable_=makeCountTable(dumpContainer,"liveCanCount",dumpFont);
+  dumpLayout->addWidget(canCountTable_,1);
+  canCountTable_->hide();
+  bottomSplitter_->addWidget(dumpContainer);
+  bottomSplitter_->setStretchFactor(0,1);
+  bottomSplitter_->setStretchFactor(1,0);
+  bottomSplitter_->setSizes({850,350});
+  const auto bottomState=QSettings().value("ui/bottomSplitterState").toByteArray();
+  if(!bottomState.isEmpty())bottomSplitter_->restoreState(bottomState);
   vertical->addWidget(bottomContainer);
   vertical->setStretchFactor(0, 1);
   vertical->setSizes({560, 180});
@@ -733,6 +806,15 @@ void Window::retranslateUi() {
       binding.object->setProperty(
           binding.property.constData(),
           QCoreApplication::translate("RNet", binding.source.constData()));
+  {
+    QSignalBlocker blocked(canDumpMode_);
+    canDumpMode_->setItemText(0,QCoreApplication::translate("RNet","Follow"));
+    canDumpMode_->setItemText(1,QCoreApplication::translate("RNet","Count"));
+    canDumpMode_->setAccessibleName(QCoreApplication::translate("RNet","CAN dump mode"));
+  }
+  setCountHeaders(canCountTable_);
+  if(systemTestTable_)setCountHeaders(systemTestTable_);
+  configureLiveCanDump(liveDumpInterface_);
   switch (view_) {
   case View::Values:
     renderValues();
@@ -1623,36 +1705,11 @@ void Window::editSelected() {
   auto source = proxy_->mapToSource(table_->currentIndex());
   if (!source.isValid())
     return;
-  int index = source.data(Qt::UserRole).toInt();
-  if (index < 0)
-    return;
-  const auto &v = values_.at(index);
-  const auto &p = catalog_.parameters.at(v.parameter);
-  QString prompt = fromU16(p.name()) +
-                   QCoreApplication::translate("RNet", "\nStored raw value; ");
-  if (v.numeric)
-    prompt += QString(QCoreApplication::translate("RNet", "range %1 to %2"))
-                  .arg(p.signed_storage ? qint64(qint32(p.metadata[4]))
-                                        : p.metadata[4])
-                  .arg(p.signed_storage ? qint64(qint32(p.metadata[5]))
-                                        : p.metadata[5]);
-  else
-    prompt +=
-        QString(QCoreApplication::translate("RNet", "up to %1 characters"))
-            .arg(v.width);
-  QDialog dialog(this);dialog.setObjectName("parameterValueDialog");
-  dialog.setWindowTitle(QCoreApplication::translate("RNet","Edit value in document"));
-  auto *layout=new QVBoxLayout(&dialog);
-  auto *description=new QLabel(prompt);description->setWordWrap(true);layout->addWidget(description);
-  auto *editor=new ParameterValueEditor(p,v,catalog_,&dialog);layout->addWidget(editor);
-  auto *error=new QLabel;error->setWordWrap(true);error->setStyleSheet("color: red");layout->addWidget(error);
-  auto *buttons=new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);layout->addWidget(buttons);
-  auto validate=[editor,error,buttons]{QString reason;bool valid=editor->valid(&reason);error->setText(reason);buttons->button(QDialogButtonBox::Ok)->setEnabled(valid);};
-  editor->validityChanged=validate;validate();
-  connect(buttons,&QDialogButtonBox::accepted,&dialog,&QDialog::accept);
-  connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);
-  dialog.resize(520,180);editor->setFocus();
-  if(dialog.exec()==QDialog::Accepted&&editor->valid())applyEdit(index,editor->rawValue());
+  const int column=model_->profileLayout?source.column():2;
+  auto target=proxy_->mapFromSource(model_->index(source.row(),column));
+  if(!target.isValid()||!(target.flags()&Qt::ItemIsEditable))return;
+  table_->setCurrentIndex(target);
+  table_->edit(target);
 }
 void Window::undo() {
   if(!busy())commitPendingValueEditor();
@@ -1812,7 +1869,7 @@ void Window::decodeRnd() {
 }
 
 void Window::command(unsigned id) {
-  if (busy() && id != 57665 && id != 57636)
+  if (busy() && id != 57665 && id != 57636 && !isSystemTestCommand(id))
     return;
   commitPendingValueEditor();
   log("COMMAND " + QString::number(id));
@@ -1872,6 +1929,10 @@ void Window::command(unsigned id) {
     break;
   case 40003:
     hardwareInfo();
+    break;
+  case 32956: case 32955: case 32957: case 33390: case 33343:
+  case 33208: case 33392: case 33395: case 32817: case 33107:
+    showSystemTest(id);
     break;
   case 40025: {
     auto interface = selectInterface();
@@ -2321,7 +2382,12 @@ void Window::configureLiveCanDump(const QString &interface){
   if(interface!=liveDumpInterface_){
     closeLiveCanDump();
     liveDumpInterface_=interface;
+    liveDumpLines_.clear();
+    liveDumpCounts_.clear();
     canDump_->clear();
+    refreshLiveCanDump();
+    systemTestCounts_.clear();
+    refreshSystemTest();
   }
   ensureLiveCanDump();
 }
@@ -2368,13 +2434,104 @@ void Window::receiveLiveCanDump(){
     const auto payload=frame.can_id&CAN_RTR_FLAG?
         QCoreApplication::translate("RNet","remote request"):
         QString::fromLatin1(QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc).toHex(' ').toUpper());
+    const auto idText=QString::number(id,16).toUpper().rightJustified(extended?8:3,'0');
+    const auto key=idText+(frame.can_id&CAN_RTR_FLAG?QStringLiteral(" RTR"):QString())+
+        (frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString());
+    auto &count=liveDumpCounts_[key];
+    ++count.frames;
+    count.payload=payload;
+    count.dlc=frame.can_dlc;
+    if(systemTestDialog_&&systemTestFrame(systemTestCommand_,id,extended)){
+      auto &testCount=systemTestCounts_[key];
+      ++testCount.frames;
+      testCount.payload=payload;
+      testCount.dlc=frame.can_dlc;
+      if((systemTestCommand_==32817||systemTestCommand_==33107)&&
+         extended&&(id&0xfffff0ffu)==0x02000000&&frame.can_dlc>=2)
+        systemTestInfo_->setText(QCoreApplication::translate("RNet","Raw joystick axes: X=%1, Y=%2")
+            .arg(int(qint8(frame.data[0]))).arg(int(qint8(frame.data[1]))));
+    }
     lines.append(QStringLiteral("%1 %2 %3 [%4] %5%6")
         .arg(QDateTime::currentDateTime().toString("HH:mm:ss.zzz"),liveDumpInterface_,
-             QString::number(id,16).toUpper().rightJustified(extended?8:3,'0'))
+             idText)
         .arg(frame.can_dlc)
         .arg(payload,frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString()));
   }
-  if(!lines.isEmpty())canDump_->appendPlainText(lines.join('\n'));
+  if(lines.isEmpty())return;
+  liveDumpLines_.append(lines);
+  while(liveDumpLines_.size()>2000)liveDumpLines_.removeFirst();
+  if(canDumpMode_->currentIndex()==0){
+    auto *scroll=canDump_->verticalScrollBar();
+    const int position=scroll->value();
+    const bool atBottom=scroll->value()==scroll->maximum();
+    canDump_->appendPlainText(lines.join('\n'));
+    if(atBottom)scroll->setValue(scroll->maximum());
+    else scroll->setValue(position);
+  }else refreshLiveCanDump();
+  if(systemTestDialog_)refreshSystemTest();
+}
+void Window::refreshLiveCanDump(){
+  const bool follow=canDumpMode_->currentIndex()==0;
+  canDump_->setVisible(follow);
+  canCountTable_->setVisible(!follow);
+  if(follow){
+    canDump_->setPlainText(liveDumpLines_.join('\n'));
+    canDump_->verticalScrollBar()->setValue(canDump_->verticalScrollBar()->maximum());
+    return;
+  }
+  populateCountTable(canCountTable_,liveDumpCounts_);
+}
+void Window::populateCountTable(QTableWidget *table,const std::map<QString,LiveDumpCount> &counts){
+  table->setRowCount(int(counts.size()));
+  int row=0;
+  for(const auto &[id,count]:counts){
+    auto *number=new QTableWidgetItem(QString::number(count.frames).rightJustified(8,'0'));
+    auto *identifier=new QTableWidgetItem(id);
+    auto *data=new QTableWidgetItem(QStringLiteral("[%1] %2").arg(count.dlc).arg(count.payload));
+    number->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+    identifier->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
+    table->setItem(row,0,number);
+    table->setItem(row,1,identifier);
+    table->setItem(row,2,data);
+    ++row;
+  }
+}
+void Window::showSystemTest(unsigned command){
+  if(!systemTestDialog_){
+    auto *dialog=new QDialog(this);
+    dialog->setObjectName("systemTestDialog");
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setModal(false);
+    auto *layout=new QVBoxLayout(dialog);
+    systemTestInfo_=new QLabel(dialog);
+    systemTestInfo_->setObjectName("systemTestInfo");
+    systemTestInfo_->setWordWrap(true);
+    layout->addWidget(systemTestInfo_);
+    systemTestTable_=makeCountTable(dialog,"systemTestFrames",
+        QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    layout->addWidget(systemTestTable_);
+    auto *buttons=new QDialogButtonBox(QDialogButtonBox::Close,dialog);
+    connect(buttons,&QDialogButtonBox::rejected,dialog,&QDialog::close);
+    layout->addWidget(buttons);
+    dialog->resize(620,400);
+    systemTestDialog_=dialog;
+  }
+  systemTestCommand_=command;
+  systemTestCounts_.clear();
+  QString title=actions_.at(command)->text();title.remove('&');
+  systemTestDialog_->setWindowTitle(title);
+  const bool verified=command==32956||command==32957||command==32817||command==33107;
+  systemTestInfo_->setText(verified?
+      QCoreApplication::translate("RNet","Passive observations on %1. Only documented CAN frame families are shown; values are not a complete module test.").arg(liveDumpInterface_):
+      QCoreApplication::translate("RNet","Passive raw CAN traffic on %1. No verified decoder exists for this module; frames below are not attributed to it.").arg(liveDumpInterface_));
+  refreshSystemTest();
+  systemTestDialog_->show();
+  systemTestDialog_->raise();
+  systemTestDialog_->activateWindow();
+}
+void Window::refreshSystemTest(){
+  if(!systemTestDialog_||!systemTestTable_)return;
+  populateCountTable(systemTestTable_,systemTestCounts_);
 }
 void Window::showMonitorCapture(bool record) {
   QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
@@ -2463,6 +2620,7 @@ void Window::closeEvent(QCloseEvent *event) {
     placement.setValue("ui/windowGeometry",saveGeometry());
     placement.setValue("ui/windowRect",normalGeometry());
     placement.setValue("ui/mainSplitterState",mainSplitter_->saveState());
+    placement.setValue("ui/bottomSplitterState",bottomSplitter_->saveState());
     if(taskPanel_->isVisible())
       placement.setValue("ui/detailsTaskSplitterState",detailsTaskSplitter_->saveState());
     if(windowHandle()&&windowHandle()->screen())
