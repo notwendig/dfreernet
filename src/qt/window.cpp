@@ -264,7 +264,7 @@ Window::Window(const QString &output,
           .arg(qVersion())
           .arg(catalog_.parameters.size()));
 }
-Window::~Window() { flushColumnSave();stopMonitor(false); }
+Window::~Window() { flushColumnSave();stopMonitor(false);closeLiveCanDump(); }
 void Window::log(const QString &text) {
   QFile f(output_ + "/runtime.log");
   if (f.open(QIODevice::WriteOnly | QIODevice::Append))
@@ -503,6 +503,11 @@ void Window::buildUi() {
   searchBar->addWidget(undoButton_);
   layout->addLayout(searchBar);
   auto *vertical = new QSplitter(Qt::Vertical);
+  mainSplitter_=vertical;
+  vertical->setObjectName("mainVerticalSplitter");
+  vertical->setHandleWidth(10);
+  vertical->setChildrenCollapsible(false);
+  vertical->setStyleSheet("QSplitter::handle:vertical { background: palette(midlight); border-top: 1px solid palette(mid); border-bottom: 1px solid palette(mid); }");
   auto *horizontal = new QSplitter(Qt::Horizontal);
   tree_ = new QTreeWidget;
   tree_->setObjectName("groups");
@@ -560,7 +565,7 @@ void Window::buildUi() {
   accessTable_=new QTableView;
   accessTable_->setObjectName("fixedAccessColumn");
   accessTable_->setModel(proxy_);
-  accessTable_->setFixedWidth(165);
+  accessTable_->setFixedWidth(250);
   accessTable_->setSelectionMode(QAbstractItemView::NoSelection);
   accessTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
   accessTable_->setFocusPolicy(Qt::NoFocus);
@@ -581,9 +586,34 @@ void Window::buildUi() {
   details_ = new QPlainTextEdit;
   details_->setObjectName("details");
   details_->setReadOnly(true);
-  vertical->addWidget(details_);
+  auto *bottomContainer=new QWidget;
+  auto *bottomLayout=new QHBoxLayout(bottomContainer);
+  bottomLayout->setContentsMargins(0,0,0,0);
+  bottomLayout->setSpacing(0);
+  bottomLayout->addWidget(details_,1);
+  auto *dumpContainer=new QWidget;
+  dumpContainer->setFixedWidth(250);
+  auto *dumpLayout=new QVBoxLayout(dumpContainer);
+  dumpLayout->setContentsMargins(4,0,0,0);
+  dumpLayout->setSpacing(2);
+  canDumpHeader_=new QLabel;
+  canDumpHeader_->setObjectName("liveCanDumpHeader");
+  dumpLayout->addWidget(canDumpHeader_);
+  canDump_=new QPlainTextEdit;
+  canDump_->setObjectName("liveCanDump");
+  canDump_->setReadOnly(true);
+  canDump_->setLineWrapMode(QPlainTextEdit::NoWrap);
+  canDump_->document()->setMaximumBlockCount(2000);
+  QFont dumpFont=QFontDatabase::systemFont(QFontDatabase::FixedFont);
+  dumpFont.setPointSize(qMax(8,dumpFont.pointSize()-1));
+  canDump_->setFont(dumpFont);
+  dumpLayout->addWidget(canDump_,1);
+  bottomLayout->addWidget(dumpContainer);
+  vertical->addWidget(bottomContainer);
   vertical->setStretchFactor(0, 1);
-  vertical->setSizes({600, 140});
+  vertical->setSizes({560, 180});
+  const auto splitterState=QSettings().value("ui/mainSplitterState").toByteArray();
+  if(!splitterState.isEmpty())vertical->restoreState(splitterState);
   layout->addWidget(vertical, 1);
   taskPanel_ = new QWidget;
   auto *taskLayout = new QVBoxLayout(taskPanel_);
@@ -630,6 +660,10 @@ void Window::buildUi() {
   sleepLabel_=new QLabel;statusBar()->addPermanentWidget(sleepLabel_);
   sleepInhibitor_=new SleepInhibitor(this);sleepInhibitor_->onChanged=[this]{updateSleepStatus();};
   heartbeat_=new CanHeartbeatIndicator(this);statusBar()->addPermanentWidget(heartbeat_);
+  liveDumpRetry_=new QTimer(this);
+  liveDumpRetry_->setInterval(1000);
+  connect(liveDumpRetry_,&QTimer::timeout,this,&Window::ensureLiveCanDump);
+  liveDumpRetry_->start();
   connect(cancel_, &QPushButton::clicked, this, [this] { cancelTask(); });
   registerStaticTexts();
   uiReady_ = true;
@@ -737,6 +771,7 @@ void Window::retranslateUi() {
     action->setChecked(action->data().toString() == languages().language());
   updateActions();
   updateTitle();
+  configureLiveCanDump(liveDumpInterface_);
 }
 void Window::buildGroups() {
   const QSignalBlocker blocked(tree_);
@@ -1338,7 +1373,7 @@ void Window::syncAccessColumn(){
   for(int column=0;column<model_->columnCount();++column)
     accessTable_->setColumnHidden(column,column!=accessColumn);
   table_->setColumnHidden(accessColumn,true);
-  accessTable_->setColumnWidth(accessColumn,160);
+  accessTable_->setColumnWidth(accessColumn,245);
   accessTable_->verticalScrollBar()->setValue(table_->verticalScrollBar()->value());
 }
 QString Window::columnLayoutKey() const{
@@ -1902,10 +1937,11 @@ void Window::applyPreferences(){
   tree_->setIconSize(QSize(settings_.itemIconSize,settings_.itemIconSize));table_->setIconSize(QSize(settings_.itemIconSize,settings_.itemIconSize));
   detailsAction_->setChecked(settings_.showDetails);details_->setVisible(settings_.showDetails);
   heartbeat_->configure(settings_.canInterface,settings_.heartbeatEnabled,settings_.heartbeatTimeoutMs);heartbeat_->setVisible(settings_.heartbeatEnabled);
+  configureLiveCanDump(settings_.canInterface);
 }
 void Window::openSettings(){
   if(busy())return;
-  commitPendingValueEditor();auto old=settings_;auto initial=settings_;initial.liveSignalEnabled=blinkCycle_->active();initial.language=languages().language();
+  commitPendingValueEditor();auto initial=settings_;initial.liveSignalEnabled=blinkCycle_->active();initial.language=languages().language();
   SettingsDialog dialog(initial,this);
   dialog.applied=[this](const AppSettings &s){
     const bool startRequested=s.liveSignalEnabled&&!blinkCycle_->active();
@@ -1918,18 +1954,21 @@ void Window::openSettings(){
     updateActions();
   };
   dialog.exec();
-  if(old.monitor!=settings_.monitor||old.maximized!=settings_.maximized)placeOnSecondary();
 }
-void Window::placeOnSecondary() {
-  auto *screen=preferredScreen(settings_.monitor);
+void Window::restoreWindowPlacement() {
+  const auto saved=QSettings().value("ui/windowGeometry").toByteArray();
+  if(!saved.isEmpty()&&restoreGeometry(saved)){
+    show();
+    return;
+  }
+  auto *screen=preferredScreen();
   if (!screen)
     return;
-  auto area = screen->availableGeometry();
-  if(isMaximized()||isFullScreen())showNormal();
+  const auto area=screen->availableGeometry();
   winId();windowHandle()->setScreen(screen);
   resize(qMin(1200,area.width()-32),qMin(820,area.height()-64));
   move(area.center()-rect().center());
-  if(settings_.maximized)showMaximized();else showNormal();
+  showMaximized();
   log(QString("SCREEN %1 primary=%2 geometry=%3,%4,%5,%6")
           .arg(screen->name())
           .arg(screen == QGuiApplication::primaryScreen())
@@ -2259,6 +2298,75 @@ void Window::stopMonitor(bool show) {
   if (show)
     showMonitorCapture();
 }
+void Window::closeLiveCanDump(){
+  delete liveDumpNotifier_;
+  liveDumpNotifier_=nullptr;
+  if(liveDumpFd_>=0)::close(liveDumpFd_);
+  liveDumpFd_=-1;
+  liveDumpIndex_=0;
+}
+void Window::configureLiveCanDump(const QString &interface){
+  canDumpHeader_->setText(QCoreApplication::translate("RNet","CAN dump · %1 (receive only)").arg(interface));
+  canDumpHeader_->setToolTip(QCoreApplication::translate("RNet","Continuous passive CAN reception; no CAN frames are sent."));
+  canDump_->setAccessibleName(canDumpHeader_->text());
+  if(interface!=liveDumpInterface_){
+    closeLiveCanDump();
+    liveDumpInterface_=interface;
+    canDump_->clear();
+  }
+  ensureLiveCanDump();
+}
+void Window::ensureLiveCanDump(){
+  if(liveDumpInterface_.isEmpty()||liveDumpInterface_.toLatin1().size()>=IFNAMSIZ)return;
+  ifreq request{};
+  const auto name=liveDumpInterface_.toLatin1();
+  std::copy(name.begin(),name.end(),request.ifr_name);
+  if(liveDumpFd_>=0){
+    if(::ioctl(liveDumpFd_,SIOCGIFINDEX,&request)<0||request.ifr_ifindex!=liveDumpIndex_||
+       ::ioctl(liveDumpFd_,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP))
+      closeLiveCanDump();
+    else return;
+  }
+  canDump_->setPlaceholderText(QCoreApplication::translate("RNet","CAN interface %1 unavailable; waiting…").arg(liveDumpInterface_));
+  liveDumpFd_=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC,CAN_RAW);
+  if(liveDumpFd_<0)return;
+  if(::ioctl(liveDumpFd_,SIOCGIFINDEX,&request)<0){closeLiveCanDump();return;}
+  const int index=request.ifr_ifindex;
+  if(::ioctl(liveDumpFd_,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP)){
+    closeLiveCanDump();return;
+  }
+  sockaddr_can address{};
+  address.can_family=AF_CAN;
+  address.can_ifindex=index;
+  if(::bind(liveDumpFd_,reinterpret_cast<sockaddr*>(&address),sizeof(address))<0){
+    closeLiveCanDump();return;
+  }
+  liveDumpIndex_=index;
+  canDump_->setPlaceholderText(QCoreApplication::translate("RNet","Waiting for CAN frames on %1…").arg(liveDumpInterface_));
+  liveDumpNotifier_=new QSocketNotifier(liveDumpFd_,QSocketNotifier::Read,this);
+  connect(liveDumpNotifier_,&QSocketNotifier::activated,this,&Window::receiveLiveCanDump);
+}
+void Window::receiveLiveCanDump(){
+  QStringList lines;
+  for(int batch=0;batch<256&&liveDumpFd_>=0;++batch){
+    can_frame frame{};
+    const auto size=::read(liveDumpFd_,&frame,sizeof(frame));
+    if(size<0&&(errno==EAGAIN||errno==EWOULDBLOCK))break;
+    if(size<0&&errno==EINTR)continue;
+    if(size!=sizeof(frame)||frame.can_dlc>8){closeLiveCanDump();break;}
+    const bool extended=frame.can_id&CAN_EFF_FLAG;
+    const auto id=frame.can_id&(extended?CAN_EFF_MASK:CAN_SFF_MASK);
+    const auto payload=frame.can_id&CAN_RTR_FLAG?
+        QCoreApplication::translate("RNet","remote request"):
+        QString::fromLatin1(QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc).toHex(' ').toUpper());
+    lines.append(QStringLiteral("%1 %2 %3 [%4] %5%6")
+        .arg(QDateTime::currentDateTime().toString("HH:mm:ss.zzz"),liveDumpInterface_,
+             QString::number(id,16).toUpper().rightJustified(extended?8:3,'0'))
+        .arg(frame.can_dlc)
+        .arg(payload,frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString()));
+  }
+  if(!lines.isEmpty())canDump_->appendPlainText(lines.join('\n'));
+}
 void Window::showMonitorCapture(bool record) {
   QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   table_->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -2342,6 +2450,13 @@ void Window::closeEvent(QCloseEvent *event) {
     }
     stopMonitor(false);
     flushColumnSave();
+    QSettings placement;
+    placement.setValue("ui/windowGeometry",saveGeometry());
+    placement.setValue("ui/windowRect",normalGeometry());
+    placement.setValue("ui/mainSplitterState",mainSplitter_->saveState());
+    if(windowHandle()&&windowHandle()->screen())
+      placement.setValue("ui/windowScreen",windowHandle()->screen()->name());
+    placement.sync();
     log("SHUTDOWN clean");
     event->accept();
   } catch (const std::exception &e) {

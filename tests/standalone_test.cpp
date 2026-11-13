@@ -36,6 +36,11 @@ private slots:
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
+    auto *liveDump=window.findChild<QPlainTextEdit*>("liveCanDump");
+    auto *liveHeader=window.findChild<QLabel*>("liveCanDumpHeader");
+    QVERIFY(liveDump&&liveHeader);QVERIFY(liveDump->isReadOnly());
+    QCOMPARE(liveDump->document()->maximumBlockCount(),2000);
+    QVERIFY(liveHeader->text().contains("rnetOffline"));
     QVERIFY(window.windowTitle().contains(QStringLiteral(DFREERNET_VERSION)));
     auto *aboutAction=window.findChild<QAction*>("command57664");
     QVERIFY(aboutAction);
@@ -212,7 +217,19 @@ private slots:
     }
     window.showValues();
     table->setColumnWidth(1,555);
+    window.showNormal();
+    window.move(60,70);
+    window.resize(950,710);
+    auto *splitter=window.findChild<QSplitter*>("mainVerticalSplitter");
+    QVERIFY(splitter);
+    splitter->setSizes({390,280});
+    const auto splitBefore=splitter->saveState();
+    const auto normalBeforeClose=window.normalGeometry();
     window.close();
+    QCOMPARE(QSettings().value("ui/windowRect").toRect(),normalBeforeClose);
+    QVERIFY(!QSettings().value("ui/windowGeometry").toByteArray().isEmpty());
+    QVERIFY(QSettings().contains("ui/windowScreen"));
+    QCOMPARE(QSettings().value("ui/mainSplitterState").toByteArray(),splitBefore);
     QVERIFY(QSettings().contains("ui/columns/v1/hierarchy"));
     Window restarted(settings.logDirectory);
     restarted.show();
@@ -220,7 +237,15 @@ private slots:
     QCOMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(1),555);
     restarted.findChild<QAction*>("profileTableView")->trigger();
     QCOMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(0),181);
-    restarted.placeOnSecondary();
+    restarted.restoreWindowPlacement();
+    QVERIFY(!restarted.isMaximized());
+    auto *restoredSplitter=restarted.findChild<QSplitter*>("mainVerticalSplitter");
+    QVERIFY(restoredSplitter);
+    const auto restoredSizes=restoredSplitter->sizes();
+    QVERIFY(restoredSizes.size()==2&&restoredSizes[1]>restoredSizes[0]/2);
+    QCOMPARE(restarted.normalGeometry().height(),normalBeforeClose.height());
+    QVERIFY(restarted.normalGeometry().width()<=normalBeforeClose.width());
+    QVERIFY(restarted.normalGeometry().intersects(QGuiApplication::primaryScreen()->availableGeometry()));
     QTRY_COMPARE(restarted.findChild<QTableView*>("parameters")->columnWidth(0),181);
     restarted.close();
   }

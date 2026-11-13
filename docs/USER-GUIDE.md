@@ -16,7 +16,7 @@ The verified catalog, UI texts and snapshot template are embedded in the applica
 scripts/run.sh
 ```
 
-The modal warning appears at every startup. “I understand — Continue” opens the interface; Exit and Escape end startup. The window uses the second monitor by default. The Language menu switches between US English and German.
+The modal warning appears at every startup. “I understand — Continue” opens the interface; Exit and Escape end startup. On the first start, the window uses the second monitor when available. Later starts restore its last position, size and maximized state; the warning appears on the same screen. The Language menu switches between US English and German.
 
 ## Edit → Settings
 
@@ -27,7 +27,7 @@ Four vertical tabs group the persisted preferences:
 | General | Language, default Dongle access level, undo limit |
 | CAN | Interface, monitor duration, heartbeat visibility and reception timeout |
 | Files and folders | Working, backup, export and log folders |
-| Appearance | Monitor, maximized state, details pane, icon and font sizes |
+| Appearance | Details pane, icon and font sizes |
 
 Apply accepts valid values; OK accepts and closes; Cancel discards edits that have not been applied. The log folder takes effect on the next start. Explicit command-line arguments take precedence. Controller operations use the saved CAN interface and backup folder without requesting them again. Safety confirmations remain; opening or saving a file still requires choosing its filename.
 
@@ -78,6 +78,10 @@ This applies to the Linux computer. The wheelchair Sleep Timer is unchanged. A p
 The heart at the right of the status bar pulses red while recent complete `0x03C30F0F` device-heartbeat frames with seven `0x87` bytes are received. The `0x00E` serial-identification frame does not activate it. Without recent reception it is gray and still. A down interface is reported explicitly in the tooltip. The receiver rebinds automatically after USB/interface replacement; it never configures the adapter or sends CAN messages. The indicator only listens and sends no CAN messages. It does not confirm driving readiness or write permission. A gray heart may also indicate an incorrect interface or a different heartbeat on the connected system.
 
 Serial queries and CAN monitoring use the saved interface. A serial number does not automatically establish a reliable module name.
+
+The panel below the fixed access column continuously displays received CAN frames with reception time, interface, ID, DLC and payload. It starts with the app, reconnects when the selected interface returns, never transmits, and keeps at most 2000 display lines. **Controller → Monitor CAN…** remains a separate timed capture summary.
+
+Drag the horizontal divider above the lower panes to change their height. The divider position is saved when the app closes.
 
 ## Troubleshooting
 

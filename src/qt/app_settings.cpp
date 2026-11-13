@@ -12,16 +12,17 @@ AppSettings AppSettings::defaults(){
 }
 AppSettings AppSettings::load(){
   auto s=defaults();QSettings q;
+  q.remove("ui/monitor");q.remove("ui/maximized");
   auto str=[&](const char *key,QString &value){value=q.value(key,value).toString();};
   auto num=[&](const char *key,int &value,int low,int high){bool ok=false;auto n=q.value(key,value).toInt(&ok);if(ok&&n>=low&&n<=high)value=n;};
   str("ui/language",s.language);if(s.language!="en_US"&&s.language!="de_DE")s.language="en_US";
-  str("can/interface",s.canInterface);str("ui/monitor",s.monitor);
+  str("can/interface",s.canInterface);
   str("paths/working",s.workingDirectory);str("paths/backups",s.backupDirectory);str("paths/exports",s.exportDirectory);
   str("paths/logs",s.logDirectory);
   num("dongle/accessLevel",s.accessLevel,0,1);num("can/monitorSeconds",s.monitorSeconds,1,120);
   num("editor/undoLimit",s.undoLimit,1,1000);num("ui/toolbarIconSize",s.toolbarIconSize,16,32);
   num("ui/itemIconSize",s.itemIconSize,16,28);num("ui/fontSize",s.fontSize,0,30);num("can/heartbeatTimeoutMs",s.heartbeatTimeoutMs,500,10000);
-  s.maximized=q.value("ui/maximized",true).toBool();s.showDetails=q.value("ui/showDetails",true).toBool();
+  s.showDetails=q.value("ui/showDetails",true).toBool();
   s.keepAwake=q.value("ui/keepAwake",true).toBool();
   s.toolbarIconsOnly = q.value("ui/toolbarIconsOnly", s.toolbarIconsOnly).toBool();
   s.showAllParameters=q.value("ui/showAllParameters",true).toBool();
@@ -44,7 +45,8 @@ AppSettings AppSettings::load(){
 }
 void AppSettings::save()const{
   QSettings q;
-  q.setValue("ui/language",language);q.setValue("can/interface",canInterface);q.setValue("ui/monitor",monitor);
+  q.setValue("ui/language",language);q.setValue("can/interface",canInterface);
+  q.remove("ui/monitor");q.remove("ui/maximized");
   q.setValue("paths/working",workingDirectory);q.setValue("paths/backups",backupDirectory);q.setValue("paths/exports",exportDirectory);
   q.setValue("paths/logs",logDirectory);
   q.setValue("ui/showAllParameters",showAllParameters);
@@ -56,7 +58,7 @@ void AppSettings::save()const{
   q.setValue("ui/toolbarIconsOnly", toolbarIconsOnly);
   q.setValue("dongle/accessLevel",qMin(accessLevel,1));q.setValue("can/monitorSeconds",monitorSeconds);q.setValue("editor/undoLimit",undoLimit);
   q.setValue("ui/toolbarIconSize",toolbarIconSize);q.setValue("ui/itemIconSize",itemIconSize);q.setValue("ui/fontSize",fontSize);
-  q.setValue("ui/keepAwake",keepAwake);q.setValue("ui/maximized",maximized);q.setValue("ui/showDetails",showDetails);q.setValue("can/heartbeatEnabled",heartbeatEnabled);
+  q.setValue("ui/keepAwake",keepAwake);q.setValue("ui/showDetails",showDetails);q.setValue("can/heartbeatEnabled",heartbeatEnabled);
   q.setValue("can/heartbeatTimeoutMs",heartbeatTimeoutMs);q.sync();
   if(q.status()!=QSettings::NoError)throw UiError(QCoreApplication::translate("RNet","Could not save application settings"));
 }
@@ -86,10 +88,8 @@ QString AppSettings::newBackupDirectory(const QString &prefix)const{
   if(!QDir().mkpath(backupDirectory))throw UiError(QCoreApplication::translate("RNet","Cannot create the configured backup directory; check Settings"));
   return QDir(backupDirectory).filePath(prefix+"-"+QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss-zzz")+"-"+QUuid::createUuid().toString(QUuid::WithoutBraces).left(8));
 }
-QScreen *preferredScreen(const QString &preference){
+QScreen *preferredScreen(){
   auto *primary=QGuiApplication::primaryScreen();
-  if(preference=="primary")return primary;
-  for(auto *screen:QGuiApplication::screens())if(screen->name()==preference)return screen;
   for(auto *screen:QGuiApplication::screens())if(screen!=primary)return screen;
   return primary;
 }

@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 12 November 2026. Application: dfreernet 1.1.0, native Linux / Qt 6.
+Status: 13 November 2026. Application: dfreernet 1.2.0, native Linux / Qt 6.
 
 ## Hardware scope
 
@@ -31,6 +31,8 @@ A user-provided 23.652-second `can1` capture shows the on/off phases: `0x00C` at
 `scripts/test.sh` builds the application, runs the offline CTest suite, verifies pinned embedded-resource checksums during the build and checks native runtime dependencies. The local suite with private fixtures contains 17 targets; the Git snapshot runs the fixture-free subset. It covers document preservation, catalog decoding, value validation, bounded write logic, capture audits, translations, startup consent, preferences and Qt interaction. These tests do not send to a physical CAN bus.
 
 The optional heartbeat integration test uses a fresh isolated network namespace and virtual CAN interface. It verifies that unrelated and incomplete frames do not activate the indicator, a complete extended `0x03C30F0F` frame with seven `0x87` bytes does, stale reception returns gray, and the indicator sends zero frames. It requires Linux namespace/vcan support and is separate from standard CTest.
+
+For 1.2.0, all eight fixture-free offline tests passed. A separate isolated-vcan test confirmed that the continuous CAN dump and timed monitor both received the test frame while the application transmitted zero frames. No physical-controller test was performed for this release.
 
 ## Known gaps
 

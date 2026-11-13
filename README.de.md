@@ -10,11 +10,11 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.1.0
+## Version 1.2.0
 
-Diese Version erhält Spaltenlayouts beim schnellen Ansichtswechsel, baut den Launcher bei geänderten Quellen neu und zeigt die Version im Fenstertitel und in der Startwarnung. „Hilfe“ steht am rechten Ende der Menüleiste. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version filtert Profiltabellen nach Katalog-Speicherzuordnung, verstärkt die Startwarnung und ergänzt einen fortlaufenden passiven CAN-Mitschnitt. Fensterposition, Größe, Maximierungszustand und Höhe der unteren Fenster werden wiederhergestellt. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
-## Bildschirmfotos
+## Bildschirmfotos (mit 1.1.0 aufgenommen)
 
 Hauptfenster mit Parametertabelle und Berechtigungsstufen:
 
@@ -64,7 +64,8 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 - `.R-net`-Dateien öffnen und speichern; angezeigte Informationen exportieren.
 - Datei → RND-Katalog importieren… prüft eine RND-Datei und schreibt deren Tabellen in eine neue SQLite-Datenbank. Der eingebettete Katalog wird nicht automatisch gewechselt.
 - Unterstützte Änderungen mit Sicherung, Vergleich und Rückleseprüfung übertragen. Der Schreibpfad ist begrenzt und experimentell.
-- Modulkennungen und Seriennummern abfragen sowie CAN-Verkehr beobachten.
+- Modulkennungen und Seriennummern abfragen. Unter der fixierten Berechtigungsspalte läuft ein fortlaufender CAN-Mitschnitt nur mit Empfang; „CAN beobachten“ erstellt weiterhin eine zeitlich begrenzte Zusammenfassung.
+- Den waagerechten Trenngriff ziehen, um die unteren Fenster für Details und CAN-Mitschnitt in der Höhe anzupassen; die Höhe bleibt nach dem Neustart erhalten.
 - Passiven CAN-Heartbeat als pulsierendes Herz rechts in der Statusleiste anzeigen.
 - Linux während der App-Nutzung wach halten; optionales Warnblinker-Signal nur für die aktuelle Sitzung (Standardintervall 300 s, Dauer 60 s; verlangt die Bestätigung „sichtbar aus“ und verhindert den Rollstuhl-Ruhezustand nicht).
 - CAN-, Ordner-, Sprach- und Darstellungseinstellungen in vertikalen Reitern speichern.

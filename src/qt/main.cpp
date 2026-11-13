@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     app.setQuitOnLastWindowClosed(false);
     {
       rnet::qt::StartupDialog notice;
-      notice.placeOnSecondary();
+      notice.placeOnSavedScreen();
       if(parser.isSet("screenshot"))QTimer::singleShot(1000,&notice,[&]{notice.grab().save(parser.value("screenshot"));});
       // UI-check timeout may reject the notice, but can never accept it.
       if(quitAfter)QTimer::singleShot(quitAfter,&notice,&QDialog::reject);
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     rnet::qt::Window window(parser.isSet("output")?parser.value("output"):preferences.logDirectory);
     if (parser.isSet("document"))
       window.openDocument(parser.value("document"));
-    window.placeOnSecondary();
+    window.restoreWindowPlacement();
     if(parser.isSet("hazard-blink-test")&&parser.isSet("read-controller"))throw UiError(QCoreApplication::translate("RNet","The light cycle cannot start together with a controller read"));
     if (parser.isSet("read-controller")) {
       if (!parser.isSet("stationary-confirmed") ||

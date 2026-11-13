@@ -24,6 +24,7 @@ class QScreen;
 class QMenu;
 class QSocketNotifier;
 class QTimer;
+class QSplitter;
 namespace rnet::qt {
 class CanHeartbeatIndicator;
 class SleepInhibitor;
@@ -103,7 +104,7 @@ public:
   void showCatalog();
   void showRepository();
   void showResources();
-  void placeOnSecondary();
+  void restoreWindowPlacement();
   void startBlinkCycle();
   void requestBlinkCycle();
   bool heartbeatReceiving()const;
@@ -171,6 +172,9 @@ private:
   std::map<QString,QByteArray> pendingColumnStates_;
   QLineEdit *search_ = nullptr;
   QPlainTextEdit *details_ = nullptr;
+  QSplitter *mainSplitter_ = nullptr;
+  QPlainTextEdit *canDump_ = nullptr;
+  QLabel *canDumpHeader_ = nullptr;
   QLabel *banner_ = nullptr;
   QPushButton *edit_ = nullptr;
   QPushButton *undoButton_ = nullptr;
@@ -183,6 +187,10 @@ private:
   QPushButton *cancel_ = nullptr;
   QWidget *taskPanel_ = nullptr;
   int monitorFd_ = -1;
+  int liveDumpFd_ = -1,liveDumpIndex_ = 0;
+  QSocketNotifier *liveDumpNotifier_ = nullptr;
+  QTimer *liveDumpRetry_ = nullptr;
+  QString liveDumpInterface_;
   QSocketNotifier *notifier_ = nullptr;
   QTimer *monitorTimer_ = nullptr;
   quint64 frameCount_ = 0;
@@ -242,6 +250,10 @@ private:
   void processFinished(int, QProcess::ExitStatus);
   void cancelTask();
   void receiveFrames();
+  void configureLiveCanDump(const QString &interface);
+  void ensureLiveCanDump();
+  void receiveLiveCanDump();
+  void closeLiveCanDump();
   void stopMonitor(bool show = true);
   void hardwareInfo();
 };

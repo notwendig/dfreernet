@@ -5,7 +5,7 @@ namespace rnet::qt {
 class StartupDialog final : public QDialog {
 public:
   explicit StartupDialog(QWidget *parent=nullptr);
-  void placeOnSecondary();
+  void placeOnSavedScreen();
 protected:
   void showEvent(QShowEvent*) override;
 };

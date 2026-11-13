@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 12. November 2026. Anwendung: dfreernet 1.1.0, natives Linux / Qt 6.
+Stand: 13. November 2026. Anwendung: dfreernet 1.2.0, natives Linux / Qt 6.
 
 ## Hardwareumfang
 
@@ -31,6 +31,8 @@ Ein vom Benutzer bereitgestellter 23,652-s-Mitschnitt von `can1` zeigt die Ein-/
 `scripts/test.sh` baut die Anwendung, startet die Offline-CTest-Suite, prüft beim Build die festen Prüfsummen eingebetteter Ressourcen und native Laufzeitabhängigkeiten. Mit lokalen privaten Referenzdaten umfasst die Suite 17 Ziele; der Git-Quelltextstand führt die referenzdatenfreien Tests aus: Dateierhaltung, Katalogdekodierung, Werteprüfung, begrenzte Schreiblogik, Mitschnittprüfungen, Übersetzungen, Startzustimmung, Einstellungen und Qt-Bedienung. Diese Tests senden nicht auf einen physischen CAN-Bus.
 
 Der optionale Heartbeat-Integrationstest verwendet einen neuen isolierten Netzwerk-Namespace mit virtuellem CAN. Er prüft, dass fremde/unvollständige Frames den Indikator nicht aktivieren, ein vollständiger erweiterter Frame `0x03C30F0F` mit sieben Bytes `0x87` ihn aktiviert, veralteter Empfang grau wird und der Indikator null Frames sendet. Benötigt Linux-Namespace-/vcan-Unterstützung; getrennt vom Standard-CTest-Lauf.
+
+Für 1.2.0 bestanden alle acht referenzdatenfreien Offline-Tests. Ein getrennter Test mit isoliertem vcan bestätigte, dass fortlaufender CAN-Mitschnitt und zeitlich begrenzter Monitor den Testframe empfingen, während die Anwendung null Frames sendete. Für diese Version wurde kein Test am physischen Controller durchgeführt.
 
 ## Bekannte Lücken
 

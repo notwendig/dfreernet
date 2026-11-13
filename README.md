@@ -10,11 +10,11 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.1.0
+## Version 1.2.0
 
-This version preserves column layouts when switching views quickly, rebuilds the launcher when sources change, and shows the version in the main title and startup warning. The Help menu is last on the menu bar. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version filters profile tables by catalog storage mapping, strengthens the startup warning, and adds a continuous passive CAN dump. It restores window position, size, maximized state and lower-pane height. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
-## Screenshots
+## Screenshots (captured with 1.1.0)
 
 Main window with the parameter table and access levels:
 
@@ -64,7 +64,8 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 - Open and save `.R-net` files; export displayed information.
 - File → Import RND catalog… validates an RND file and exports its tables to a new SQLite database. The built-in catalog is not switched automatically.
 - Write supported parameter changes with backups, comparison and readback verification. This is a bounded experimental implementation.
-- Query module identifiers and serial numbers, and monitor CAN traffic.
+- Query module identifiers and serial numbers. A continuous receive-only CAN dump appears below the fixed access column; the separate Monitor CAN command still provides a timed capture summary.
+- Drag the horizontal divider to resize the lower details and CAN dump panes; the chosen height is restored on restart.
 - Show a passive CAN heartbeat as a pulsating heart at the right of the status bar.
 - Keep Linux awake while the app is open; optional session-only hazard-light experiment (default interval 300 s, duration 60 s; requires physical OFF-state confirmation and does not prevent wheelchair sleep).
 - Store CAN, folder, language and appearance preferences in grouped vertical settings tabs.

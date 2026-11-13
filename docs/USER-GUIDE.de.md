@@ -16,7 +16,7 @@ Der geprüfte Katalog, Oberflächentexte und die Snapshotvorlage sind eingebette
 scripts/run.sh
 ```
 
-Das modale Warnfenster erscheint bei jedem Start. „Verstanden – Fortfahren“ öffnet die Oberfläche, „Beenden“ und Escape schließen den Start. Das Fenster öffnet standardmäßig auf dem zweiten Monitor. Im Menü „Sprache“ kann zwischen US-Englisch und Deutsch gewechselt werden.
+Das modale Warnfenster erscheint bei jedem Start. „Verstanden – Fortfahren“ öffnet die Oberfläche, „Beenden“ und Escape schließen den Start. Beim ersten Start öffnet sich das Fenster nach Möglichkeit auf dem zweiten Monitor. Danach werden Position, Größe und Maximierungszustand wiederhergestellt; die Warnung erscheint auf demselben Bildschirm. Im Menü „Sprache“ kann zwischen US-Englisch und Deutsch gewechselt werden.
 
 ## Bearbeiten → Einstellungen
 
@@ -27,7 +27,7 @@ Vier vertikale Reiter bündeln die dauerhaft gespeicherten Einstellungen:
 | Allgemein | Sprache, Standard-Dongle-Berechtigung, Rückgängig-Schritte |
 | CAN | Schnittstelle, Monitorzeit, Herz-Anzeige und Empfangszeitlimit |
 | Dateien und Ordner | Arbeits-, Sicherungs-, Export- und Protokollordner |
-| Darstellung | Monitor, Maximierung, Detailbereich, Icon- und Schriftgröße |
+| Darstellung | Detailbereich, Icon- und Schriftgröße |
 
 „Anwenden“ übernimmt gültige Werte, „OK“ übernimmt und schließt, „Abbrechen“ verwirft noch nicht übernommene Eingaben. Der Protokollordner wirkt beim nächsten Start. Explizite Startparameter haben Vorrang. Die gespeicherte CAN-Schnittstelle und die Sicherungsordner werden bei Controlleraktionen ohne erneute Auswahl verwendet. Sicherheitsbestätigungen bleiben erhalten; beim Öffnen oder Speichern einer Datei wird weiterhin ein Dateiname ausgewählt.
 
@@ -78,6 +78,10 @@ Das betrifft den Linux-Rechner. Der Sleep Timer des Rollstuhls bleibt unverände
 Rechts in der Statusleiste pulsiert das Herz rot, wenn aktuelle vollständige Geräte-Heartbeat-Frames `0x03C30F0F` mit sieben Bytes `0x87` empfangen werden. `0x00E` ist hier eine Serienkennung und aktiviert das Herz nicht. Ohne aktuellen Empfang ist es grau und still. Eine ausgeschaltete Schnittstelle steht ausdrücklich im Tooltip. Nach USB-/Schnittstellenwechsel bindet sich der Empfänger automatisch neu; er konfiguriert den Adapter nicht und sendet keine CAN-Nachrichten. Die Anzeige hört ausschließlich mit und sendet keine CAN-Nachrichten. Sie bestätigt weder Fahrbereitschaft noch Schreibberechtigung. Ein graues Herz kann auch durch eine falsche Schnittstelle oder einen auf diesem System abweichenden Heartbeat entstehen.
 
 Seriennummernabfrage und CAN-Monitor verwenden die gespeicherte Schnittstelle. Eine Seriennummer ist nicht automatisch ein zuverlässig ermittelter Modulname.
+
+Unter der fixierten Berechtigungsspalte zeigt ein Fenster fortlaufend empfangene CAN-Nachrichten mit Empfangszeit, Schnittstelle, Kennung, DLC und Nutzdaten. Es startet mit der App, verbindet sich nach Wiederkehr der gewählten Schnittstelle erneut, sendet nichts und hält höchstens 2000 Anzeigezeilen vor. **Controller → CAN beobachten…** bleibt eine getrennte, zeitlich begrenzte Zusammenfassung.
+
+Der waagerechte Trenngriff über den unteren Fenstern verändert deren Höhe. Die Position des Trenners wird beim Schließen gespeichert.
 
 ## Bei Problemen
 

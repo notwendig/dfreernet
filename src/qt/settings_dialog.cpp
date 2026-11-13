@@ -48,11 +48,7 @@ SettingsDialog::SettingsDialog(const AppSettings &settings,QWidget *parent):QDia
   auto *liveNote=new QLabel;bind(liveNote,"text",QT_TRANSLATE_NOOP("RNet","Starts when CAN heartbeat is available. Pauses during controller access. Stops when disabled or the app closes."));liveNote->setWordWrap(true);can->addRow(liveNote);
   auto *note=new QLabel;bind(note,"text",QT_TRANSLATE_NOOP("RNet","The selected interface is used directly. Configure and enable it in Linux before controller access. Enabling or disabling the live signal controls the hazard-light cycle; controller parameters are unchanged."));note->setWordWrap(true);can->addRow(note);
   auto *folders=page(QT_TRANSLATE_NOOP("RNet","Files and folders"));working_=directory(folders,QT_TRANSLATE_NOOP("RNet","Working directory"),"settingsWorkingDirectory",settings.workingDirectory);backup_=directory(folders,QT_TRANSLATE_NOOP("RNet","Controller backups"),"settingsBackupDirectory",settings.backupDirectory);exports_=directory(folders,QT_TRANSLATE_NOOP("RNet","Exports"),"settingsExportDirectory",settings.exportDirectory);logs_=directory(folders,QT_TRANSLATE_NOOP("RNet","Log directory (restart)"),"settingsLogDirectory",settings.logDirectory);
-  auto *appearance=page(QT_TRANSLATE_NOOP("RNet","Appearance"));monitor_=new QComboBox;monitor_->setObjectName("settingsMonitor");monitor_->addItem("","secondary");monitor_->addItem("","primary");
-  for(auto *screen:QGuiApplication::screens())monitor_->addItem(screen->name(),screen->name());
-  if(monitor_->findData(settings.monitor)<0)monitor_->addItem(settings.monitor,settings.monitor);
-  monitor_->setCurrentIndex(monitor_->findData(settings.monitor));row(appearance,QT_TRANSLATE_NOOP("RNet","Preferred monitor"),monitor_);
-  maximized_=new QCheckBox;maximized_->setChecked(settings.maximized);bind(maximized_,"text",QT_TRANSLATE_NOOP("RNet","Start maximized"));appearance->addRow(maximized_);
+  auto *appearance=page(QT_TRANSLATE_NOOP("RNet","Appearance"));
   details_=new QCheckBox;details_->setChecked(settings.showDetails);bind(details_,"text",QT_TRANSLATE_NOOP("RNet","Show parameter details"));appearance->addRow(details_);
   toolbarIconsOnly_ = new QCheckBox;
   toolbarIconsOnly_->setObjectName("settingsToolbarIconsOnly");
@@ -71,7 +67,6 @@ void SettingsDialog::retranslate(){
   for(const auto &binding:texts_)if(binding.object)binding.object->setProperty(binding.property.constData(),QCoreApplication::translate("RNet",binding.source.constData()));
   const char *labels[]{QT_TRANSLATE_NOOP("RNet","General"),QT_TRANSLATE_NOOP("RNet","CAN"),QT_TRANSLATE_NOOP("RNet","Files and folders"),QT_TRANSLATE_NOOP("RNet","Appearance")};for(int i=0;i<4;++i){tabs_->item(i)->setText(QCoreApplication::translate("RNet",labels[i]));tabs_->item(i)->setSizeHint(QSize(185,qMax(54,fontMetrics().height()*2+8)));}
   for(int i=0;i<access_->count();++i)access_->setItemText(i,QCoreApplication::translate("RNet",access_level_name(AccessLevel(i))));
-  monitor_->setItemText(0,QCoreApplication::translate("RNet","Secondary monitor (preferred)"));monitor_->setItemText(1,QCoreApplication::translate("RNet","Primary monitor"));
 }
 void SettingsDialog::changeEvent(QEvent *event){QDialog::changeEvent(event);if((event->type()==QEvent::LanguageChange||event->type()==QEvent::FontChange)&&pages_)retranslate();}
 bool SettingsDialog::apply(){
@@ -84,7 +79,7 @@ bool SettingsDialog::apply(){
     s.liveSignalDurationSeconds = liveDuration_->value();
     s.toolbarIconsOnly = toolbarIconsOnly_->isChecked();
     s.workingDirectory=working_->text();s.backupDirectory=backup_->text();s.exportDirectory=exports_->text();s.logDirectory=logs_->text();
-    s.monitor=monitor_->currentData().toString();s.maximized=maximized_->isChecked();s.showDetails=details_->isChecked();s.toolbarIconSize=toolbarIcons_->value();s.itemIconSize=itemIcons_->value();s.fontSize=font_->value();
+    s.showDetails=details_->isChecked();s.toolbarIconSize=toolbarIcons_->value();s.itemIconSize=itemIcons_->value();s.fontSize=font_->value();
     s=s.validated();s.save();settings_=s;if(applied)applied(s);languages().setLanguage(s.language,true);error_->clear();return true;
   }catch(const std::exception &error){error_->setText(localizedError(error.what()));return false;}
 }

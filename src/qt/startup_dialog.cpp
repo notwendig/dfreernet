@@ -60,8 +60,16 @@ void StartupDialog::showEvent(QShowEvent *event){
   auto *leave=findChild<QPushButton*>("startupExit");
   leave->setDefault(true);leave->setFocus(Qt::OtherFocusReason);
 }
-void StartupDialog::placeOnSecondary(){
-  auto *screen=preferredScreen(AppSettings::load().monitor);
+void StartupDialog::placeOnSavedScreen(){
+  QSettings settings;
+  const auto name=settings.value("ui/windowScreen").toString();
+  QScreen *screen=nullptr;
+  for(auto *candidate:QGuiApplication::screens())
+    if(!name.isEmpty()&&candidate->name()==name){screen=candidate;break;}
+  const auto saved=settings.value("ui/windowRect").toRect();
+  if(!screen&&saved.isValid())screen=QGuiApplication::screenAt(saved.center());
+  if(!screen)screen=(name.isEmpty()&&!saved.isValid())?
+      preferredScreen():QGuiApplication::primaryScreen();
   if(!screen)return;
   const auto area=screen->availableGeometry();
   resize(qMin(760,area.width()-32),qMin(650,area.height()-32));

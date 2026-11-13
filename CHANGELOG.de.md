@@ -4,6 +4,11 @@
 
 ## Unveröffentlicht
 
+## 1.2.0 — 13. November 2026
+
+- Einstellungen für bevorzugten Monitor und maximierten Start entfernt; Fensterposition, Größe und Maximierungszustand wiederherstellen und die Startwarnung auf demselben Bildschirm öffnen.
+- Die unteren Fenster für Details und CAN-Mitschnitt mit sichtbarem Trenngriff höhenverstellbar gemacht; Trennerposition speichern.
+- Fortlaufenden passiven CAN-Mitschnitt unter der fixierten Berechtigungsspalte ergänzt, mit automatischer Neuverbindung und begrenzter Anzeigehistorie.
 - Zweisprachige Startwarnung um Verletzungsgefahr und mögliche Zerstörung von Motoren oder Steuerungselektronik ergänzt; Illustration eines kranken Rollstuhls hinzugefügt.
 - Profiltabellen auf profilbezogene Parameter begrenzen; passende ungelesene Werte bleiben grau.
 

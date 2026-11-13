@@ -55,7 +55,7 @@ private slots:
   }
   void englishAndGermanLayout(){
     for(const auto &code:{QString("en_US"),QString("de_DE")}){
-      languages().setLanguage(code);StartupDialog dialog;dialog.placeOnSecondary();dialog.show();QTest::qWait(40);
+      languages().setLanguage(code);StartupDialog dialog;dialog.placeOnSavedScreen();dialog.show();QTest::qWait(40);
       QVERIFY(dialog.windowTitle().contains(QStringLiteral(DFREERNET_VERSION)));
       QVERIFY(dialog.findChild<QLabel*>("startupTitle")->text().contains(QStringLiteral(DFREERNET_VERSION)));
       auto text=dialog.findChild<QTextBrowser*>("startupNoticeText")->toPlainText();

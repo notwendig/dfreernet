@@ -1295,6 +1295,26 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Warnung</translation>
         </message>
         <message>
+            <source>CAN dump · %1 (receive only)</source>
+            <translation>CAN-Mitschnitt · %1 (nur Empfang)</translation>
+        </message>
+        <message>
+            <source>Continuous passive CAN reception; no CAN frames are sent.</source>
+            <translation>Fortlaufender passiver CAN-Empfang; es werden keine CAN-Nachrichten gesendet.</translation>
+        </message>
+        <message>
+            <source>CAN interface %1 unavailable; waiting…</source>
+            <translation>CAN-Schnittstelle %1 nicht verfügbar; warte…</translation>
+        </message>
+        <message>
+            <source>Waiting for CAN frames on %1…</source>
+            <translation>Warte auf CAN-Nachrichten auf %1…</translation>
+        </message>
+        <message>
+            <source>remote request</source>
+            <translation>Remote-Anfrage</translation>
+        </message>
+        <message>
             <source>Independent, experimental software. This is not an official controller-manufacturer programming tool.</source>
             <translation>Unabhängige, experimentelle Software. Dies ist kein offizielles Programmierwerkzeug des Steuerungsherstellers.</translation>
         </message>
@@ -1423,14 +1443,6 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Protokollverzeichnis (Neustart)</translation>
         </message>
         <message>
-            <source>Preferred monitor</source>
-            <translation>Bevorzugter Monitor</translation>
-        </message>
-        <message>
-            <source>Start maximized</source>
-            <translation>Maximiert starten</translation>
-        </message>
-        <message>
             <source>Show parameter details</source>
             <translation>Parameterdetails anzeigen</translation>
         </message>
@@ -1449,14 +1461,6 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
         <message>
             <source>Font size (points)</source>
             <translation>Schriftgröße (Punkt)</translation>
-        </message>
-        <message>
-            <source>Secondary monitor (preferred)</source>
-            <translation>Anderer Monitor (bevorzugt)</translation>
-        </message>
-        <message>
-            <source>Primary monitor</source>
-            <translation>Hauptmonitor</translation>
         </message>
         <message>
             <source>Could not save application settings</source>

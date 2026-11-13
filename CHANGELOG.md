@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+## 1.2.0 — 2026-11-13
+
+- Remove the preferred-monitor and start-maximized settings; restore the main window's saved position, size and maximized state, and open the warning on the same screen.
+- Make the lower details and CAN dump panes height-adjustable with a visible divider and save its position.
+- Add a continuous passive CAN dump below the pinned access column, with automatic reconnection and bounded display history.
 - Strengthen the bilingual startup warning about injury and possible destruction of motors or control electronics; add an illustrated sick wheelchair.
 - Restrict each profile's table to profile-mapped parameters; keep applicable unread values gray.
 

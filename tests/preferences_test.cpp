@@ -33,12 +33,16 @@ private slots:
     QVERIFY(!defaults.toolbarIconsOnly);
 
     QSettings old;
+    old.setValue("ui/monitor","primary");
+    old.setValue("ui/maximized",false);
     old.setValue("dongle/accessLevel", 3);
     old.remove("can/liveSignalIntervalSeconds");
     old.remove("can/liveSignalDurationSeconds");
     old.setValue("can/liveSignalIntervalMinutes", 8);
     old.setValue("can/liveSignalDurationMinutes", 2);
     auto settings = AppSettings::load();
+    QVERIFY(!old.contains("ui/monitor"));
+    QVERIFY(!old.contains("ui/maximized"));
     QCOMPARE(settings.accessLevel, 1);
     QCOMPARE(settings.liveSignalIntervalSeconds, 480);
     QCOMPARE(settings.liveSignalDurationSeconds, 120);
@@ -61,6 +65,7 @@ private slots:
     QVERIFY_THROWS_EXCEPTION(std::runtime_error, settings.validated());
 
     SettingsDialog dialog(defaults);
+    QVERIFY(!dialog.findChild<QComboBox*>("settingsMonitor"));
     dialog.findChild<QCheckBox*>("settingsLiveSignal")->setChecked(true);
     dialog.findChild<QSpinBox*>("settingsLiveInterval")->setValue(11);
     dialog.findChild<QSpinBox*>("settingsLiveDuration")->setValue(3);
@@ -76,7 +81,9 @@ private slots:
     QCOMPARE(dialog.findChild<QComboBox*>("settingsAccess")->count(), 2);
   }
   void roundtripValidationAndUniqueBackups(){
-    auto s=original();s.canInterface="vcan42";s.accessLevel=1;s.monitor="primary";s.heartbeatTimeoutMs=750;s=s.validated();s.save();
+    auto s=original();s.canInterface="vcan42";s.accessLevel=1;s.heartbeatTimeoutMs=750;s=s.validated();s.save();
+    QVERIFY(!QSettings().contains("ui/monitor"));
+    QVERIFY(!QSettings().contains("ui/maximized"));
     auto loaded=AppSettings::load();QCOMPARE(loaded.canInterface,s.canInterface);QCOMPARE(loaded.backupDirectory,s.backupDirectory);QCOMPARE(loaded.accessLevel,1);QCOMPARE(loaded.heartbeatTimeoutMs,750);
     auto a=loaded.newBackupDirectory("rnet-config"),b=loaded.newBackupDirectory("rnet-config");QVERIFY(a!=b);QVERIFY(a.startsWith(s.backupDirectory+'/'));QVERIFY(!QFileInfo::exists(a));
     s.canInterface="bad/name";QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
