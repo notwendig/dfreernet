@@ -4,6 +4,7 @@
 
 ## Unveröffentlicht
 
+- Den fortlaufenden CAN-Mitschnitt rechts neben dem gesamten unteren Bereich sichtbar halten; Vorgangsprotokolle links öffnen und Details sowie Protokoll getrennt in der Höhe verstellen.
 ## 1.2.0 — 13. November 2026
 
 - Einstellungen für bevorzugten Monitor und maximierten Start entfernt; Fensterposition, Größe und Maximierungszustand wiederherstellen und die Startwarnung auf demselben Bildschirm öffnen.

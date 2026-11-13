@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- Keep the continuous CAN dump visible beside the full lower area while task logs open on the left; allow independent height adjustment of details and task log.
 ## 1.2.0 — 2026-11-13
 
 - Remove the preferred-monitor and start-maximized settings; restore the main window's saved position, size and maximized state, and open the warning on the same screen.

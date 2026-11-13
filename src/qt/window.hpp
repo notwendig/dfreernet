@@ -173,6 +173,7 @@ private:
   QLineEdit *search_ = nullptr;
   QPlainTextEdit *details_ = nullptr;
   QSplitter *mainSplitter_ = nullptr;
+  QSplitter *detailsTaskSplitter_ = nullptr;
   QPlainTextEdit *canDump_ = nullptr;
   QLabel *canDumpHeader_ = nullptr;
   QLabel *banner_ = nullptr;

@@ -81,7 +81,7 @@ Serial queries and CAN monitoring use the saved interface. A serial number does 
 
 The panel below the fixed access column continuously displays received CAN frames with reception time, interface, ID, DLC and payload. It starts with the app, reconnects when the selected interface returns, never transmits, and keeps at most 2000 display lines. **Controller → Monitor CAN…** remains a separate timed capture summary.
 
-Drag the horizontal divider above the lower panes to change their height. The divider position is saved when the app closes.
+Drag the horizontal divider above the lower panes to change their height. When a task log is open, a second divider on the left adjusts details and task log independently; the CAN dump stays visible on the right down to the status bar. Both divider positions are saved when the app closes.
 
 ## Troubleshooting
 

@@ -223,6 +223,15 @@ private slots:
     auto *splitter=window.findChild<QSplitter*>("mainVerticalSplitter");
     QVERIFY(splitter);
     splitter->setSizes({390,280});
+    auto *taskPanel=window.findChild<QWidget*>("taskPanel");
+    auto *taskSplitter=window.findChild<QSplitter*>("detailsTaskSplitter");
+    QVERIFY(taskPanel&&taskSplitter);
+    taskPanel->show();
+    QTRY_VERIFY(taskSplitter->handle(1)->isVisible());
+    taskSplitter->setSizes({120,160});
+    if(auto path=qEnvironmentVariable("DFREERNET_SMOKE_SCREENSHOT");!path.isEmpty())
+      QVERIFY(window.grab().save(path+"-task.png"));
+    const auto taskSplitBefore=taskSplitter->saveState();
     const auto splitBefore=splitter->saveState();
     const auto normalBeforeClose=window.normalGeometry();
     window.close();
@@ -230,6 +239,7 @@ private slots:
     QVERIFY(!QSettings().value("ui/windowGeometry").toByteArray().isEmpty());
     QVERIFY(QSettings().contains("ui/windowScreen"));
     QCOMPARE(QSettings().value("ui/mainSplitterState").toByteArray(),splitBefore);
+    QCOMPARE(QSettings().value("ui/detailsTaskSplitterState").toByteArray(),taskSplitBefore);
     QVERIFY(QSettings().contains("ui/columns/v1/hierarchy"));
     Window restarted(settings.logDirectory);
     restarted.show();
@@ -243,6 +253,12 @@ private slots:
     QVERIFY(restoredSplitter);
     const auto restoredSizes=restoredSplitter->sizes();
     QVERIFY(restoredSizes.size()==2&&restoredSizes[1]>restoredSizes[0]/2);
+    auto *restoredTaskSplitter=restarted.findChild<QSplitter*>("detailsTaskSplitter");
+    auto *restoredTaskPanel=restarted.findChild<QWidget*>("taskPanel");
+    QVERIFY(restoredTaskSplitter&&restoredTaskPanel);
+    restoredTaskPanel->show();
+    QTRY_VERIFY(restoredTaskSplitter->handle(1)->isVisible());
+    QVERIFY(restoredTaskSplitter->sizes()[1]>0);
     QCOMPARE(restarted.normalGeometry().height(),normalBeforeClose.height());
     QVERIFY(restarted.normalGeometry().width()<=normalBeforeClose.width());
     QVERIFY(restarted.normalGeometry().intersects(QGuiApplication::primaryScreen()->availableGeometry()));

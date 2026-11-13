@@ -590,7 +590,13 @@ void Window::buildUi() {
   auto *bottomLayout=new QHBoxLayout(bottomContainer);
   bottomLayout->setContentsMargins(0,0,0,0);
   bottomLayout->setSpacing(0);
-  bottomLayout->addWidget(details_,1);
+  detailsTaskSplitter_=new QSplitter(Qt::Vertical);
+  detailsTaskSplitter_->setObjectName("detailsTaskSplitter");
+  detailsTaskSplitter_->setHandleWidth(10);
+  detailsTaskSplitter_->setChildrenCollapsible(false);
+  detailsTaskSplitter_->setStyleSheet("QSplitter::handle:vertical { background: palette(midlight); border-top: 1px solid palette(mid); border-bottom: 1px solid palette(mid); }");
+  detailsTaskSplitter_->addWidget(details_);
+  bottomLayout->addWidget(detailsTaskSplitter_,1);
   auto *dumpContainer=new QWidget;
   dumpContainer->setFixedWidth(250);
   auto *dumpLayout=new QVBoxLayout(dumpContainer);
@@ -616,18 +622,21 @@ void Window::buildUi() {
   if(!splitterState.isEmpty())vertical->restoreState(splitterState);
   layout->addWidget(vertical, 1);
   taskPanel_ = new QWidget;
+  taskPanel_->setObjectName("taskPanel");
   auto *taskLayout = new QVBoxLayout(taskPanel_);
   taskLayout->setContentsMargins(0, 0, 0, 0);
   taskLog_ = new QPlainTextEdit;
   taskLog_->setReadOnly(true);
-  taskLog_->setMaximumHeight(170);
   taskLog_->document()->setMaximumBlockCount(4000);
   cancel_ =
       new QPushButton(QT_TRANSLATE_NOOP("RNet", "Cancel / release access"));
   taskLayout->addWidget(taskLog_);
   cancel_->setIcon(uiIcon(Icon::Stop));
   taskLayout->addWidget(cancel_);
-  layout->addWidget(taskPanel_);
+  detailsTaskSplitter_->addWidget(taskPanel_);
+  detailsTaskSplitter_->setSizes({170,170});
+  const auto taskSplitterState=QSettings().value("ui/detailsTaskSplitterState").toByteArray();
+  if(!taskSplitterState.isEmpty())detailsTaskSplitter_->restoreState(taskSplitterState);
   taskPanel_->hide();
   setCentralWidget(central);
   connect(search_, &QLineEdit::textChanged, this, [this](const QString &s) {
@@ -2454,6 +2463,8 @@ void Window::closeEvent(QCloseEvent *event) {
     placement.setValue("ui/windowGeometry",saveGeometry());
     placement.setValue("ui/windowRect",normalGeometry());
     placement.setValue("ui/mainSplitterState",mainSplitter_->saveState());
+    if(taskPanel_->isVisible())
+      placement.setValue("ui/detailsTaskSplitterState",detailsTaskSplitter_->saveState());
     if(windowHandle()&&windowHandle()->screen())
       placement.setValue("ui/windowScreen",windowHandle()->screen()->name());
     placement.sync();

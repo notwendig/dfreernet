@@ -81,7 +81,7 @@ Seriennummernabfrage und CAN-Monitor verwenden die gespeicherte Schnittstelle. E
 
 Unter der fixierten Berechtigungsspalte zeigt ein Fenster fortlaufend empfangene CAN-Nachrichten mit Empfangszeit, Schnittstelle, Kennung, DLC und Nutzdaten. Es startet mit der App, verbindet sich nach Wiederkehr der gewählten Schnittstelle erneut, sendet nichts und hält höchstens 2000 Anzeigezeilen vor. **Controller → CAN beobachten…** bleibt eine getrennte, zeitlich begrenzte Zusammenfassung.
 
-Der waagerechte Trenngriff über den unteren Fenstern verändert deren Höhe. Die Position des Trenners wird beim Schließen gespeichert.
+Der waagerechte Trenngriff über den unteren Fenstern verändert deren Höhe. Bei geöffnetem Vorgangsprotokoll verstellt ein zweiter Trenngriff links Details und Protokoll getrennt; der CAN-Mitschnitt bleibt rechts bis zur Statusleiste sichtbar. Beide Trennerpositionen werden beim Schließen gespeichert.
 
 ## Bei Problemen
 

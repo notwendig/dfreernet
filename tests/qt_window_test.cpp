@@ -838,6 +838,13 @@ private slots:
     w->applyPreferences();
     QTRY_VERIFY_WITH_TIMEOUT(w->liveDumpFd_>=0,2000);
     w->startMonitor(interface, 300);
+    auto *lower=w->findChild<QSplitter*>("detailsTaskSplitter");
+    auto *liveDump=w->findChild<QPlainTextEdit*>("liveCanDump");
+    QVERIFY(lower&&liveDump&&w->taskPanel_->isVisible());
+    QTRY_VERIFY_WITH_TIMEOUT(lower->handle(1)->isVisible(),1000);
+    const int dumpBottom=liveDump->mapTo(w.get(),QPoint(0,liveDump->height())).y();
+    const int taskBottom=w->taskPanel_->mapTo(w.get(),QPoint(0,w->taskPanel_->height())).y();
+    QVERIFY(dumpBottom>=taskBottom-2); // The live dump must continue beside the task log.
     languages().setLanguage("de_DE");
     QCoreApplication::sendPostedEvents(nullptr, QEvent::LanguageChange);
     QVERIFY(w->monitoring());
@@ -860,8 +867,6 @@ private slots:
     frame.data[2] = 3;
     QCOMPARE(::write(fd, &frame, sizeof(frame)), ssize_t(sizeof(frame)));
     ::close(fd);
-    auto *liveDump=w->findChild<QPlainTextEdit*>("liveCanDump");
-    QVERIFY(liveDump);
     QTRY_VERIFY_WITH_TIMEOUT(liveDump->toPlainText().contains("123 [3] 01 02 03"),2000);
     QTRY_VERIFY_WITH_TIMEOUT(!w->monitoring(), 2000);
     QVERIFY(w->liveDumpFd_>=0);
