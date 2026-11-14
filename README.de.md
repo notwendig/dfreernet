@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.2.1
+## Version 1.2.2
 
-Diese Version ergänzt Verlauf und Zählung im passiven CAN-Mitschnitt, passive Ansichten unter Werkzeuge → Systemtests sowie einstellbare Breiten für CAN-Fenster und -Tabellen. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version verwendet eine gemeinsame CAN-Zähltabelle für Mitschnitt und passive Systemtests. Beide Ansichten bieten Symbolschalter für Verlauf/Zählung und Hz/ms sowie einstellbare Spalten und gespeicherte Layout- und Ansichtsoptionen. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Bildschirmfotos (mit 1.1.0 aufgenommen)
 

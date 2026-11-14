@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 13 November 2026. Application: dfreernet 1.2.1, native Linux / Qt 6.
+Status: 14 November 2026. Application: dfreernet 1.2.2, native Linux / Qt 6.
 
 ## Hardware scope
 
@@ -35,6 +35,8 @@ The optional heartbeat integration test uses a fresh isolated network namespace 
 For 1.2.0, all eight fixture-free offline tests passed. A separate isolated-vcan test confirmed that the continuous CAN dump and timed monitor both received the test frame while the application transmitted zero frames. No physical-controller test was performed for this release.
 
 For 1.2.1, `scripts/test.sh` passed all eight fixture-free offline tests. `unshare --user --map-root-user --net python3 scripts/test_qt_can.py` passed the private-vcan follow/count and passive system-test checks; the application transmitted zero CAN frames. No physical-controller test was performed for this release.
+
+For 1.2.2, the RELEASE build passed all eight fixture-free offline tests. The DEBUG build passed seven in the first run; the remaining DBus sleep-inhibitor test passed when rerun outside the sandbox after a local socket bind was denied. The isolated vcan test passed the icon-controlled Follow/Count and Hz/ms views in the live dump and System Tests; the application transmitted zero CAN frames. The Qt tests also checked CAN table layout, view selection, and window geometry restoration. No physical-controller test was performed for this release.
 
 ## Known gaps
 

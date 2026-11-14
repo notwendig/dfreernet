@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "can_frame_table.hpp"
 #include "i18n.hpp"
 #include "value_editor.hpp"
 #include "settings_dialog.hpp"
@@ -24,28 +25,6 @@ namespace {
 QColor accessColor(int level){
   static const QColor colors[]{QColor("#FFEB3B"),QColor("#4CAF50"),QColor("#1976D2"),QColor("#D32F2F")};
   return level>=0&&level<4?colors[level]:QColor(Qt::gray);
-}
-void setCountHeaders(QTableWidget *table){
-  table->setHorizontalHeaderLabels({QCoreApplication::translate("RNet","Count"),
-      QStringLiteral("CAN ID"),QCoreApplication::translate("RNet","Latest payload")});
-}
-QTableWidget *makeCountTable(QWidget *parent,const char *name,const QFont &font){
-  auto *table=new QTableWidget(parent);
-  table->setObjectName(name);
-  table->setColumnCount(3);
-  setCountHeaders(table);
-  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  table->setSelectionMode(QAbstractItemView::NoSelection);
-  table->setFocusPolicy(Qt::NoFocus);
-  table->verticalHeader()->hide();
-  table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-  table->horizontalHeader()->setStretchLastSection(false);
-  table->setColumnWidth(0,105);
-  table->setColumnWidth(1,115);
-  table->setColumnWidth(2,280);
-  table->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-  table->setFont(font);
-  return table;
 }
 class ChangedValueDelegate final : public QStyledItemDelegate {
 public:
@@ -560,6 +539,8 @@ void Window::buildUi() {
   vertical->setChildrenCollapsible(false);
   vertical->setStyleSheet("QSplitter::handle:vertical { background: palette(midlight); border-top: 1px solid palette(mid); border-bottom: 1px solid palette(mid); }");
   auto *horizontal = new QSplitter(Qt::Horizontal);
+  contentSplitter_=horizontal;
+  horizontal->setObjectName("contentSplitter");
   tree_ = new QTreeWidget;
   tree_->setObjectName("groups");
   tree_->installEventFilter(this);
@@ -633,6 +614,8 @@ void Window::buildUi() {
   horizontal->addWidget(tableContainer);
   horizontal->setStretchFactor(1, 1);
   horizontal->setSizes({310, 950});
+  const auto contentState=QSettings().value("ui/contentSplitterState").toByteArray();
+  if(!contentState.isEmpty())horizontal->restoreState(contentState);
   vertical->addWidget(horizontal);
   details_ = new QPlainTextEdit;
   details_->setObjectName("details");
@@ -662,14 +645,9 @@ void Window::buildUi() {
   canDumpHeader_=new QLabel;
   canDumpHeader_->setObjectName("liveCanDumpHeader");
   dumpLayout->addWidget(canDumpHeader_);
-  canDumpMode_=new QComboBox;
-  canDumpMode_->setObjectName("liveCanDumpMode");
-  canDumpMode_->addItem(QCoreApplication::translate("RNet","Follow"));
-  canDumpMode_->addItem(QCoreApplication::translate("RNet","Count"));
-  canDumpMode_->setAccessibleName(QCoreApplication::translate("RNet","CAN dump mode"));
-  dumpLayout->addWidget(canDumpMode_);
-  connect(canDumpMode_,qOverload<int>(&QComboBox::currentIndexChanged),this,
-          [this]{refreshLiveCanDump();});
+  canDumpControls_=new CanViewControls(dumpContainer,"liveCanView","ui/canDump",true,
+      [this]{refreshLiveCanDump();});
+  dumpLayout->addWidget(canDumpControls_);
   canDump_=new QPlainTextEdit;
   canDump_->setObjectName("liveCanDump");
   canDump_->setReadOnly(true);
@@ -679,7 +657,7 @@ void Window::buildUi() {
   dumpFont.setPointSize(qMax(8,dumpFont.pointSize()-1));
   canDump_->setFont(dumpFont);
   dumpLayout->addWidget(canDump_,1);
-  canCountTable_=makeCountTable(dumpContainer,"liveCanCount",dumpFont);
+  canCountTable_=new CanFrameTable(dumpContainer,"liveCanCount",dumpFont);
   dumpLayout->addWidget(canCountTable_,1);
   canCountTable_->hide();
   bottomSplitter_->addWidget(dumpContainer);
@@ -806,14 +784,10 @@ void Window::retranslateUi() {
       binding.object->setProperty(
           binding.property.constData(),
           QCoreApplication::translate("RNet", binding.source.constData()));
-  {
-    QSignalBlocker blocked(canDumpMode_);
-    canDumpMode_->setItemText(0,QCoreApplication::translate("RNet","Follow"));
-    canDumpMode_->setItemText(1,QCoreApplication::translate("RNet","Count"));
-    canDumpMode_->setAccessibleName(QCoreApplication::translate("RNet","CAN dump mode"));
-  }
-  setCountHeaders(canCountTable_);
-  if(systemTestTable_)setCountHeaders(systemTestTable_);
+  canDumpControls_->retranslate();
+  if(systemTestControls_)systemTestControls_->retranslate();
+  canCountTable_->retranslate();
+  if(systemTestTable_)systemTestTable_->retranslate();
   configureLiveCanDump(liveDumpInterface_);
   switch (view_) {
   case View::Values:
@@ -2383,10 +2357,12 @@ void Window::configureLiveCanDump(const QString &interface){
     closeLiveCanDump();
     liveDumpInterface_=interface;
     liveDumpLines_.clear();
-    liveDumpCounts_.clear();
+    canCountTable_->resetCounts();
     canDump_->clear();
     refreshLiveCanDump();
-    systemTestCounts_.clear();
+    if(systemTestTable_)systemTestTable_->resetCounts();
+    systemTestLines_.clear();
+    if(systemTestDump_)systemTestDump_->clear();
     refreshSystemTest();
   }
   ensureLiveCanDump();
@@ -2437,30 +2413,26 @@ void Window::receiveLiveCanDump(){
     const auto idText=QString::number(id,16).toUpper().rightJustified(extended?8:3,'0');
     const auto key=idText+(frame.can_id&CAN_RTR_FLAG?QStringLiteral(" RTR"):QString())+
         (frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString());
-    auto &count=liveDumpCounts_[key];
-    ++count.frames;
-    count.payload=payload;
-    count.dlc=frame.can_dlc;
+    canCountTable_->observe(key,frame.can_dlc,payload);
+    const auto line=QStringLiteral("%1 %2 %3 [%4] %5%6")
+        .arg(QDateTime::currentDateTime().toString("HH:mm:ss.zzz"),liveDumpInterface_,idText)
+        .arg(frame.can_dlc)
+        .arg(payload,frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString());
     if(systemTestDialog_&&systemTestFrame(systemTestCommand_,id,extended)){
-      auto &testCount=systemTestCounts_[key];
-      ++testCount.frames;
-      testCount.payload=payload;
-      testCount.dlc=frame.can_dlc;
+      systemTestTable_->observe(key,frame.can_dlc,payload);
+      systemTestLines_.append(line);
+      while(systemTestLines_.size()>2000)systemTestLines_.removeFirst();
       if((systemTestCommand_==32817||systemTestCommand_==33107)&&
          extended&&(id&0xfffff0ffu)==0x02000000&&frame.can_dlc>=2)
         systemTestInfo_->setText(QCoreApplication::translate("RNet","Raw joystick axes: X=%1, Y=%2")
             .arg(int(qint8(frame.data[0]))).arg(int(qint8(frame.data[1]))));
     }
-    lines.append(QStringLiteral("%1 %2 %3 [%4] %5%6")
-        .arg(QDateTime::currentDateTime().toString("HH:mm:ss.zzz"),liveDumpInterface_,
-             idText)
-        .arg(frame.can_dlc)
-        .arg(payload,frame.can_id&CAN_ERR_FLAG?QStringLiteral(" ERROR"):QString()));
+    lines.append(line);
   }
   if(lines.isEmpty())return;
   liveDumpLines_.append(lines);
   while(liveDumpLines_.size()>2000)liveDumpLines_.removeFirst();
-  if(canDumpMode_->currentIndex()==0){
+  if(canDumpControls_->follow()){
     auto *scroll=canDump_->verticalScrollBar();
     const int position=scroll->value();
     const bool atBottom=scroll->value()==scroll->maximum();
@@ -2471,30 +2443,16 @@ void Window::receiveLiveCanDump(){
   if(systemTestDialog_)refreshSystemTest();
 }
 void Window::refreshLiveCanDump(){
-  const bool follow=canDumpMode_->currentIndex()==0;
+  const bool follow=canDumpControls_->follow();
   canDump_->setVisible(follow);
   canCountTable_->setVisible(!follow);
+  canCountTable_->setAverageUnit(canDumpControls_->averageUnit());
   if(follow){
     canDump_->setPlainText(liveDumpLines_.join('\n'));
     canDump_->verticalScrollBar()->setValue(canDump_->verticalScrollBar()->maximum());
     return;
   }
-  populateCountTable(canCountTable_,liveDumpCounts_);
-}
-void Window::populateCountTable(QTableWidget *table,const std::map<QString,LiveDumpCount> &counts){
-  table->setRowCount(int(counts.size()));
-  int row=0;
-  for(const auto &[id,count]:counts){
-    auto *number=new QTableWidgetItem(QString::number(count.frames).rightJustified(8,'0'));
-    auto *identifier=new QTableWidgetItem(id);
-    auto *data=new QTableWidgetItem(QStringLiteral("[%1] %2").arg(count.dlc).arg(count.payload));
-    number->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-    identifier->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
-    table->setItem(row,0,number);
-    table->setItem(row,1,identifier);
-    table->setItem(row,2,data);
-    ++row;
-  }
+  canCountTable_->refresh();
 }
 void Window::showSystemTest(unsigned command){
   if(!systemTestDialog_){
@@ -2507,17 +2465,39 @@ void Window::showSystemTest(unsigned command){
     systemTestInfo_->setObjectName("systemTestInfo");
     systemTestInfo_->setWordWrap(true);
     layout->addWidget(systemTestInfo_);
-    systemTestTable_=makeCountTable(dialog,"systemTestFrames",
+    systemTestControls_=new CanViewControls(dialog,"systemTestView","ui/systemTest",false,
+        [this]{refreshSystemTest();});
+    layout->addWidget(systemTestControls_);
+    systemTestDump_=new QPlainTextEdit(dialog);
+    systemTestDump_->setObjectName("systemTestFollow");
+    systemTestDump_->setReadOnly(true);
+    systemTestDump_->setLineWrapMode(QPlainTextEdit::NoWrap);
+    systemTestDump_->document()->setMaximumBlockCount(2000);
+    systemTestDump_->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    layout->addWidget(systemTestDump_,1);
+    systemTestTable_=new CanFrameTable(dialog,"systemTestFrames",
         QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    layout->addWidget(systemTestTable_);
+    layout->addWidget(systemTestTable_,1);
+    systemTestDump_->hide();
     auto *buttons=new QDialogButtonBox(QDialogButtonBox::Close,dialog);
     connect(buttons,&QDialogButtonBox::rejected,dialog,&QDialog::close);
     layout->addWidget(buttons);
     dialog->resize(620,400);
+    const auto geometry=QSettings().value("ui/systemTestGeometry").toByteArray();
+    if(!geometry.isEmpty())dialog->restoreGeometry(geometry);
     systemTestDialog_=dialog;
+    connect(dialog,&QDialog::finished,this,[dialog]{
+      QSettings().setValue("ui/systemTestGeometry",dialog->saveGeometry());
+    });
+    connect(dialog,&QObject::destroyed,this,[this]{
+      systemTestTable_=nullptr;systemTestInfo_=nullptr;
+      systemTestControls_=nullptr;systemTestDump_=nullptr;systemTestLines_.clear();
+    });
   }
   systemTestCommand_=command;
-  systemTestCounts_.clear();
+  systemTestTable_->resetCounts();
+  systemTestLines_.clear();
+  systemTestDump_->clear();
   QString title=actions_.at(command)->text();title.remove('&');
   systemTestDialog_->setWindowTitle(title);
   const bool verified=command==32956||command==32957||command==32817||command==33107;
@@ -2530,8 +2510,17 @@ void Window::showSystemTest(unsigned command){
   systemTestDialog_->activateWindow();
 }
 void Window::refreshSystemTest(){
-  if(!systemTestDialog_||!systemTestTable_)return;
-  populateCountTable(systemTestTable_,systemTestCounts_);
+  if(!systemTestDialog_||!systemTestTable_||!systemTestControls_)return;
+  const bool follow=systemTestControls_->follow();
+  systemTestDump_->setVisible(follow);
+  systemTestTable_->setVisible(!follow);
+  systemTestTable_->setAverageUnit(systemTestControls_->averageUnit());
+  if(follow){
+    systemTestDump_->setPlainText(systemTestLines_.join('\n'));
+    systemTestDump_->verticalScrollBar()->setValue(systemTestDump_->verticalScrollBar()->maximum());
+    return;
+  }
+  systemTestTable_->refresh();
 }
 void Window::showMonitorCapture(bool record) {
   QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
@@ -2620,9 +2609,12 @@ void Window::closeEvent(QCloseEvent *event) {
     placement.setValue("ui/windowGeometry",saveGeometry());
     placement.setValue("ui/windowRect",normalGeometry());
     placement.setValue("ui/mainSplitterState",mainSplitter_->saveState());
+    placement.setValue("ui/contentSplitterState",contentSplitter_->saveState());
     placement.setValue("ui/bottomSplitterState",bottomSplitter_->saveState());
     if(taskPanel_->isVisible())
       placement.setValue("ui/detailsTaskSplitterState",detailsTaskSplitter_->saveState());
+    if(systemTestDialog_)
+      placement.setValue("ui/systemTestGeometry",systemTestDialog_->saveGeometry());
     if(windowHandle()&&windowHandle()->screen())
       placement.setValue("ui/windowScreen",windowHandle()->screen()->name());
     placement.sync();

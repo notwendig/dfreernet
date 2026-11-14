@@ -1307,6 +1307,14 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>Zählung</translation>
         </message>
         <message>
+            <source>Average rate (Hz)</source>
+            <translation>Mittlere Frequenz (Hz)</translation>
+        </message>
+        <message>
+            <source>Average interval (ms)</source>
+            <translation>Mittlerer Abstand (ms)</translation>
+        </message>
+        <message>
             <source>CAN dump mode</source>
             <translation>CAN-Mitschnittmodus</translation>
         </message>

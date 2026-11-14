@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 13. November 2026. Anwendung: dfreernet 1.2.1, natives Linux / Qt 6.
+Stand: 14. November 2026. Anwendung: dfreernet 1.2.2, natives Linux / Qt 6.
 
 ## Hardwareumfang
 
@@ -35,6 +35,8 @@ Der optionale Heartbeat-Integrationstest verwendet einen neuen isolierten Netzwe
 Für 1.2.0 bestanden alle acht referenzdatenfreien Offline-Tests. Ein getrennter Test mit isoliertem vcan bestätigte, dass fortlaufender CAN-Mitschnitt und zeitlich begrenzter Monitor den Testframe empfingen, während die Anwendung null Frames sendete. Für diese Version wurde kein Test am physischen Controller durchgeführt.
 
 Für 1.2.1 bestanden alle acht referenzdatenfreien Offline-Tests mit `scripts/test.sh`. Der isolierte vcan-Test `unshare --user --map-root-user --net python3 scripts/test_qt_can.py` bestätigte Verlauf, Zählung und passive Systemtests; die Anwendung sendete null CAN-Frames. Für diese Version wurde kein Test am physischen Controller durchgeführt.
+
+Für 1.2.2 bestanden alle acht referenzdatenfreien Offline-Tests im RELEASE-Build. Im DEBUG-Build bestanden zunächst sieben; der DBus-Test zur Schlafsperre bestand bei Wiederholung außerhalb der Sandbox, nachdem dort das Binden eines lokalen Sockets verweigert worden war. Der isolierte vcan-Test bestätigte die Symbolschalter für Verlauf/Zählung und Hz/ms im Mitschnitt und in den Systemtests; die Anwendung sendete null CAN-Frames. Qt-Tests prüften außerdem die Wiederherstellung der CAN-Spaltenlayouts, Ansichtsoptionen und Fenstergröße. Für diese Version wurde kein Test am physischen Controller durchgeführt.
 
 ## Bekannte Lücken
 
