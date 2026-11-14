@@ -10,15 +10,15 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.2.1
+## Version 1.2.2
 
-This version adds follow and count modes to the passive CAN dump, passive views under Tools → System Tests, and adjustable CAN pane and table widths. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version shares the CAN count table implementation across the live dump and passive System Tests. Both views offer icon controls for Follow/Count and Hz/ms, with adjustable columns and saved layout and view preferences. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
-## Screenshots (captured with 1.1.0)
+## Screenshots (captured with 1.2.2)
 
 Main window with the parameter table and access levels:
 
-![dfreernet main window with parameter table](docs/screens/Bildschirmfoto%20vom%202026-11-12%2011-18-25.png)
+![dfreernet main window with parameter table](docs/screens/Bildschirmfoto%20vom%202026-11-14%2006-28-20.png)
 
 Startup warning with the illustrated wheelchair:
 

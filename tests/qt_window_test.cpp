@@ -4,6 +4,7 @@
 #include "value_editor.hpp"
 #include "app_settings.hpp"
 #include "can_heartbeat.hpp"
+#include "can_frame_table.hpp"
 #include <QtTest>
 #include <QtWidgets>
 #include <linux/can.h>
@@ -45,6 +46,121 @@ class WindowTest final : public QObject {
     return -1;
   }
 private slots:
+  void canFrameTableAverage() {
+    CanFrameTable table(nullptr, "averageTest", QFont());
+    table.show();
+    QCOMPARE(table.columnCount(), 4);
+    QCOMPARE(table.horizontalHeaderItem(2)->text(), QString("avg [Hz]"));
+    table.observe("123", 2, "01 02");
+    table.observe("123", 2, "03 04");
+    table.refresh();
+    QCOMPARE(table.item(0, 0)->text(), QString("00000002"));
+    QCOMPARE(table.item(0, 3)->text(), QString("[2] 03 04"));
+    const double initial = table.item(0, 2)->text().toDouble();
+    QVERIFY(initial > 0.0 && initial <= 2.0);
+    table.setAverageUnit(CanFrameTable::AverageUnit::Milliseconds);
+    QCOMPARE(table.horizontalHeaderItem(2)->text(), QString("avg [ms]"));
+    QVERIFY(qAbs(table.item(0, 2)->text().toDouble() - 1000.0 / initial) < 10.0);
+    table.setAverageUnit(CanFrameTable::AverageUnit::Hertz);
+    QTRY_VERIFY_WITH_TIMEOUT(table.item(0, 2)->text().toDouble() < initial, 3000);
+    QVERIFY(table.item(0, 2)->text().toDouble() > 0.0);
+    table.resetCounts();
+    QCOMPARE(table.rowCount(), 0);
+    table.observe("124", 1, "AA");
+    table.refresh();
+    QCOMPARE(table.item(0, 0)->text(), QString("00000001"));
+    QVERIFY(table.item(0, 2)->text().toDouble() > 0.0);
+  }
+  void canViewPreferencesRestore() {
+    QSettings settings;
+    settings.remove("ui/columns/v1/layoutTestCount");
+    settings.remove("ui/columns/v1/layoutTestSystem");
+    settings.remove("ui/columns/v1/liveCanCount");
+    settings.remove("ui/columns/v1/systemTestFrames");
+    settings.remove("ui/canDumpMode");
+    settings.remove("ui/canDumpUnit");
+    settings.remove("ui/systemTestMode");
+    settings.remove("ui/systemTestUnit");
+    settings.remove("ui/systemTestGeometry");
+    settings.remove("ui/contentSplitterState");
+    QList<int> savedContentSizes;
+    {
+      CanFrameTable count(nullptr, "layoutTestCount", QFont());
+      CanFrameTable system(nullptr, "layoutTestSystem", QFont());
+      count.horizontalHeader()->moveSection(2, 0);
+      count.setColumnWidth(1, 147);
+      system.horizontalHeader()->moveSection(3, 1);
+      system.setColumnWidth(0, 164);
+    }
+    {
+      CanFrameTable count(nullptr, "layoutTestCount", QFont());
+      CanFrameTable system(nullptr, "layoutTestSystem", QFont());
+      QCOMPARE(count.horizontalHeader()->visualIndex(2), 0);
+      QCOMPARE(count.columnWidth(1), 147);
+      QCOMPARE(system.horizontalHeader()->visualIndex(3), 1);
+      QCOMPARE(system.columnWidth(0), 164);
+      QCOMPARE(count.horizontalHeader()->visualIndex(3), 3);
+      QCOMPARE(system.columnWidth(1), 115);
+    }
+    {
+      auto window = make();
+      auto *countMode = window->findChild<QToolButton *>("liveCanViewCount");
+      auto *msUnit = window->findChild<QToolButton *>("liveCanViewMs");
+      QVERIFY(countMode && msUnit);
+      countMode->click();
+      msUnit->click();
+      window->contentSplitter_->setSizes({420, 780});
+      savedContentSizes = window->contentSplitter_->sizes();
+      auto *count = dynamic_cast<CanFrameTable *>(window->findChild<QTableWidget *>("liveCanCount"));
+      QVERIFY(count);
+      count->horizontalHeader()->moveSection(2, 0);
+      count->setColumnWidth(1, 148);
+      window->showSystemTest(33395);
+      auto *dialog = window->systemTestDialog_.data();
+      QVERIFY(dialog);
+      auto *system = dynamic_cast<CanFrameTable *>(dialog->findChild<QTableWidget *>("systemTestFrames"));
+      QVERIFY(system);
+      auto *systemFollow = dialog->findChild<QToolButton *>("systemTestViewFollow");
+      auto *systemMs = dialog->findChild<QToolButton *>("systemTestViewMs");
+      QVERIFY(systemFollow && systemMs);
+      systemFollow->click();
+      systemMs->click();
+      system->horizontalHeader()->moveSection(3, 1);
+      system->setColumnWidth(0, 165);
+      dialog->resize(750, 440);
+      dialog->close();
+      QTRY_VERIFY(window->systemTestDialog_.isNull());
+      QVERIFY(window->close());
+    }
+    {
+      auto window = make();
+      QVERIFY(window->findChild<QToolButton *>("liveCanViewCount")->isChecked());
+      QVERIFY(window->findChild<QToolButton *>("liveCanViewMs")->isChecked());
+      QCOMPARE(window->contentSplitter_->sizes(), savedContentSizes);
+      auto *count = dynamic_cast<CanFrameTable *>(window->findChild<QTableWidget *>("liveCanCount"));
+      QVERIFY(count);
+      QCOMPARE(count->horizontalHeader()->visualIndex(2), 0);
+      QCOMPARE(count->columnWidth(1), 148);
+      window->showSystemTest(33395);
+      QVERIFY(window->systemTestDialog_->findChild<QToolButton *>("systemTestViewFollow")->isChecked());
+      QVERIFY(window->systemTestDialog_->findChild<QToolButton *>("systemTestViewMs")->isChecked());
+      auto *system = dynamic_cast<CanFrameTable *>(window->systemTestDialog_->findChild<QTableWidget *>("systemTestFrames"));
+      QVERIFY(system);
+      QCOMPARE(system->horizontalHeader()->visualIndex(3), 1);
+      QCOMPARE(system->columnWidth(0), 165);
+      QCOMPARE(window->systemTestDialog_->size(), QSize(750, 440));
+    }
+    settings.remove("ui/columns/v1/layoutTestCount");
+    settings.remove("ui/columns/v1/layoutTestSystem");
+    settings.remove("ui/columns/v1/liveCanCount");
+    settings.remove("ui/columns/v1/systemTestFrames");
+    settings.remove("ui/canDumpMode");
+    settings.remove("ui/canDumpUnit");
+    settings.remove("ui/systemTestMode");
+    settings.remove("ui/systemTestUnit");
+    settings.remove("ui/systemTestGeometry");
+    settings.remove("ui/contentSplitterState");
+  }
   void profileTableSwitchAndEdit() {
     auto w=make();w->openDocument(fixture_);
     const int valueIndex=firstSpeed(*w);
@@ -868,38 +984,51 @@ private slots:
     QCOMPARE(w->receivedFrames(), quint64(1));
     QCOMPARE(w->model()->rowCount(), 1);
     QCOMPARE(w->model()->rows[0].value, QString("01 02 03"));
-    auto *mode=w->findChild<QComboBox*>("liveCanDumpMode");
-    QVERIFY(mode);
-    QCOMPARE(mode->currentIndex(),0);
-    QCOMPARE(mode->itemText(0),QString("Verlauf"));
-    QCOMPARE(mode->itemText(1),QString("Zählung"));
+    auto *followMode=w->findChild<QToolButton*>("liveCanViewFollow");
+    auto *countMode=w->findChild<QToolButton*>("liveCanViewCount");
+    auto *hertzUnit=w->findChild<QToolButton*>("liveCanViewHz");
+    auto *msUnit=w->findChild<QToolButton*>("liveCanViewMs");
+    QVERIFY(followMode&&countMode&&hertzUnit&&msUnit);
+    QVERIFY(followMode->isChecked());
+    QVERIFY(hertzUnit->isChecked());
+    QCOMPARE(followMode->toolTip(),QString("Verlauf"));
+    QCOMPARE(countMode->toolTip(),QString("Zählung"));
+    QVERIFY(followMode->text().isEmpty());
     auto *counts=w->findChild<QTableWidget*>("liveCanCount");
     QVERIFY(counts);
-    mode->setCurrentIndex(1);
+    countMode->click();
     QTRY_COMPARE(counts->rowCount(),1);
     QVERIFY(counts->isVisible());QVERIFY(!liveDump->isVisible());
     QCOMPARE(counts->item(0,0)->text(),QString("00000001"));
     QCOMPARE(counts->item(0,1)->text(),QString("123"));
     QVERIFY(counts->item(0,1)->textAlignment()&Qt::AlignRight);
-    QCOMPARE(counts->item(0,2)->text(),QString("[3] 01 02 03"));
+    QCOMPARE(counts->columnCount(),4);
+    QCOMPARE(counts->horizontalHeaderItem(2)->text(),QString("avg [Hz]"));
+    QVERIFY(counts->item(0,2)->text().toDouble()>0.0);
+    msUnit->click();
+    QCOMPARE(counts->horizontalHeaderItem(2)->text(),QString("avg [ms]"));
+    QVERIFY(counts->item(0,2)->text().toDouble()>0.0);
+    hertzUnit->click();
+    QCOMPARE(counts->horizontalHeaderItem(2)->text(),QString("avg [Hz]"));
+    QCOMPARE(counts->item(0,3)->text(),QString("[3] 01 02 03"));
     frame.data[0]=4;
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(counts->item(0,0)->text(),QString("00000002"));
-    QCOMPARE(counts->item(0,2)->text(),QString("[3] 04 02 03"));
+    QCOMPARE(counts->item(0,3)->text(),QString("[3] 04 02 03"));
     frame.can_id=0x124;
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(counts->rowCount(),2);
     QCOMPARE(counts->item(1,0)->text(),QString("00000001"));
     QCOMPARE(counts->item(1,1)->text(),QString("124"));
-    mode->setCurrentIndex(0);
+    followMode->click();
     QVERIFY(liveDump->isVisible());QVERIFY(!counts->isVisible());
     QCOMPARE(liveDump->toPlainText().split('\n').size(),3);
     QVERIFY(liveDump->toPlainText().contains("123 [3] 01 02 03"));
     QVERIFY(liveDump->toPlainText().contains("123 [3] 04 02 03"));
     languages().setLanguage("en_US");
     QCoreApplication::sendPostedEvents(nullptr, QEvent::LanguageChange);
-    QCOMPARE(mode->itemText(0),QString("Follow"));
-    QCOMPARE(mode->itemText(1),QString("Count"));
+    QCOMPARE(followMode->toolTip(),QString("Follow"));
+    QCOMPARE(countMode->toolTip(),QString("Count"));
     for(unsigned command:{32956u,32955u,32957u,33390u,33343u,
                           33208u,33392u,33395u,32817u,33107u}){
       auto *action=w->findChild<QAction*>("command"+QString::number(command));
@@ -912,6 +1041,12 @@ private slots:
     auto *testDump=w->findChild<QTableWidget*>("systemTestFrames");
     auto *testInfo=w->findChild<QLabel*>("systemTestInfo");
     QVERIFY(testDump&&testInfo);
+    auto *testFollow=w->findChild<QToolButton*>("systemTestViewFollow");
+    auto *testCount=w->findChild<QToolButton*>("systemTestViewCount");
+    auto *testMs=w->findChild<QToolButton*>("systemTestViewMs");
+    auto *testHz=w->findChild<QToolButton*>("systemTestViewHz");
+    auto *testLines=w->findChild<QPlainTextEdit*>("systemTestFollow");
+    QVERIFY(testFollow&&testCount&&testMs&&testHz&&testLines);
     w->findChild<QAction*>("command33395")->trigger();
     QVERIFY(testInfo->text().contains("No verified decoder"));
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
@@ -919,7 +1054,17 @@ private slots:
     QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
     QCOMPARE(testDump->item(0,1)->text(),QString("124"));
     QVERIFY(testDump->item(0,1)->textAlignment()&Qt::AlignRight);
-    QCOMPARE(testDump->item(0,2)->text(),QString("[3] 04 02 03"));
+    QCOMPARE(testDump->columnCount(),4);
+    QCOMPARE(testDump->horizontalHeaderItem(2)->text(),QString("avg [Hz]"));
+    QVERIFY(testDump->item(0,2)->text().toDouble()>0.0);
+    testMs->click();
+    QCOMPARE(testDump->horizontalHeaderItem(2)->text(),QString("avg [ms]"));
+    testFollow->click();
+    QVERIFY(testLines->isVisible());QVERIFY(!testDump->isVisible());
+    QVERIFY(testLines->toPlainText().contains("124 [3] 04 02 03"));
+    testCount->click();
+    testHz->click();
+    QCOMPARE(testDump->item(0,3)->text(),QString("[3] 04 02 03"));
     w->findChild<QAction*>("command32956")->trigger();
     QVERIFY(testInfo->text().contains("documented CAN frame"));
     frame.can_id=CAN_EFF_FLAG|0x0c140000;
@@ -928,7 +1073,7 @@ private slots:
     QTRY_COMPARE(testDump->rowCount(),1);
     QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
     QCOMPARE(testDump->item(0,1)->text(),QString("0C140000"));
-    QCOMPARE(testDump->item(0,2)->text(),QString("[1] C0"));
+    QCOMPARE(testDump->item(0,3)->text(),QString("[1] C0"));
     w->findChild<QAction*>("command32957")->trigger();
     frame.can_id=CAN_EFF_FLAG|0x03c30f0f;
     frame.can_dlc=8;std::fill_n(frame.data,8,0x87);
@@ -944,7 +1089,7 @@ private slots:
       QTRY_COMPARE(testDump->rowCount(),1);
       QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
       QCOMPARE(testDump->item(0,1)->text(),QString("02000100"));
-      QCOMPARE(testDump->item(0,2)->text(),QString("[2] 0A F6"));
+      QCOMPARE(testDump->item(0,3)->text(),QString("[2] 0A F6"));
       QCOMPARE(testInfo->text(),QString("Raw joystick axes: X=10, Y=-10"));
     }
     ::close(fd);

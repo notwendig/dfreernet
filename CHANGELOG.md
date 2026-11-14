@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+## 1.2.2 — 2026-11-14
+
+- Share one CAN count table implementation between the live dump and passive System Tests.
+- Add eight-digit counters, average rate in Hz or interval in ms, and icon controls for Follow/Count and Hz/ms in both CAN areas.
+- Save and restore each CAN table's column widths and order, both view selections, System Tests geometry, and the group-tree divider.
+
 ## 1.2.1 — 2026-11-13
 
 - Keep the continuous CAN dump beside details and task logs, with independently adjustable pane sizes.

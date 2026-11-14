@@ -4,6 +4,12 @@
 
 ## Unveröffentlicht
 
+## 1.2.2 — 14. November 2026
+
+- Gemeinsame CAN-Zähltabellenklasse für Mitschnitt und passive Systemtests eingeführt.
+- Achtstellige Zähler, mittlere Frequenz in Hz oder Abstand in ms sowie Symbolschalter für Verlauf/Zählung und Hz/ms in beiden CAN-Bereichen ergänzt.
+- Spaltenbreiten und -reihenfolge jeder CAN-Tabelle, beide Ansichtsoptionen, Größe und Position der Systemtests sowie den Gruppenbaum-Trenner speichern und wiederherstellen.
+
 ## 1.2.1 — 13. November 2026
 
 - Fortlaufenden CAN-Mitschnitt neben Details und Vorgangsprotokoll anzeigen; Fenstergrößen getrennt einstellen.
