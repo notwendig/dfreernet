@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "i18n.hpp"
 #include "app_settings.hpp"
 #include "runtime_resources.hpp"
 #include "rnd_decoder.hpp"
@@ -26,6 +27,8 @@ private slots:
     QCoreApplication::setOrganizationName("dfreernetTests");QCoreApplication::setApplicationName("standalone");
     QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());
     auto settings=AppSettings::defaults();settings.canInterface="rnetOffline";settings.keepAwake=false;settings.logDirectory=temp.path()+"/logs";settings.save();
+    if(!qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT").isEmpty())
+      languages().setLanguage(qEnvironmentVariable("DFREERNET_DOC_LANGUAGE","de_DE"),true);
     const Bytes encryptedPrefix={23,11,237,144,246,191,29,43,202,71,194,194,17,163,47,134,135,65,45,116,173,153,1,17,200,51,137,189,4,44,95,208,98,53,109,98,129,74,253,251,4,15,209,72,219,16,143,100,64,235,91,12,199,187,224,120,98,101,175,173,155,18,137,4};
     auto decodedPrefix=RndDecoder().decode(encryptedPrefix);QVERIFY(std::equal(decodedPrefix.begin(),decodedPrefix.end(),bundled_catalog_bytes().begin()));
     const auto catalog=bundled_catalog();QCOMPARE(catalog.parameters.size(),std::size_t(2154));QCOMPARE(catalog.storage_maps.size(),std::size_t(29));QCOMPARE(catalog.editors.size(),std::size_t(164));
@@ -36,6 +39,10 @@ private slots:
     auto before=RnetDocument::read(bundled_default_document());QVERIFY(before.write()==bundled_default_document());
     const auto source=temp.path()+"/before.R-net";QFile f(source);QVERIFY(f.open(QIODevice::WriteOnly));auto bytes=before.write();QCOMPARE(f.write(reinterpret_cast<const char*>(bytes.data()),bytes.size()),qint64(bytes.size()));f.close();
     Window window(settings.logDirectory);window.show();window.openDocument(source);QVERIFY(window.valueCount()>1000);
+    if(const auto path=qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT");!path.isEmpty()){
+      window.showNormal();window.resize(1200,820);QTest::qWait(80);
+      QVERIFY(window.grab().save(path+"-main.png"));
+    }
     auto *liveDump=window.findChild<QPlainTextEdit*>("liveCanDump");
     auto *liveHeader=window.findChild<QLabel*>("liveCanDumpHeader");
     QVERIFY(liveDump&&liveHeader);QVERIFY(liveDump->isReadOnly());
@@ -55,9 +62,17 @@ private slots:
       auto *contact=dialog->findChild<QLabel*>("aboutContact");
       if(heading)aboutHeading=heading->text();
       if(contact){aboutContact=contact->text();QVERIFY(contact->openExternalLinks());}
+      if(const auto path=qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT");!path.isEmpty()){
+        dialog->adjustSize();QTest::qWait(80);
+        QVERIFY(dialog->grab().save(path+"-about.png"));
+      }
       dialog->accept();
     });
     aboutAction->trigger();
+    if(!qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT").isEmpty()){
+      languages().setLanguage("en_US",true);
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
+    }
     QVERIFY(aboutHeading.contains(QStringLiteral(DFREERNET_VERSION)));
     QVERIFY(aboutContact.contains(QString::fromUtf8("Jürgen Willi Sievers")));
     QVERIFY(aboutContact.contains("mailto:JSievers@NadiSoft.de"));

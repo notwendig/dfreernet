@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Refresh the English and German screenshots for the current UI; expand the About dialog so its text is fully visible and keep the R-Net date readable in the status bar.
+
 ## 1.3.0 — 2026-11-15
 
 - Show fresh R-Net Time of Day frames in the status bar and allow confirmed, single-frame synchronization to computer time with CAN readback.

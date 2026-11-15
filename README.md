@@ -3,7 +3,7 @@
 [English](README.md) | [Deutsch](README.de.md)
 
 **Dongle free R-Net Programmer** · Native Linux application · C++17 / Qt 6 / SocketCAN
-
+![](../../../../tmp/ghostwriter-aVSbem/main-window-1.3.0-en.png)
 An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. Build and runtime use only checked-in resources and installed Linux libraries.
 
 **License:** Original code is [GPL-3.0-only](LICENSE). The bundled catalog and other third-party-derived materials are excluded; see the [license scope](SCOPE.md). A complete bundled application is not cleared for redistribution.
@@ -16,24 +16,20 @@ This version shows the R-Net date and time in the status bar, colors differences
 
 ## Screenshots
 
-Status bar in 1.3.0, from an offline test with an intentionally mismatched date:
-
-![R-Net date and time shown red in the status bar](docs/screens/rnet-date-status-1.3.0.png)
-
-Main window with the parameter table and access levels, captured with 1.2.2:
-
-![dfreernet main window with parameter table](docs/screens/Bildschirmfoto%20vom%202026-11-14%2006-28-20.png)
-
 Startup warning with the illustrated wheelchair:
 
-![dfreernet startup warning](docs/screens/Bildschirmfoto%20vom%202026-11-12%2020-12-57.png)
+![dfreernet startup warning](docs/screens/startup-warning-1.3.0-en.png)
+
+Main window with the parameter table and access levels:
+
+![dfreernet main window with parameter table](docs/screens/main-window-1.3.0-en.png)
 
 <details>
 <summary>More screenshots: Dongle access warning and About dialog</summary>
 
-![Dongle access warning](docs/screens/Bildschirmfoto%20vom%202026-11-12%2009-28-23.png)
+![Dongle access warning](docs/screens/dongle-warning-1.3.0-en.png)
 
-![About dfreernet](docs/screens/Bildschirmfoto%20vom%202026-11-12%2011-16-00.png)
+![About dfreernet](docs/screens/about-1.3.0-en.png)
 
 </details>
 

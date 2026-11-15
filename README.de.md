@@ -16,24 +16,21 @@ Diese Version zeigt R-Net-Datum und -Uhrzeit in der Statusleiste, markiert Abwei
 
 ## Bildschirmfotos
 
-Statusleiste in 1.3.0 aus einem Offline-Test mit absichtlich abweichendem Datum:
-
-![R-Net-Datum und -Uhrzeit rot in der Statusleiste](docs/screens/rnet-date-status-1.3.0.png)
-
-Hauptfenster mit Parametertabelle und Berechtigungsstufen, aufgenommen mit 1.2.2:
-
-![dfreernet-Hauptfenster mit Parametertabelle](docs/screens/Bildschirmfoto%20vom%202026-11-14%2006-28-20.png)
-
 Startwarnung mit illustriertem Rollstuhl:
 
-![dfreernet-Startwarnung](docs/screens/Bildschirmfoto%20vom%202026-11-12%2020-12-57.png)
+![dfreernet-Startwarnung](docs/screens/startup-warning-1.3.0-de.png)
+
+Hauptfenster mit Parametertabelle und Berechtigungsstufen:
+
+![dfreernet-Hauptfenster mit Parametertabelle](docs/screens/main-window-1.3.0-de.png)
+
 
 <details>
 <summary>Weitere Bildschirmfotos: Dongle-Hinweis und Über-Dialog</summary>
 
-![Warnung zur Dongle-Berechtigung](docs/screens/Bildschirmfoto%20vom%202026-11-12%2009-28-23.png)
+![Warnung zur Dongle-Berechtigung](docs/screens/dongle-warning-1.3.0-de.png)
 
-![Über dfreernet](docs/screens/Bildschirmfoto%20vom%202026-11-12%2011-16-00.png)
+![Über dfreernet](docs/screens/about-1.3.0-de.png)
 
 </details>
 

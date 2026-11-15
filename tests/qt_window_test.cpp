@@ -421,7 +421,20 @@ private slots:
   }
   void elevatedMenuRequiresWarningAndDoesNotPersist(){
     auto w=make();w->setAccess(AccessLevel::Dealer);
-    QTimer::singleShot(0,[]{auto *box=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());QVERIFY(box);box->button(QMessageBox::Cancel)->click();});w->findChild<QAction*>("role3")->trigger();QCOMPARE(w->access_,AccessLevel::Dealer);QVERIFY(w->findChild<QAction*>("role1")->isChecked());
+    if(!qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT").isEmpty()){
+      languages().setLanguage(qEnvironmentVariable("DFREERNET_DOC_LANGUAGE","de_DE"),true);
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
+    }
+    QTimer::singleShot(0,[]{
+      auto *box=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());QVERIFY(box);
+      if(const auto path=qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT");!path.isEmpty())
+        QVERIFY(box->grab().save(path+"-dongle.png"));
+      box->button(QMessageBox::Cancel)->click();
+    });w->findChild<QAction*>("role3")->trigger();QCOMPARE(w->access_,AccessLevel::Dealer);QVERIFY(w->findChild<QAction*>("role1")->isChecked());
+    if(!qEnvironmentVariable("DFREERNET_DOC_SCREENSHOT").isEmpty()){
+      languages().setLanguage("en_US",true);
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
+    }
     QTimer::singleShot(0,[]{auto *box=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());QVERIFY(box);box->button(QMessageBox::Yes)->click();});w->findChild<QAction*>("role2")->trigger();QCOMPARE(w->access_,AccessLevel::OEM);QCOMPARE(AppSettings::load().accessLevel,1);
     w->close();
   }
@@ -597,9 +610,16 @@ private slots:
     w->rnetClock_={host.date().addDays(1),host.time()};
     w->rnetClockAge_.restart();w->updateRnetClockStatus();
     QVERIFY(date->styleSheet().contains("#d32f2f"));
-    QVERIFY(w->grab().save(root_+"/analysis/rnet-date-offset-red.png"));
+    const auto screenshotLanguage=qEnvironmentVariable("DFREERNET_DOC_LANGUAGE");
+    if(screenshotLanguage=="en_US"||screenshotLanguage=="de_DE"){
+      languages().setLanguage(screenshotLanguage,true);
+      QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
+    }
+    const auto suffix=screenshotLanguage=="de_DE"?QStringLiteral("-de"):QStringLiteral("-en");
+    QVERIFY(w->grab().save(root_+"/analysis/rnet-date-offset-red"+suffix+".png"));
     w->rnetClockAge_.invalidate();w->updateRnetClockStatus();
     QVERIFY(!date->isVisible());
+    languages().setLanguage("en_US",true);
   }
   void rnetClockSetOnPrivateVcan(){
     const auto interface=qEnvironmentVariable("RNET_CLOCK_VCAN");

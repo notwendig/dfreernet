@@ -4,6 +4,8 @@
 
 ## Unveröffentlicht
 
+- Englische und deutsche Bildschirmfotos der aktuellen Oberfläche erneuern; Über-Dialog für vollständig sichtbaren Text vergrößern und R-Net-Datum in der Statusleiste lesbar halten.
+
 ## 1.3.0 — 15. November 2026
 
 - Aktuelle R-Net-Uhrzeit aus Time-of-Day-Frames in der Statusleiste anzeigen; nach Bestätigung einmalig auf die Computerzeit stellen und per CAN-Rückmeldung prüfen.

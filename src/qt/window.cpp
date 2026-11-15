@@ -1595,7 +1595,7 @@ void Window::showAbout(){
   QDialog dialog(this);
   dialog.setObjectName("aboutDialog");
   dialog.setWindowTitle(QCoreApplication::translate("RNet","About dfreernet"));
-  dialog.setMinimumWidth(540);
+  dialog.setMinimumSize(640,400);
   auto *layout=new QVBoxLayout(&dialog);
   auto *heading=new QLabel(QStringLiteral("<h2>dfreernet %1</h2>%2")
       .arg(QStringLiteral(DFREERNET_VERSION),
@@ -2479,7 +2479,7 @@ void Window::updateRnetClockStatus(){
     rnetClockLabel_->setStyleSheet(QStringLiteral("color: %1").arg(QLatin1String(color)));
     rnetDateLabel_->setStyleSheet(rnetNow.date()==hostNow.date()?QStringLiteral("color: #2e9b44"):
                                                                QStringLiteral("color: #d32f2f"));
-    rnetDateLabel_->setText(QCoreApplication::translate("RNet","R-Net date %1").arg(rnetNow.date().toString(Qt::ISODate)));
+    rnetDateLabel_->setText(rnetNow.date().toString(Qt::ISODate));
     rnetDateLabel_->show();
   }else{
     rnetDateLabel_->hide();

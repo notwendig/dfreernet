@@ -1439,10 +1439,6 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>CAN-Schnittstelle</translation>
         </message>
         <message>
-            <source>R-Net date %1</source>
-            <translation>R-Net-Datum %1</translation>
-        </message>
-        <message>
             <source>R-Net time %1</source>
             <translation>R-Net-Zeit %1</translation>
         </message>
