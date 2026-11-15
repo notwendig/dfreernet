@@ -1439,6 +1439,106 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>CAN-Schnittstelle</translation>
         </message>
         <message>
+            <source>R-Net date %1</source>
+            <translation>R-Net-Datum %1</translation>
+        </message>
+        <message>
+            <source>R-Net time %1</source>
+            <translation>R-Net-Zeit %1</translation>
+        </message>
+        <message>
+            <source>R-Net time unavailable</source>
+            <translation>R-Net-Zeit nicht verfügbar</translation>
+        </message>
+        <message>
+            <source>R-Net date and time: %1 (received on %2). Click to set to computer time.</source>
+            <translation>R-Net-Datum und -Uhrzeit: %1 (empfangen auf %2). Klicken, um die Computerzeit zu übernehmen.</translation>
+        </message>
+        <message>
+            <source>No current R-Net time received on %1</source>
+            <translation>Keine aktuelle R-Net-Zeit auf %1 empfangen</translation>
+        </message>
+        <message>
+            <source>R-Net clock readback is still pending</source>
+            <translation>Rückmeldung der R-Net-Uhr steht noch aus</translation>
+        </message>
+        <message>
+            <source>No current R-Net time received; clock not set</source>
+            <translation>Keine aktuelle R-Net-Zeit empfangen; Uhr nicht gestellt</translation>
+        </message>
+        <message>
+            <source>Set the R-Net clock to this computer's time (%1)? This sends one CAN frame. Confirm that the wheelchair is stationary and driving is not needed.</source>
+            <translation>R-Net-Uhr auf die Zeit dieses Computers (%1) stellen? Dabei wird ein CAN-Frame gesendet. Bestätigen Sie, dass der Rollstuhl stillsteht und nicht gefahren werden muss.</translation>
+        </message>
+        <message>
+            <source>Set R-Net clock</source>
+            <translation>R-Net-Uhr stellen</translation>
+        </message>
+        <message>
+            <source>Computer date is outside the supported R-Net clock range (2000–2099)</source>
+            <translation>Das Computerdatum liegt außerhalb des unterstützten R-Net-Uhrbereichs (2000–2099)</translation>
+        </message>
+        <message>
+            <source>CAN interface is unavailable or down</source>
+            <translation>CAN-Schnittstelle ist nicht verfügbar oder ausgeschaltet</translation>
+        </message>
+        <message>
+            <source>Could not send R-Net clock frame</source>
+            <translation>R-Net-Uhrzeit-Frame konnte nicht gesendet werden</translation>
+        </message>
+        <message>
+            <source>R-Net time confirmed by CAN readback</source>
+            <translation>R-Net-Zeit durch CAN-Rückmeldung bestätigt</translation>
+        </message>
+        <message>
+            <source>No matching R-Net clock readback was received. The clock update is unconfirmed; no retry was sent.</source>
+            <translation>Keine passende Rückmeldung der R-Net-Uhr empfangen. Die Uhrzeitänderung ist unbestätigt; es wurde kein weiterer Sendeversuch ausgeführt.</translation>
+        </message>
+        <message>
+            <source>Configure and enable CAN at startup</source>
+            <translation>CAN beim Start einrichten und aktivieren</translation>
+        </message>
+        <message>
+            <source>CAN bitrate (bit/s)</source>
+            <translation>CAN-Bitrate (Bit/s)</translation>
+        </message>
+        <message>
+            <source>Startup CAN setup requires permission to change the Linux interface. It runs after the startup warning and sends no CAN frames. When disabled, configure the interface in Linux before controller access.</source>
+            <translation>Die CAN-Einrichtung beim Start benötigt die Berechtigung, die Linux-Schnittstelle zu ändern. Sie erfolgt nach dem Starthinweis und sendet keine CAN-Frames. Bei deaktivierter Option die Schnittstelle vor dem Controllerzugriff unter Linux einrichten.</translation>
+        </message>
+        <message>
+            <source>Selected interface is not a Linux CAN interface: %1</source>
+            <translation>Die gewählte Schnittstelle ist keine Linux-CAN-Schnittstelle: %1</translation>
+        </message>
+        <message>
+            <source>The ip command is required for CAN startup setup</source>
+            <translation>Für die CAN-Einrichtung beim Start wird der Befehl ip benötigt</translation>
+        </message>
+        <message>
+            <source>Could not start CAN setup: %1</source>
+            <translation>CAN-Einrichtung konnte nicht gestartet werden: %1</translation>
+        </message>
+        <message>
+            <source>CAN setup timed out</source>
+            <translation>Zeitüberschreitung bei der CAN-Einrichtung</translation>
+        </message>
+        <message>
+            <source>ip command failed</source>
+            <translation>Befehl ip fehlgeschlagen</translation>
+        </message>
+        <message>
+            <source>CAN setup failed: %1</source>
+            <translation>CAN-Einrichtung fehlgeschlagen: %1</translation>
+        </message>
+        <message>
+            <source>CAN startup setup</source>
+            <translation>CAN-Einrichtung beim Start</translation>
+        </message>
+        <message>
+            <source>CAN bitrate must be between 10000 and 1000000 bit/s</source>
+            <translation>Die CAN-Bitrate muss zwischen 10000 und 1000000 Bit/s liegen</translation>
+        </message>
+        <message>
             <source>Monitor duration (seconds)</source>
             <translation>Monitor-Dauer (Sekunden)</translation>
         </message>

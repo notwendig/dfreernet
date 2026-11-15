@@ -8,7 +8,7 @@
 
 ## Requirements and startup
 
-Linux with Qt 6.10 or later and a suitable SocketCAN interface. The application does not configure the CAN adapter. Interface, wiring and bitrate must match the actual controller. The development setup used `can0` at 125 kbit/s; this is not an automatic recommendation for other systems.
+Linux with Qt 6.10 or later and a suitable SocketCAN interface. Interface, wiring and bitrate must match the actual controller. By default, the application uses an interface already configured in Linux. An optional setting configures and enables it after the startup warning. The development setup used `can0` at 125 kbit/s; this is not an automatic recommendation for other systems.
 
 The verified catalog, UI texts and snapshot template are embedded in the application. The app uses its embedded resources and Linux SocketCAN. For a copied standalone directory, launch `bin/dfreernet` and keep its controller helpers beside it. Installed Qt 6.10+ including the Sql module/QSQLITE driver, and zlib are still required.
 
@@ -25,11 +25,13 @@ Four vertical tabs group the persisted preferences:
 | Tab | Contents |
 | --- | --- |
 | General | Language, default Dongle access level, undo limit |
-| CAN | Interface, monitor duration, heartbeat visibility and reception timeout |
+| CAN | Interface, optional startup setup and bitrate, monitor duration, heartbeat visibility and reception timeout |
 | Files and folders | Working, backup, export and log folders |
 | Appearance | Details pane, icon and font sizes |
 
 Apply accepts valid values; OK accepts and closes; Cancel discards edits that have not been applied. The log folder takes effect on the next start. Explicit command-line arguments take precedence. Controller operations use the saved CAN interface and backup folder without requesting them again. Safety confirmations remain; opening or saving a file still requires choosing its filename.
+
+When **Configure and enable CAN at startup** is selected, the app runs `ip link set dev INTERFACE down`, sets the configured CAN bitrate, and brings the interface up after the startup warning is accepted. This needs Linux permission to change network interfaces. If direct setup fails, the app retries with `sudo -n ip`; this works when passwordless sudo permission is available. Setup sends no CAN frames. A setup error is shown, and the app remains open. The bitrate is initially set to 125000 bit/s; confirm the correct value for your controller before enabling the option.
 
 ## Read configuration
 
@@ -77,13 +79,15 @@ This applies to the Linux computer. The wheelchair Sleep Timer is unchanged. A p
 
 The heart at the right of the status bar pulses red while recent complete `0x03C30F0F` device-heartbeat frames with seven `0x87` bytes are received. The `0x00E` serial-identification frame does not activate it. Without recent reception it is gray and still. A down interface is reported explicitly in the tooltip. The receiver rebinds automatically after USB/interface replacement; it never configures the adapter or sends CAN messages. The indicator only listens and sends no CAN messages. It does not confirm driving readiness or write permission. A gray heart may also indicate an incorrect interface or a different heartbeat on the connected system.
 
+The status bar also shows the latest date and time from a valid `0x1C2C0X00` Time of Day frame. Their tooltip shows the date, time, and receiving interface. The R-Net date is green when it matches the computer's local date and red when it differs. Compared with the computer's local date and time, the R-Net time is green when the difference is under one minute, orange from one minute through 15 minutes, and red above 15 minutes. The time colors apply equally when the R-Net clock is ahead or behind. After three seconds without a valid frame, the date is hidden and the time display returns to “R-Net time unavailable” without a color. Click the date or time to set the R-Net clock to the computer's local date and time. The app requires confirmation that the wheelchair is stationary, sends one extended `0x1C2C0001` frame, and checks the following time broadcast. A missing or different readback is reported without a retry. This command was inferred from two passive CJSM2 on-board clock adjustments. A single external physical CAN send changed the clock to a deliberately different date and time; sending from the app UI itself has been tested only on isolated virtual CAN.
+
 Serial queries and CAN monitoring use the saved interface. A serial number does not automatically establish a reliable module name.
 
-The panel below the fixed access column receives CAN frames continuously. Icon buttons select **Follow** or **Count** and **Hz** or **ms**; hover for their tooltips. **Follow** shows the latest 2000 frames with reception time, interface, ID, DLC and payload. **Count** groups them by ID and frame type in a table: an eight-digit counter, a right-aligned CAN ID, **avg [Hz]** or **avg [ms]**, and the latest payload. The Hz average is the frame count divided by elapsed seconds since the selected interface was set; ms shows its reciprocal as an average interval. Values update each second and include idle time. Switching back restores the recent frame list. Counts reset when the selected interface changes. The receiver reconnects when that interface returns and never transmits. **Controller → Monitor CAN…** remains a separate timed capture summary.
+The panel below the fixed access column receives CAN frames continuously. Icon buttons select **Follow** or **Count** and **Hz** or **ms**; hover for their tooltips. **Follow** shows the latest 2000 frames with reception time, interface, ID, DLC and payload. **Count** groups them by ID and frame type in a table: an eight-character, space-padded counter, a right-aligned CAN ID, **avg [Hz]** or **avg [ms]**, and the latest payload. The Hz average is the frame count divided by elapsed seconds since the selected interface was set; ms shows its reciprocal as an average interval. Values update each second and include idle time. Switching back restores the recent frame list. Counts reset when the selected interface changes. The receiver reconnects when that interface returns and never transmits. **Controller → Monitor CAN…** remains a separate timed capture summary.
 
 **Tools → System Tests** opens passive live views for all ten listed tests. The same four icon buttons select Follow/Count and Hz/ms here; Follow lists only frames for the selected test. Averages and counts reset when opening or switching tests. PM, JSM, Joystick Status and Intermediate XY select documented CAN frame families; the joystick views show raw X/Y bytes as signed values. The other module views show unassigned raw bus traffic because their status encoding is not verified. These views do not reproduce the original programmer's full diagnostic fields and send no requests. The [R-net Programmer manual](https://medema.no/files/Programmer%20k%C3%B8restole/R-net_PC_Programmer_OEM.pdf) describes the original tests.
 
-Drag the horizontal divider above the lower panes to change their height. The vertical dividers between the group tree and parameters, and beside the CAN dump, adjust their widths. In **Count** and **System Tests**, drag column headers to reorder them or their edges to resize them. Each CAN table saves its own layout and restores it after a restart. Follow/Count and Hz/ms are saved for each CAN area, along with System Tests window geometry and all divider positions. When a task log is open, another divider on the left adjusts details and task log independently.
+Drag the horizontal divider above the lower panes to change their height. The vertical dividers between the group tree and parameters, and beside the CAN dump, adjust their widths. In **Count** and **System Tests**, drag column headers to reorder them or their edges to resize them. Click a header to sort ascending, then again for descending; counts, CAN IDs, and Hz/ms sort numerically. Each CAN table saves its own layout and restores it after a restart. Follow/Count and Hz/ms are saved for each CAN area, along with System Tests window geometry and all divider positions. When a task log is open, another divider on the left adjusts details and task log independently.
 
 ## Troubleshooting
 

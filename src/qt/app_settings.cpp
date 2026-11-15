@@ -17,6 +17,8 @@ AppSettings AppSettings::load(){
   auto num=[&](const char *key,int &value,int low,int high){bool ok=false;auto n=q.value(key,value).toInt(&ok);if(ok&&n>=low&&n<=high)value=n;};
   str("ui/language",s.language);if(s.language!="en_US"&&s.language!="de_DE")s.language="en_US";
   str("can/interface",s.canInterface);
+  num("can/bitrate",s.canBitrate,10000,1000000);
+  s.configureCanOnStartup=q.value("can/configureOnStartup",false).toBool();
   str("paths/working",s.workingDirectory);str("paths/backups",s.backupDirectory);str("paths/exports",s.exportDirectory);
   str("paths/logs",s.logDirectory);
   num("dongle/accessLevel",s.accessLevel,0,1);num("can/monitorSeconds",s.monitorSeconds,1,120);
@@ -46,6 +48,7 @@ AppSettings AppSettings::load(){
 void AppSettings::save()const{
   QSettings q;
   q.setValue("ui/language",language);q.setValue("can/interface",canInterface);
+  q.setValue("can/bitrate",canBitrate);q.setValue("can/configureOnStartup",configureCanOnStartup);
   q.remove("ui/monitor");q.remove("ui/maximized");
   q.setValue("paths/working",workingDirectory);q.setValue("paths/backups",backupDirectory);q.setValue("paths/exports",exportDirectory);
   q.setValue("paths/logs",logDirectory);
@@ -72,6 +75,8 @@ AppSettings AppSettings::validated()const{
   s.canInterface=s.canInterface.trimmed();
   if(!QRegularExpression("^[A-Za-z0-9_.-]{1,15}$").match(s.canInterface).hasMatch())
     throw UiError(QCoreApplication::translate("RNet","Enter a valid CAN interface name (up to 15 characters)"));
+  if(s.canBitrate<10000||s.canBitrate>1000000)
+    throw UiError(QCoreApplication::translate("RNet","CAN bitrate must be between 10000 and 1000000 bit/s"));
   for(auto *directory:{&s.workingDirectory,&s.backupDirectory,&s.exportDirectory,&s.logDirectory}){
     *directory=directory->trimmed();if(directory->startsWith("~/"))*directory=QDir::homePath()+directory->mid(1);
     if(directory->isEmpty()||!QDir::isAbsolutePath(*directory))throw UiError(QCoreApplication::translate("RNet","Use absolute directory paths"));

@@ -35,6 +35,11 @@ SettingsDialog::SettingsDialog(const AppSettings &settings,QWidget *parent):QDia
   auto *can=page(QT_TRANSLATE_NOOP("RNet","CAN"));interface_=new QComboBox;interface_->setObjectName("settingsCanInterface");interface_->setEditable(true);
   for(const auto &name:QDir("/sys/class/net").entryList(QDir::Dirs|QDir::NoDotAndDotDot)){QFile file("/sys/class/net/"+name+"/type");if(file.open(QIODevice::ReadOnly)&&file.readAll().trimmed()=="280")interface_->addItem(name);}
   interface_->setCurrentText(settings.canInterface);row(can,QT_TRANSLATE_NOOP("RNet","CAN interface"),interface_);
+  configureCanOnStartup_=new QCheckBox;configureCanOnStartup_->setObjectName("settingsConfigureCanOnStartup");configureCanOnStartup_->setChecked(settings.configureCanOnStartup);
+  bind(configureCanOnStartup_,"text",QT_TRANSLATE_NOOP("RNet","Configure and enable CAN at startup"));can->addRow(configureCanOnStartup_);
+  canBitrate_=spin("settingsCanBitrate",10000,1000000,settings.canBitrate);canBitrate_->setSingleStep(1000);
+  row(can,QT_TRANSLATE_NOOP("RNet","CAN bitrate (bit/s)"),canBitrate_);
+  connect(configureCanOnStartup_,&QCheckBox::toggled,canBitrate_,&QWidget::setEnabled);canBitrate_->setEnabled(settings.configureCanOnStartup);
   duration_=spin("settingsMonitorSeconds",1,120,settings.monitorSeconds);row(can,QT_TRANSLATE_NOOP("RNet","Monitor duration (seconds)"),duration_);
   heartbeat_=new QCheckBox;heartbeat_->setObjectName("settingsHeartbeat");heartbeat_->setChecked(settings.heartbeatEnabled);bind(heartbeat_,"text",QT_TRANSLATE_NOOP("RNet","Show receive-only CAN heartbeat"));can->addRow(heartbeat_);
   heartbeatTimeout_=spin("settingsHeartbeatTimeout",500,10000,settings.heartbeatTimeoutMs);row(can,QT_TRANSLATE_NOOP("RNet","Heartbeat timeout (milliseconds)"),heartbeatTimeout_);
@@ -46,7 +51,7 @@ SettingsDialog::SettingsDialog(const AppSettings &settings,QWidget *parent):QDia
   auto updateSignal=[this]{liveInterval_->setEnabled(liveSignal_->isChecked());liveDuration_->setEnabled(liveSignal_->isChecked());};
   connect(liveSignal_,&QCheckBox::toggled,this,updateSignal);updateSignal();
   auto *liveNote=new QLabel;bind(liveNote,"text",QT_TRANSLATE_NOOP("RNet","Starts when CAN heartbeat is available. Pauses during controller access. Stops when disabled or the app closes."));liveNote->setWordWrap(true);can->addRow(liveNote);
-  auto *note=new QLabel;bind(note,"text",QT_TRANSLATE_NOOP("RNet","The selected interface is used directly. Configure and enable it in Linux before controller access. Enabling or disabling the live signal controls the hazard-light cycle; controller parameters are unchanged."));note->setWordWrap(true);can->addRow(note);
+  auto *note=new QLabel;bind(note,"text",QT_TRANSLATE_NOOP("RNet","Startup CAN setup requires permission to change the Linux interface. It runs after the startup warning and sends no CAN frames. When disabled, configure the interface in Linux before controller access."));note->setWordWrap(true);can->addRow(note);
   auto *folders=page(QT_TRANSLATE_NOOP("RNet","Files and folders"));working_=directory(folders,QT_TRANSLATE_NOOP("RNet","Working directory"),"settingsWorkingDirectory",settings.workingDirectory);backup_=directory(folders,QT_TRANSLATE_NOOP("RNet","Controller backups"),"settingsBackupDirectory",settings.backupDirectory);exports_=directory(folders,QT_TRANSLATE_NOOP("RNet","Exports"),"settingsExportDirectory",settings.exportDirectory);logs_=directory(folders,QT_TRANSLATE_NOOP("RNet","Log directory (restart)"),"settingsLogDirectory",settings.logDirectory);
   auto *appearance=page(QT_TRANSLATE_NOOP("RNet","Appearance"));
   details_=new QCheckBox;details_->setChecked(settings.showDetails);bind(details_,"text",QT_TRANSLATE_NOOP("RNet","Show parameter details"));appearance->addRow(details_);
@@ -72,7 +77,7 @@ void SettingsDialog::changeEvent(QEvent *event){QDialog::changeEvent(event);if((
 bool SettingsDialog::apply(){
   try{
     auto s=settings_;s.language=language_->currentData().toString();s.accessLevel=access_->currentData().toInt();s.undoLimit=undo_->value();
-    s.canInterface=interface_->currentText();s.monitorSeconds=duration_->value();s.heartbeatEnabled=heartbeat_->isChecked();s.heartbeatTimeoutMs=heartbeatTimeout_->value();
+    s.canInterface=interface_->currentText();s.canBitrate=canBitrate_->value();s.configureCanOnStartup=configureCanOnStartup_->isChecked();s.monitorSeconds=duration_->value();s.heartbeatEnabled=heartbeat_->isChecked();s.heartbeatTimeoutMs=heartbeatTimeout_->value();
     s.keepAwake=keepAwake_->isChecked();s.showAllParameters=showAll_->isChecked();
     s.liveSignalEnabled = liveSignal_->isChecked();
     s.liveSignalIntervalSeconds = liveInterval_->value();

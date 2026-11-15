@@ -8,6 +8,30 @@
 #include <QTimer>
 
 namespace rnet::qt {
+namespace {
+class SortItem final : public QTableWidgetItem {
+public:
+  enum class Kind { Text, Integer, Rate };
+  explicit SortItem(Kind kind) : kind_(kind) {}
+  bool operator<(const QTableWidgetItem &other) const override {
+    const auto *rhs = dynamic_cast<const SortItem *>(&other);
+    if (rhs && rhs->kind_ == kind_) {
+      if (kind_ == Kind::Integer) {
+        const auto left = data(Qt::UserRole).toULongLong();
+        const auto right = rhs->data(Qt::UserRole).toULongLong();
+        if (left != right) return left < right;
+      } else if (kind_ == Kind::Rate) {
+        const auto left = data(Qt::UserRole).toDouble();
+        const auto right = rhs->data(Qt::UserRole).toDouble();
+        if (left != right) return left < right;
+      }
+    }
+    return QTableWidgetItem::operator<(other);
+  }
+private:
+  Kind kind_;
+};
+}
 
 CanFrameTable::CanFrameTable(QWidget *parent, const char *name, const QFont &font)
     : QTableWidget(parent) {
@@ -19,7 +43,9 @@ CanFrameTable::CanFrameTable(QWidget *parent, const char *name, const QFont &fon
   setFocusPolicy(Qt::NoFocus);
   verticalHeader()->hide();
   horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+  horizontalHeader()->setSectionsClickable(true);
   horizontalHeader()->setSectionsMovable(true);
+  horizontalHeader()->setSortIndicatorShown(true);
   horizontalHeader()->setStretchLastSection(false);
   setColumnWidth(0, 105);
   setColumnWidth(1, 115);
@@ -28,8 +54,17 @@ CanFrameTable::CanFrameTable(QWidget *parent, const char *name, const QFont &fon
   setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
   setFont(font);
   layoutKey_ = QStringLiteral("ui/columns/v1/") + QString::fromLatin1(name);
+  sortKey_ = QStringLiteral("ui/canSort/v1/") + QString::fromLatin1(name);
   const auto layout = QSettings().value(layoutKey_).toByteArray();
   if (!layout.isEmpty()) horizontalHeader()->restoreState(layout);
+  const auto savedSort = QSettings().value(sortKey_).toList();
+  const int sortColumn = savedSort.size() == 2 && savedSort[0].toInt() >= 0 &&
+                                 savedSort[0].toInt() < columnCount()
+                             ? savedSort[0].toInt() : 1;
+  const auto sortOrder = savedSort.size() == 2 && savedSort[1].toInt() == int(Qt::DescendingOrder)
+                             ? Qt::DescendingOrder : Qt::AscendingOrder;
+  setSortingEnabled(true);
+  sortItems(sortColumn, sortOrder);
   layoutSaveTimer_ = new QTimer(this);
   layoutSaveTimer_->setSingleShot(true);
   layoutSaveTimer_->setInterval(250);
@@ -39,6 +74,8 @@ CanFrameTable::CanFrameTable(QWidget *parent, const char *name, const QFont &fon
           [changed](int, int, int) { changed(); });
   connect(horizontalHeader(), &QHeaderView::sectionMoved, this,
           [changed](int, int, int) { changed(); });
+  connect(horizontalHeader(), &QHeaderView::sortIndicatorChanged, this,
+          [changed](int, Qt::SortOrder) { changed(); });
   elapsed_.start();
   auto *timer = new QTimer(this);
   timer->setInterval(1000);
@@ -52,6 +89,8 @@ void CanFrameTable::saveLayout() {
   if (!layoutDirty_) return;
   QSettings settings;
   settings.setValue(layoutKey_, horizontalHeader()->saveState());
+  settings.setValue(sortKey_, QVariantList{horizontalHeader()->sortIndicatorSection(),
+                                          int(horizontalHeader()->sortIndicatorOrder())});
   settings.sync();
   if (settings.status() == QSettings::NoError) layoutDirty_ = false;
 }
@@ -85,35 +124,51 @@ void CanFrameTable::resetCounts() {
 }
 
 void CanFrameTable::refresh() {
+  const int sortColumn = horizontalHeader()->sortIndicatorSection();
+  const auto sortOrder = horizontalHeader()->sortIndicatorOrder();
+  setSortingEnabled(false);
   setRowCount(int(counts_.size()));
   int row = 0;
   for (const auto &[id, count] : counts_) {
-    auto setCell = [this, row](int column, const QString &value, bool right = false) {
+    auto setCell = [this, row](int column, const QString &value, SortItem::Kind kind,
+                               const QVariant &sortValue = {}, bool right = false) {
       auto *item = this->item(row, column);
       if (!item) {
-        item = new QTableWidgetItem;
+        item = new SortItem(kind);
         setItem(row, column, item);
       }
       item->setText(value);
+      if (sortValue.isValid()) item->setData(Qt::UserRole, sortValue);
       if (right) item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
     };
-    setCell(0, QString::number(count.frames).rightJustified(8, '0'), true);
-    setCell(1, id, true);
-    setCell(3, QStringLiteral("[%1] %2").arg(count.dlc).arg(count.payload));
+    setCell(0, QString::number(count.frames).rightJustified(8, ' '),
+            SortItem::Kind::Integer, count.frames, true);
+    setCell(1, id, SortItem::Kind::Integer, id.section(' ', 0, 0).toULongLong(nullptr, 16), true);
+    setCell(3, QStringLiteral("[%1] %2").arg(count.dlc).arg(count.payload),
+            SortItem::Kind::Text);
     ++row;
   }
   updateAverages();
+  setSortingEnabled(true);
+  sortItems(sortColumn, sortOrder);
 }
 
 void CanFrameTable::updateAverages() {
   if (!isVisible()) return;
+  const bool sorting = isSortingEnabled();
+  const int sortColumn = horizontalHeader()->sortIndicatorSection();
+  const auto sortOrder = horizontalHeader()->sortIndicatorOrder();
+  if (sorting) setSortingEnabled(false);
   const double seconds = qMax(1.0, elapsed_.elapsed() / 1000.0);
-  int row = 0;
-  for (const auto &[id, count] : counts_) {
-    Q_UNUSED(id);
+  for (int row = 0; row < rowCount(); ++row) {
+    const auto idItem = this->item(row, 1);
+    if (!idItem) continue;
+    const auto found = counts_.find(idItem->text());
+    if (found == counts_.end()) continue;
+    const auto &count = found->second;
     auto *item = this->item(row, 2);
     if (!item) {
-      item = new QTableWidgetItem;
+      item = new SortItem(SortItem::Kind::Rate);
       setItem(row, 2, item);
       item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
     }
@@ -121,7 +176,11 @@ void CanFrameTable::updateAverages() {
                              ? count.frames / seconds
                              : seconds * 1000.0 / count.frames;
     item->setText(QString::number(value, 'f', 2));
-    ++row;
+    item->setData(Qt::UserRole, value);
+  }
+  if (sorting) {
+    setSortingEnabled(true);
+    sortItems(sortColumn, sortOrder);
   }
 }
 

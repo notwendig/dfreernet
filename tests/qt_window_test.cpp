@@ -54,7 +54,7 @@ private slots:
     table.observe("123", 2, "01 02");
     table.observe("123", 2, "03 04");
     table.refresh();
-    QCOMPARE(table.item(0, 0)->text(), QString("00000002"));
+    QCOMPARE(table.item(0, 0)->text(), QString("       2"));
     QCOMPARE(table.item(0, 3)->text(), QString("[2] 03 04"));
     const double initial = table.item(0, 2)->text().toDouble();
     QVERIFY(initial > 0.0 && initial <= 2.0);
@@ -68,8 +68,52 @@ private slots:
     QCOMPARE(table.rowCount(), 0);
     table.observe("124", 1, "AA");
     table.refresh();
-    QCOMPARE(table.item(0, 0)->text(), QString("00000001"));
+    QCOMPARE(table.item(0, 0)->text(), QString("       1"));
     QVERIFY(table.item(0, 2)->text().toDouble() > 0.0);
+  }
+  void canFrameTableSort() {
+    QSettings().remove("ui/columns/v1/sortTest");
+    QSettings().remove("ui/canSort/v1/sortTest");
+    {
+      CanFrameTable table(nullptr, "sortTest", QFont());
+      table.resize(720, 300);
+      table.show();
+      for (int i = 0; i < 2; ++i) table.observe("001", 1, "01");
+      for (int i = 0; i < 10; ++i) table.observe("002", 1, "02");
+      table.observe("003", 1, "03");
+      table.refresh();
+      QCOMPARE(table.horizontalHeader()->sortIndicatorSection(), 1);
+      QCOMPARE(table.item(0, 1)->text(), QString("001"));
+      table.sortItems(0, Qt::AscendingOrder);
+      QCOMPARE(table.item(0, 0)->text(), QString("       1"));
+      QCOMPARE(table.item(2, 0)->text(), QString("      10"));
+      auto *header = table.horizontalHeader();
+      QTest::mouseClick(header->viewport(), Qt::LeftButton, Qt::NoModifier,
+                        QPoint(header->sectionViewportPosition(0) + 20, header->height() / 2));
+      QCOMPARE(header->sortIndicatorOrder(), Qt::DescendingOrder);
+      QCOMPARE(table.item(0, 0)->text(), QString("      10"));
+      table.observe("001", 1, "AA");
+      table.refresh();
+      QCOMPARE(table.item(0, 1)->text(), QString("002"));
+      QCOMPARE(table.item(1, 1)->text(), QString("001"));
+      QCOMPARE(table.item(1, 0)->text(), QString("       3"));
+      QCOMPARE(table.item(1, 3)->text(), QString("[1] AA"));
+      QVERIFY(table.item(0, 2)->text().toDouble() > table.item(1, 2)->text().toDouble());
+      table.sortItems(2, Qt::AscendingOrder);
+      QCOMPARE(table.item(0, 1)->text(), QString("003"));
+      QCOMPARE(table.item(2, 1)->text(), QString("002"));
+      table.setAverageUnit(CanFrameTable::AverageUnit::Milliseconds);
+      QCOMPARE(table.item(0, 1)->text(), QString("002"));
+      QCOMPARE(table.item(2, 1)->text(), QString("003"));
+      table.observe("00F", 1, "0F");
+      table.observe("00000010", 1, "10");
+      table.refresh();
+      table.sortItems(1, Qt::AscendingOrder);
+      QCOMPARE(table.item(3, 1)->text(), QString("00F"));
+      QCOMPARE(table.item(4, 1)->text(), QString("00000010"));
+    }
+    QSettings().remove("ui/columns/v1/sortTest");
+    QSettings().remove("ui/canSort/v1/sortTest");
   }
   void canViewPreferencesRestore() {
     QSettings settings;
@@ -77,6 +121,10 @@ private slots:
     settings.remove("ui/columns/v1/layoutTestSystem");
     settings.remove("ui/columns/v1/liveCanCount");
     settings.remove("ui/columns/v1/systemTestFrames");
+    settings.remove("ui/canSort/v1/layoutTestCount");
+    settings.remove("ui/canSort/v1/layoutTestSystem");
+    settings.remove("ui/canSort/v1/liveCanCount");
+    settings.remove("ui/canSort/v1/systemTestFrames");
     settings.remove("ui/canDumpMode");
     settings.remove("ui/canDumpUnit");
     settings.remove("ui/systemTestMode");
@@ -89,16 +137,22 @@ private slots:
       CanFrameTable system(nullptr, "layoutTestSystem", QFont());
       count.horizontalHeader()->moveSection(2, 0);
       count.setColumnWidth(1, 147);
+      count.sortItems(0, Qt::DescendingOrder);
       system.horizontalHeader()->moveSection(3, 1);
       system.setColumnWidth(0, 164);
+      system.sortItems(2, Qt::DescendingOrder);
     }
     {
       CanFrameTable count(nullptr, "layoutTestCount", QFont());
       CanFrameTable system(nullptr, "layoutTestSystem", QFont());
       QCOMPARE(count.horizontalHeader()->visualIndex(2), 0);
       QCOMPARE(count.columnWidth(1), 147);
+      QCOMPARE(count.horizontalHeader()->sortIndicatorSection(), 0);
+      QCOMPARE(count.horizontalHeader()->sortIndicatorOrder(), Qt::DescendingOrder);
       QCOMPARE(system.horizontalHeader()->visualIndex(3), 1);
       QCOMPARE(system.columnWidth(0), 164);
+      QCOMPARE(system.horizontalHeader()->sortIndicatorSection(), 2);
+      QCOMPARE(system.horizontalHeader()->sortIndicatorOrder(), Qt::DescendingOrder);
       QCOMPARE(count.horizontalHeader()->visualIndex(3), 3);
       QCOMPARE(system.columnWidth(1), 115);
     }
@@ -115,6 +169,7 @@ private slots:
       QVERIFY(count);
       count->horizontalHeader()->moveSection(2, 0);
       count->setColumnWidth(1, 148);
+      count->sortItems(0, Qt::DescendingOrder);
       window->showSystemTest(33395);
       auto *dialog = window->systemTestDialog_.data();
       QVERIFY(dialog);
@@ -127,6 +182,7 @@ private slots:
       systemMs->click();
       system->horizontalHeader()->moveSection(3, 1);
       system->setColumnWidth(0, 165);
+      system->sortItems(2, Qt::DescendingOrder);
       dialog->resize(750, 440);
       dialog->close();
       QTRY_VERIFY(window->systemTestDialog_.isNull());
@@ -141,6 +197,8 @@ private slots:
       QVERIFY(count);
       QCOMPARE(count->horizontalHeader()->visualIndex(2), 0);
       QCOMPARE(count->columnWidth(1), 148);
+      QCOMPARE(count->horizontalHeader()->sortIndicatorSection(), 0);
+      QCOMPARE(count->horizontalHeader()->sortIndicatorOrder(), Qt::DescendingOrder);
       window->showSystemTest(33395);
       QVERIFY(window->systemTestDialog_->findChild<QToolButton *>("systemTestViewFollow")->isChecked());
       QVERIFY(window->systemTestDialog_->findChild<QToolButton *>("systemTestViewMs")->isChecked());
@@ -148,12 +206,18 @@ private slots:
       QVERIFY(system);
       QCOMPARE(system->horizontalHeader()->visualIndex(3), 1);
       QCOMPARE(system->columnWidth(0), 165);
+      QCOMPARE(system->horizontalHeader()->sortIndicatorSection(), 2);
+      QCOMPARE(system->horizontalHeader()->sortIndicatorOrder(), Qt::DescendingOrder);
       QCOMPARE(window->systemTestDialog_->size(), QSize(750, 440));
     }
     settings.remove("ui/columns/v1/layoutTestCount");
     settings.remove("ui/columns/v1/layoutTestSystem");
     settings.remove("ui/columns/v1/liveCanCount");
     settings.remove("ui/columns/v1/systemTestFrames");
+    settings.remove("ui/canSort/v1/layoutTestCount");
+    settings.remove("ui/canSort/v1/layoutTestSystem");
+    settings.remove("ui/canSort/v1/liveCanCount");
+    settings.remove("ui/canSort/v1/systemTestFrames");
     settings.remove("ui/canDumpMode");
     settings.remove("ui/canDumpUnit");
     settings.remove("ui/systemTestMode");
@@ -477,6 +541,113 @@ private slots:
     QVERIFY(!action->isChecked());
     QVERIFY(!w->blinkCycle_->active());
     QVERIFY(QApplication::activeModalWidget() == nullptr);
+  }
+  void rnetClockStatusShowsFreshTimeAndStaleState(){
+    auto w=make();
+    auto *label=w->findChild<QLabel*>("rnetClockStatus");QVERIFY(label);
+    QVERIFY(label->text().contains("unavailable"));
+    w->rnetClock_=decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0000U,QByteArray::fromHex("281604ef0b1a"));
+    w->rnetClockAge_.restart();w->updateRnetClockStatus();
+    QVERIFY(label->text().contains("04:22:40"));
+    QVERIFY(label->toolTip().contains("2026-11-15"));
+    languages().setLanguage("de_DE",true);
+    QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
+    QTRY_VERIFY(label->text().contains("R-Net-Zeit"));
+    QVERIFY(w->grab().save(root_+"/analysis/rnet-clock-status-de.png"));
+    QTimer::singleShot(0,w.get(),[this]{
+      auto *dialog=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);QVERIFY(dialog->text().contains("stillsteht"));
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-clock-confirm-de.png"));
+      dialog->reject();
+    });
+    QTest::mouseClick(label,Qt::LeftButton);
+    QVERIFY(!w->pendingRnetClock_.isValid());
+    w->rnetClockAge_.invalidate();w->updateRnetClockStatus();
+    QVERIFY(label->text().contains("nicht verfügbar"));
+    languages().setLanguage("en_US",true);
+  }
+  void rnetClockStatusColorsTrackHostDifference(){
+    auto w=make();
+    auto *label=w->findChild<QLabel*>("rnetClockStatus");QVERIFY(label);
+    const auto host=QDateTime::currentDateTime();
+    auto check=[&](int offsetSeconds,const char *color){
+      const auto rnet=host.addSecs(offsetSeconds);
+      w->rnetClock_={rnet.date(),rnet.time()};
+      w->rnetClockAge_.restart();w->updateRnetClockStatus();
+      QVERIFY(label->styleSheet().contains(QLatin1String(color)));
+    };
+    check(-59,"#2e9b44");
+    check(61,"#e67e00");
+    check(-899,"#e67e00");
+    check(901,"#d32f2f");
+    QVERIFY(w->grab().save(root_+"/analysis/rnet-clock-offset-red.png"));
+    w->rnetClockAge_.invalidate();w->updateRnetClockStatus();
+    QVERIFY(label->styleSheet().isEmpty());
+  }
+  void rnetDateStatusMatchesHostDate(){
+    auto w=make();
+    auto *date=w->findChild<QLabel*>("rnetDateStatus");QVERIFY(date);
+    QVERIFY(!date->isVisible());
+    const auto host=QDateTime::currentDateTime();
+    w->rnetClock_={host.date(),host.time()};
+    w->rnetClockAge_.restart();w->updateRnetClockStatus();
+    QVERIFY(date->isVisible());
+    QVERIFY(date->text().contains(host.date().toString(Qt::ISODate)));
+    QVERIFY(date->styleSheet().contains("#2e9b44"));
+    w->rnetClock_={host.date().addDays(1),host.time()};
+    w->rnetClockAge_.restart();w->updateRnetClockStatus();
+    QVERIFY(date->styleSheet().contains("#d32f2f"));
+    QVERIFY(w->grab().save(root_+"/analysis/rnet-date-offset-red.png"));
+    w->rnetClockAge_.invalidate();w->updateRnetClockStatus();
+    QVERIFY(!date->isVisible());
+  }
+  void rnetClockSetOnPrivateVcan(){
+    const auto interface=qEnvironmentVariable("RNET_CLOCK_VCAN");
+    if(interface!="rnetclock0")QSKIP("Only run in isolated clock test namespace");
+    auto w=make();w->settings_.canInterface=interface;w->applyPreferences();
+    QTRY_VERIFY_WITH_TIMEOUT(w->liveDumpFd_>=0,2000);
+    int fd=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK,CAN_RAW);QVERIFY(fd>=0);
+    ifreq request{};qstrncpy(request.ifr_name,"rnetclock0",IFNAMSIZ);
+    QVERIFY(::ioctl(fd,SIOCGIFINDEX,&request)==0);
+    sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=request.ifr_ifindex;
+    QVERIFY(::bind(fd,reinterpret_cast<sockaddr*>(&address),sizeof(address))==0);
+    can_frame frame{};frame.can_id=CAN_EFF_FLAG|rnetClockBroadcastId;frame.can_dlc=6;
+    const auto before=QByteArray::fromHex("281604ef0b1a");
+    std::copy(before.begin(),before.end(),frame.data);
+    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    auto *label=w->findChild<QLabel*>("rnetClockStatus");QVERIFY(label);
+    QTRY_VERIFY_WITH_TIMEOUT(label->text().contains("04:22:40"),2000);
+    QString unexpectedDialog;
+    QTimer modal;
+    QObject::connect(&modal,&QTimer::timeout,w.get(),[&]{
+      auto *dialog=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+      if(!dialog)return;
+      if(dialog->text().contains("stationary"))dialog->button(QMessageBox::Yes)->click();
+      else {unexpectedDialog=dialog->text();dialog->accept();}
+    });
+    modal.start(20);
+    QTest::mouseClick(label,Qt::LeftButton);
+    modal.stop();
+    QVERIFY2(unexpectedDialog.isEmpty(),qPrintable(unexpectedDialog));
+    QVERIFY(w->pendingRnetClock_.isValid());
+    can_frame sent{};bool found=false;QElapsedTimer deadline;deadline.start();
+    while(deadline.elapsed()<2000&&!found){
+      can_frame candidate{};
+      const auto size=::read(fd,&candidate,sizeof(candidate));
+      if(size==sizeof(candidate)&&candidate.can_id==(CAN_EFF_FLAG|rnetClockSetId)){
+        sent=candidate;found=true;
+      }else QTest::qWait(10);
+    }
+    QVERIFY(found);QCOMPARE(sent.can_dlc,6);
+    const auto payload=QByteArray(reinterpret_cast<const char*>(sent.data),6);
+    const auto decoded=decodeRnetClockFrame(CAN_EFF_FLAG|rnetClockBroadcastId,payload);
+    QVERIFY(decoded.isValid());QCOMPARE(decoded.date,QDate::currentDate());
+    QVERIFY(qAbs(decoded.time.secsTo(QTime::currentTime()))<=2);
+    sent.can_id=CAN_EFF_FLAG|rnetClockBroadcastId;
+    QCOMPARE(::write(fd,&sent,sizeof(sent)),ssize_t(sizeof(sent)));
+    QTRY_VERIFY_WITH_TIMEOUT(!w->pendingRnetClock_.isValid(),2000);
+    QVERIFY(w->statusBar()->currentMessage().contains("confirmed"));
+    ::close(fd);
   }
   void persistentSettingsAndPassiveStatusWidget(){
     auto w=make();w->openDocument(fixture_);const auto bytes=w->document()->write();
@@ -999,7 +1170,7 @@ private slots:
     countMode->click();
     QTRY_COMPARE(counts->rowCount(),1);
     QVERIFY(counts->isVisible());QVERIFY(!liveDump->isVisible());
-    QCOMPARE(counts->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(counts->item(0,0)->text(),QString("       1"));
     QCOMPARE(counts->item(0,1)->text(),QString("123"));
     QVERIFY(counts->item(0,1)->textAlignment()&Qt::AlignRight);
     QCOMPARE(counts->columnCount(),4);
@@ -1013,12 +1184,12 @@ private slots:
     QCOMPARE(counts->item(0,3)->text(),QString("[3] 01 02 03"));
     frame.data[0]=4;
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
-    QTRY_COMPARE(counts->item(0,0)->text(),QString("00000002"));
+    QTRY_COMPARE(counts->item(0,0)->text(),QString("       2"));
     QCOMPARE(counts->item(0,3)->text(),QString("[3] 04 02 03"));
     frame.can_id=0x124;
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(counts->rowCount(),2);
-    QCOMPARE(counts->item(1,0)->text(),QString("00000001"));
+    QCOMPARE(counts->item(1,0)->text(),QString("       1"));
     QCOMPARE(counts->item(1,1)->text(),QString("124"));
     followMode->click();
     QVERIFY(liveDump->isVisible());QVERIFY(!counts->isVisible());
@@ -1051,7 +1222,7 @@ private slots:
     QVERIFY(testInfo->text().contains("No verified decoder"));
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(testDump->rowCount(),1);
-    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(testDump->item(0,0)->text(),QString("       1"));
     QCOMPARE(testDump->item(0,1)->text(),QString("124"));
     QVERIFY(testDump->item(0,1)->textAlignment()&Qt::AlignRight);
     QCOMPARE(testDump->columnCount(),4);
@@ -1071,7 +1242,7 @@ private slots:
     frame.can_dlc=1;frame.data[0]=0xc0;
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(testDump->rowCount(),1);
-    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(testDump->item(0,0)->text(),QString("       1"));
     QCOMPARE(testDump->item(0,1)->text(),QString("0C140000"));
     QCOMPARE(testDump->item(0,3)->text(),QString("[1] C0"));
     w->findChild<QAction*>("command32957")->trigger();
@@ -1080,14 +1251,14 @@ private slots:
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     QTRY_COMPARE(testDump->rowCount(),1);
     QCOMPARE(testDump->item(0,1)->text(),QString("03C30F0F"));
-    QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+    QCOMPARE(testDump->item(0,0)->text(),QString("       1"));
     for(unsigned command:{32817u,33107u}){
       w->findChild<QAction*>("command"+QString::number(command))->trigger();
       frame.can_id=CAN_EFF_FLAG|0x02000100;
       frame.can_dlc=2;frame.data[0]=10;frame.data[1]=246;
       QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
       QTRY_COMPARE(testDump->rowCount(),1);
-      QCOMPARE(testDump->item(0,0)->text(),QString("00000001"));
+      QCOMPARE(testDump->item(0,0)->text(),QString("       1"));
       QCOMPARE(testDump->item(0,1)->text(),QString("02000100"));
       QCOMPARE(testDump->item(0,3)->text(),QString("[2] 0A F6"));
       QCOMPARE(testInfo->text(),QString("Raw joystick axes: X=10, Y=-10"));

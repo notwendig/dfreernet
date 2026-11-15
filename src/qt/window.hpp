@@ -5,7 +5,9 @@
 #include "values.hpp"
 #include "icons.hpp"
 #include "app_settings.hpp"
+#include "rnet_clock.hpp"
 #include <QAbstractTableModel>
+#include <QElapsedTimer>
 #include <QMainWindow>
 #include <QPointer>
 #include <QProcess>
@@ -163,6 +165,13 @@ private:
   QLabel *sleepLabel_=nullptr;
   QString sleepStatus_;
   CanHeartbeatIndicator *heartbeat_=nullptr;
+  QLabel *rnetDateLabel_=nullptr,*rnetClockLabel_=nullptr;
+  RnetClockValue rnetClock_;
+  QElapsedTimer rnetClockAge_;
+  QDateTime pendingRnetClock_;
+  QElapsedTimer pendingRnetClockAge_;
+  void updateRnetClockStatus();
+  void setRnetClockToHostTime();
   QAction *detailsAction_=nullptr;
   QAction *parameterHelpAction_=nullptr;
   QAction *listViewAction_=nullptr,*profileViewAction_=nullptr,*moduleViewAction_=nullptr;

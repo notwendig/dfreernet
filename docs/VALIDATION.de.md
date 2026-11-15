@@ -2,7 +2,7 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 14. November 2026. Anwendung: dfreernet 1.2.2, natives Linux / Qt 6.
+Stand: 15. November 2026. Anwendung: dfreernet 1.3.0, natives Linux / Qt 6.
 
 ## Hardwareumfang
 
@@ -26,6 +26,14 @@ Ein separater Einschaltvergleich am 11. November 2026: Ein einziger, ausdrückli
 
 Ein vom Benutzer bereitgestellter 23,652-s-Mitschnitt von `can1` zeigt die Ein-/Aus-Phasen: `0x00C` zu Beginn, `0x00E` als Serienkennungsframe nach 21 ms, `0x7B1`/`0x7B0` während der Initialisierung und ab 0,513 s den zyklischen Geräte-Heartbeat `0x03C30F0F`. Ab 12,601 s erscheinen `0x002`/`0x004` als Abschaltvorlauf, ab 14,260 s `0x002` als RTR und am Ende `0x000` samt RTR. Der Mitschnitt enthält keine Senderichtungs- oder Tastermarkierungen; die Phasen sind aus der Reihenfolge erschlossen. Ein danach ausdrücklich angeforderter Einzeltest auf `can1` mit vier `0x03C30F0F`-Geräteframes, `0x00C` und vier weiteren Geräteframes erzeugte nur neun eigene CAN-Echos ohne Antwort; das Display leuchtete kurz und ging wieder aus.
 
+Eine passive Beobachtung auf `can0` am 15. November 2026 ergab etwa einmal pro Sekunde den erweiterten Frame `0x1C2C0000` mit sechs Datenbytes. Zwölf aufeinanderfolgende Nutzdaten liefen von `28 16 04 EF 0B 1A` bis `33 16 04 EF 0B 1A`: Byte 0 stieg sekündlich um eins. Als Uhrzeitformat passen Sekunden, Minuten, Stunden, `(Wochentag << 5) | Tag`, Monat und Jahr seit 2000; `0xEF` ergibt Wochentag 7 und Tag 15, passend zu Sonntag, dem 15. November 2026. Das [Open-RNet-Frameverzeichnis](https://github.com/redragonx/open-rnet/blob/main/reference/RNET_FRAME_DICTIONARY.md) bezeichnet die Familie `1C2C0X00` unabhängig davon als „Time of Day“, ohne diese Datenbytes aufzuschlüsseln. In dieser ersten Beobachtung wurden die CJSM2-Anzeige und der Sender nicht unabhängig bestätigt. Zur Beobachtung war kein Anfrageframe nötig. Open-RNet nennt die Programmer-Vorgänge `ReadDateTime` und `SendDateTime`, enthält dafür aber keine CAN-Nachrichten.
+
+In einem späteren passiven Mitschnitt auf `can0` stellte der Benutzer die Uhr über die CJSM2-Bordprogrammierung. Zwei erweiterte Frames `0x1C2C0001` enthielten `00 2E 15 AF 0B 1A` und `00 2E 15 4F 0B 1A`; 387 beziehungsweise 405 ms später sendete `0x1C2C0000` jeweils dieselben sechs Bytes und zählte danach die Sekunden weiter. Der Benutzer bestätigte anschließend 21:47 auf dem Display, passend zu den Stunden-/Minutenbytes `15 2E` in Hexadezimal. Das spricht stark für `0x1C2C0001` als Setzframe der Bordprogrammierung. Die oberen drei Bits von Byte 3 wechselten von 5 auf 2, während Tag 15 gleich blieb; der Decoder darf deshalb keine Übereinstimmung zwischen Wochentag und Datum verlangen. Der Rohmitschnitt bleibt privat. dfreernet sendete keinen Frame; ob ein extern gesendeter Setzframe angenommen wird, war zu diesem Zeitpunkt noch ungeprüft.
+
+Nachdem der Benutzer den stillstehenden Rollstuhl bestätigt und genau eine physische Sendung freigegeben hatte, beobachtete ein separates Einzelversuchswerkzeug `0x1C2C0000#180204EF0B1A`, identisch mit der aktuellen lokalen Computerzeit, sendete genau einmal `0x1C2C0001#180204EF0B1A` und empfing den passenden Zeit-Frame. Es gab keinen weiteren Sendeversuch. Da die Uhr bereits vorher zur Computerzeit passte, bestätigt das den gewünschten Uhrzustand und die einzelne Sendung, belegt aber noch nicht, dass ein extern gesendeter Frame die physische RTC ändern kann. Die dfreernet-Oberfläche wurde nur auf isoliertem virtuellem CAN geprüft.
+
+Bei einem weiteren Test am 15. November 2026 verlangte der Benutzer ausdrücklich einen absichtlich abweichenden Wert, bestätigte den stillstehenden Rollstuhl und gab genau einen physischen Frame frei. Der vorherige Zeit-Frame zeigte den 15. November 2026 um 04:40:18–23. Eine einzelne Sendung auf `can0` mit `0x1C2C0001#0000005A0A4D` kodierte Dienstag, den 26. Oktober 2077 um 00:00:00. Die spätere passive Rücklesung zeigte `0x1C2C0000#2000005A0A4D` bis `#2300005A0A4D` und zählte auf dem gewünschten Datum von 00:00:32 bis 00:00:35 sekündlich weiter. Damit ist bestätigt, dass ein extern gesendeter Frame die physische R-Net-Uhr geändert hat. Gesendet wurde mit `cansend`; die dfreernet-Oberfläche wurde weiterhin nur auf isoliertem virtuellem CAN geprüft. Es gab keinen zweiten Setzframe und keinen erneuten Sendeversuch.
+
 ## Automatisierte Prüfungen
 
 `scripts/test.sh` baut die Anwendung, startet die Offline-CTest-Suite, prüft beim Build die festen Prüfsummen eingebetteter Ressourcen und native Laufzeitabhängigkeiten. Mit lokalen privaten Referenzdaten umfasst die Suite 17 Ziele; der Git-Quelltextstand führt die referenzdatenfreien Tests aus: Dateierhaltung, Katalogdekodierung, Werteprüfung, begrenzte Schreiblogik, Mitschnittprüfungen, Übersetzungen, Startzustimmung, Einstellungen und Qt-Bedienung. Diese Tests senden nicht auf einen physischen CAN-Bus.
@@ -38,6 +46,10 @@ Für 1.2.1 bestanden alle acht referenzdatenfreien Offline-Tests mit `scripts/te
 
 Für 1.2.2 bestanden alle acht referenzdatenfreien Offline-Tests im RELEASE-Build. Im DEBUG-Build bestanden zunächst sieben; der DBus-Test zur Schlafsperre bestand bei Wiederholung außerhalb der Sandbox, nachdem dort das Binden eines lokalen Sockets verweigert worden war. Der isolierte vcan-Test bestätigte die Symbolschalter für Verlauf/Zählung und Hz/ms im Mitschnitt und in den Systemtests; die Anwendung sendete null CAN-Frames. Qt-Tests prüften außerdem die Wiederherstellung der CAN-Spaltenlayouts, Ansichtsoptionen und Fenstergröße. Für diese Version wurde kein Test am physischen Controller durchgeführt.
 
+Für 1.3.0 bestanden alle acht referenzdatenfreien Offline-Tests mit `scripts/test.sh`. Acht gezielte Qt-Testfälle für CAN-Zähler, Sortierung, Wiederherstellung des Layouts und die R-Net-Datums-/Uhrzeitanzeige bestanden ebenfalls. `unshare --user --map-root-user --net python3 scripts/test_rnet_clock_vcan.py` bestand mit genau einem von der Anwendung gesendeten Uhr-Setzframe und passender Rückmeldung in isoliertem virtuellem CAN. `dfreernet --version` meldete 1.3.0. Die oben beschriebene physische Änderung der Uhr erfolgte mit `cansend`, nicht über die Programmoberfläche.
+
+Die spätere Uhr-Erweiterung bestand die acht referenzdatenfreien Offline-Tests und den gezielten Qt-Test der Statusanzeige. `unshare --user --map-root-user --net python3 scripts/test_rnet_clock_vcan.py` prüfte in einem isolierten virtuellen CAN-Netz genau einen von der Anwendung gesendeten Frame `0x1C2C0001` mit Host-Datum und -Uhrzeit sowie eine passende Rückmeldung `0x1C2C0000`. Das Netz verzeichnete genau drei Sendungen: den anfänglichen Zeit-Frame des Tests, den einzigen Setzframe der Anwendung und den Rückmeldeframe des Tests. Die Anwendung sendete keinen Uhrzeit-Frame an echte Hardware.
+
 ## Bekannte Lücken
 
 - Die vollständige OEM-Rekonstruktion ist nicht abgeschlossen. Nicht unterstützte Aktionen bleiben gesperrt.
@@ -47,6 +59,7 @@ Für 1.2.2 bestanden alle acht referenzdatenfreien Offline-Tests im RELEASE-Buil
 - Mehrere Dateien können nur teilweise geschrieben sein. Commit-Bestätigung und verifiziertes Rücklesen sind getrennte Zustände; keine automatische Schreibwiederholung.
 - Eine zuverlässige Zuordnung der Modulnamen/-typen ist unvollständig.
 - Das passive Herz überwacht den beobachteten sieben Byte langen Geräte-Heartbeat `0x03C30F0F`. Es belegt weder den Zustand des gesamten Systems noch eine universelle Heartbeat-Abdeckung.
+- Das Uhrzeitformat von `0x1C2C0000` und der Bord-Setzframe `0x1C2C0001` wurden aus passiven Beobachtungen abgeleitet. Eine spätere einzelne externe physische Sendung änderte die RTC auf ein absichtlich abweichendes Datum und eine andere Uhrzeit; der Zeit-Frame bestätigte dies. Die dfreernet-Oberfläche selbst ist auf echter Hardware weiterhin ungeprüft; eine aktive Leseanfrage ist ebenfalls unbekannt.
 - Die native Anwendung bettet abgeleitete Referenzressourcen ein. Deren Herkunft und Weitergabebeschränkungen bleiben bestehen; es handelt sich nicht um einen unabhängig erstellten Ersatzkatalog. Opaque Dokumentmetadaten stammen weiterhin aus der eingebetteten Referenzvorlage.
 
 ## Nachvollziehbare Fehlermeldung

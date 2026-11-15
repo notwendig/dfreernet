@@ -10,13 +10,17 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.2.2
+## Version 1.3.0
 
-Diese Version verwendet eine gemeinsame CAN-Zähltabelle für Mitschnitt und passive Systemtests. Beide Ansichten bieten Symbolschalter für Verlauf/Zählung und Hz/ms sowie einstellbare Spalten und gespeicherte Layout- und Ansichtsoptionen. Sie bleibt experimentell: Controllerkompatibilität und Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version zeigt R-Net-Datum und -Uhrzeit in der Statusleiste, markiert Abweichungen zur Host-Zeit farbig und bietet nach Bestätigung das einmalige Stellen der Uhr mit CAN-Rücklesung. Hinzu kommen die optionale Einrichtung der CAN-Schnittstelle beim Start und sortierbare CAN-Zähltabellen. Sie bleibt experimentell: Controllerkompatibilität und Parameter-Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
-## Bildschirmfotos (mit 1.29999.2 aufgenommen)
+## Bildschirmfotos
 
-Hauptfenster mit Parametertabelle und Berechtigungsstufen:
+Statusleiste in 1.3.0 aus einem Offline-Test mit absichtlich abweichendem Datum:
+
+![R-Net-Datum und -Uhrzeit rot in der Statusleiste](docs/screens/rnet-date-status-1.3.0.png)
+
+Hauptfenster mit Parametertabelle und Berechtigungsstufen, aufgenommen mit 1.2.2:
 
 ![dfreernet-Hauptfenster mit Parametertabelle](docs/screens/Bildschirmfoto%20vom%202026-11-14%2006-28-20.png)
 
@@ -65,10 +69,12 @@ Bei jedem interaktiven Start erscheint eine Warnung mit Haftungsausschluss. Erst
 - `.R-net`-Dateien öffnen und speichern; angezeigte Informationen exportieren.
 - Datei → RND-Katalog importieren… prüft eine RND-Datei und schreibt deren Tabellen in eine neue SQLite-Datenbank. Der eingebettete Katalog wird nicht automatisch gewechselt.
 - Unterstützte Änderungen mit Sicherung, Vergleich und Rückleseprüfung übertragen. Der Schreibpfad ist begrenzt und experimentell.
-- Modulkennungen und Seriennummern abfragen. Unter der fixierten Berechtigungsspalte läuft ein fortlaufender CAN-Mitschnitt nur mit Empfang; „CAN beobachten“ erstellt weiterhin eine zeitlich begrenzte Zusammenfassung.
+- Modulkennungen und Seriennummern abfragen. Unter der fixierten Berechtigungsspalte läuft ein fortlaufender CAN-Mitschnitt nur mit Empfang; „CAN beobachten“ erstellt weiterhin eine zeitlich begrenzte Zusammenfassung. CAN-Zähltabellen lassen sich über ihre Spaltenköpfe sortieren.
 - Den waagerechten Trenngriff für die Höhe und den Trenngriff neben dem CAN-Mitschnitt für dessen Breite ziehen; die Positionen bleiben nach dem Neustart erhalten.
 - Passiven CAN-Heartbeat als pulsierendes Herz rechts in der Statusleiste anzeigen.
+- R-Net-Datum und -Uhrzeit in der Statusleiste anzeigen, Abweichungen farbig markieren und die Uhr nach Bestätigung per Klick auf die Host-Zeit stellen.
 - Linux während der App-Nutzung wach halten; optionales Warnblinker-Signal nur für die aktuelle Sitzung (Standardintervall 300 s, Dauer 60 s; verlangt die Bestätigung „sichtbar aus“ und verhindert den Rollstuhl-Ruhezustand nicht).
+- Die ausgewählte CAN-Schnittstelle nach Annahme der Startwarnung optional mit gespeicherter Bitrate einrichten und einschalten.
 - CAN-, Ordner-, Sprach- und Darstellungseinstellungen in vertikalen Reitern speichern.
 
 ## Dokumentation

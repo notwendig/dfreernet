@@ -1,6 +1,7 @@
 #include "app_settings.hpp"
 #include "settings_dialog.hpp"
 #include "can_heartbeat.hpp"
+#include "rnet_clock.hpp"
 #include "i18n.hpp"
 #include <QtTest>
 #include <QtWidgets>
@@ -21,6 +22,18 @@ class PreferencesTest final : public QObject {
   QTemporaryDir temp_;
   AppSettings original(){auto s=AppSettings::defaults();s.workingDirectory=temp_.path()+"/documents";s.backupDirectory=temp_.path()+"/backups";s.exportDirectory=temp_.path()+"/exports";s.logDirectory=temp_.path()+"/logs";return s;}
 private slots:
+  void rnetClockFrame(){
+    auto clock=decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0000U,QByteArray::fromHex("281604ef0b1a"));
+    QVERIFY(clock.isValid());QCOMPARE(clock.date,QDate(2026,11,15));QCOMPARE(clock.time,QTime(4,22,40));
+    clock=decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0300U,QByteArray::fromHex("1336144c0710"));
+    QVERIFY(clock.isValid());QCOMPARE(clock.date,QDate(2016,7,12));QCOMPARE(clock.time,QTime(20,54,19));
+    clock=decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0000U,QByteArray::fromHex("002e154f0b1a"));
+    QVERIFY(clock.isValid());QCOMPARE(clock.date,QDate(2026,11,15));QCOMPARE(clock.time,QTime(21,46,0));
+    QCOMPARE(encodeRnetClockTime(QDateTime(QDate(2026,11,15),QTime(3,50,12))),QByteArray::fromHex("0c3203ef0b1a"));
+    QVERIFY(!decodeRnetClockFrame(0x1c2c0000U,QByteArray::fromHex("281604ef0b1a")).isValid());
+    QVERIFY(!decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0000U,QByteArray::fromHex("281604ef0b")).isValid());
+    QVERIFY(!decodeRnetClockFrame(CAN_EFF_FLAG|0x1c2c0000U,QByteArray::fromHex("281604e00b1a")).isValid());
+  }
   void initTestCase(){QApplication::setQuitOnLastWindowClosed(false);QCoreApplication::setOrganizationName("RNetTests");QCoreApplication::setApplicationName("PreferencesTests");QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp_.path());}
   void init(){languages().setLanguage("en_US");original().save();}
   void newDefaultsAndLiveSettings() {
@@ -31,6 +44,8 @@ private slots:
     QCOMPARE(defaults.liveSignalIntervalSeconds, 300);
     QCOMPARE(defaults.liveSignalDurationSeconds, 60);
     QVERIFY(!defaults.toolbarIconsOnly);
+    QVERIFY(!defaults.configureCanOnStartup);
+    QCOMPARE(defaults.canBitrate,125000);
 
     QSettings old;
     old.setValue("ui/monitor","primary");
@@ -81,12 +96,13 @@ private slots:
     QCOMPARE(dialog.findChild<QComboBox*>("settingsAccess")->count(), 2);
   }
   void roundtripValidationAndUniqueBackups(){
-    auto s=original();s.canInterface="vcan42";s.accessLevel=1;s.heartbeatTimeoutMs=750;s=s.validated();s.save();
+    auto s=original();s.canInterface="vcan42";s.canBitrate=250000;s.configureCanOnStartup=true;s.accessLevel=1;s.heartbeatTimeoutMs=750;s=s.validated();s.save();
     QVERIFY(!QSettings().contains("ui/monitor"));
     QVERIFY(!QSettings().contains("ui/maximized"));
-    auto loaded=AppSettings::load();QCOMPARE(loaded.canInterface,s.canInterface);QCOMPARE(loaded.backupDirectory,s.backupDirectory);QCOMPARE(loaded.accessLevel,1);QCOMPARE(loaded.heartbeatTimeoutMs,750);
+    auto loaded=AppSettings::load();QCOMPARE(loaded.canInterface,s.canInterface);QCOMPARE(loaded.canBitrate,250000);QVERIFY(loaded.configureCanOnStartup);QCOMPARE(loaded.backupDirectory,s.backupDirectory);QCOMPARE(loaded.accessLevel,1);QCOMPARE(loaded.heartbeatTimeoutMs,750);
     auto a=loaded.newBackupDirectory("rnet-config"),b=loaded.newBackupDirectory("rnet-config");QVERIFY(a!=b);QVERIFY(a.startsWith(s.backupDirectory+'/'));QVERIFY(!QFileInfo::exists(a));
     s.canInterface="bad/name";QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
+    s=original();s.canBitrate=0;QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
     s=original();s.backupDirectory="relative";QVERIFY_THROWS_EXCEPTION(std::runtime_error,s.validated());
   }
   void verticalTabsCancelApplyAndLiveTranslation(){
@@ -97,9 +113,11 @@ private slots:
     SettingsDialog dialog(original());dialog.show();auto *tabs=dialog.findChild<QListWidget*>("settingsTabs");auto *pages=dialog.findChild<QStackedWidget*>("settingsPages");QCOMPARE(tabs->count(),4);
     for(int i=0;i<4;++i){tabs->setCurrentRow(i);QCOMPARE(pages->currentIndex(),i);}
     dialog.findChild<QComboBox*>("settingsCanInterface")->setCurrentText("vcan9");
+    dialog.findChild<QCheckBox*>("settingsConfigureCanOnStartup")->setChecked(true);
+    dialog.findChild<QSpinBox*>("settingsCanBitrate")->setValue(500000);
     dialog.findChild<QComboBox*>("settingsLanguage")->setCurrentIndex(1);
     auto *buttons=dialog.findChild<QDialogButtonBox*>("settingsButtons");buttons->button(QDialogButtonBox::Apply)->click();
-    QTRY_COMPARE(tabs->item(0)->text(),QString("Allgemein"));QCOMPARE(tabs->currentRow(),3);QCOMPARE(AppSettings::load().canInterface,QString("vcan9"));
+    QTRY_COMPARE(tabs->item(0)->text(),QString("Allgemein"));QCOMPARE(tabs->currentRow(),3);QCOMPARE(AppSettings::load().canInterface,QString("vcan9"));QCOMPARE(AppSettings::load().canBitrate,500000);QVERIFY(AppSettings::load().configureCanOnStartup);
     QCOMPARE(dialog.findChild<QComboBox*>("settingsCanInterface")->currentText(),QString("vcan9"));
     dialog.findChild<QComboBox*>("settingsCanInterface")->setCurrentText("invalid/interface");buttons->button(QDialogButtonBox::Apply)->click();QVERIFY(!dialog.findChild<QLabel*>("settingsError")->text().isEmpty());QCOMPARE(AppSettings::load().canInterface,QString("vcan9"));
     dialog.findChild<QComboBox*>("settingsCanInterface")->setCurrentText("vcan9");buttons->button(QDialogButtonBox::Apply)->click();

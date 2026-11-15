@@ -10,13 +10,17 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.2.2
+## Version 1.3.0
 
-This version shares the CAN count table implementation across the live dump and passive System Tests. Both views offer icon controls for Follow/Count and Hz/ms, with adjustable columns and saved layout and view preferences. It remains experimental: controller compatibility and the write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version shows the R-Net date and time in the status bar, colors differences from the host, and offers a confirmed one-frame clock update with CAN readback. It also adds optional CAN interface setup at startup and sortable CAN count tables. It remains experimental: controller compatibility and the parameter write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
-## Screenshots (captured with 1.2.2)
+## Screenshots
 
-Main window with the parameter table and access levels:
+Status bar in 1.3.0, from an offline test with an intentionally mismatched date:
+
+![R-Net date and time shown red in the status bar](docs/screens/rnet-date-status-1.3.0.png)
+
+Main window with the parameter table and access levels, captured with 1.2.2:
 
 ![dfreernet main window with parameter table](docs/screens/Bildschirmfoto%20vom%202026-11-14%2006-28-20.png)
 
@@ -65,10 +69,12 @@ A warning and disclaimer appears at every interactive start. Choose Continue del
 - Open and save `.R-net` files; export displayed information.
 - File → Import RND catalog… validates an RND file and exports its tables to a new SQLite database. The built-in catalog is not switched automatically.
 - Write supported parameter changes with backups, comparison and readback verification. This is a bounded experimental implementation.
-- Query module identifiers and serial numbers. A continuous receive-only CAN dump appears below the fixed access column; the separate Monitor CAN command still provides a timed capture summary.
+- Query module identifiers and serial numbers. A continuous receive-only CAN dump appears below the fixed access column; the separate Monitor CAN command still provides a timed capture summary. CAN count tables can be sorted by clicking column headers.
 - Drag the lower horizontal divider to adjust pane height and the divider beside the CAN dump to adjust its width; these positions are restored on restart.
 - Show a passive CAN heartbeat as a pulsating heart at the right of the status bar.
+- Show R-Net date and time in the status bar, with colors for mismatches and a click action to set the clock to host time after confirmation.
 - Keep Linux awake while the app is open; optional session-only hazard-light experiment (default interval 300 s, duration 60 s; requires physical OFF-state confirmation and does not prevent wheelchair sleep).
+- Optionally configure and enable the selected CAN interface at startup with a saved bitrate, after accepting the startup warning.
 - Store CAN, folder, language and appearance preferences in grouped vertical settings tabs.
 
 ## Documentation

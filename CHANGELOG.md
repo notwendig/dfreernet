@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+## 1.3.0 — 2026-11-15
+
+- Show fresh R-Net Time of Day frames in the status bar and allow confirmed, single-frame synchronization to computer time with CAN readback.
+- Show the R-Net date alongside the time. Color the date green when it matches the host and red otherwise; color the time green, orange, or red according to its absolute offset from the host.
+- Add optional CAN interface setup at startup with a configurable bitrate, after the startup warning is accepted.
+- Show CAN counters right-aligned with spaces instead of leading zeroes.
+- Sort CAN table columns in either direction by clicking their headers; keep the order while frames arrive and after restart.
+
 ## 1.2.2 — 2026-11-14
 
 - Share one CAN count table implementation between the live dump and passive System Tests.

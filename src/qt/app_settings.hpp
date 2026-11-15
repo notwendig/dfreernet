@@ -10,9 +10,10 @@ struct AppSettings {
   int liveSignalIntervalSeconds = 300;
   int liveSignalDurationSeconds = 60;
   int accessLevel=1,monitorSeconds=10,undoLimit=100,toolbarIconSize=24,itemIconSize=18,fontSize=0,heartbeatTimeoutMs=1500;
+  int canBitrate=125000;
   bool toolbarIconsOnly = false;
   bool showAllParameters=true,liveSignalEnabled=false,profileTableView=false,moduleGroupView=false;
-  bool showDetails=true,heartbeatEnabled=true,keepAwake=true;
+  bool showDetails=true,heartbeatEnabled=true,keepAwake=true,configureCanOnStartup=false;
   static AppSettings defaults();
   static AppSettings load();
   void save() const;

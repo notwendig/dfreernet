@@ -719,10 +719,16 @@ void Window::buildUi() {
   blinkCycle_=new HazardBlinkCycle(this);blinkCycle_->canPulse=[this]{return !busy()&&heartbeat_&&heartbeat_->receiving();};blinkCycle_->onChanged=[this]{updateBlinkState();};blinkCycle_->onEvent=[this](const QString &message){log(message);};
   sleepLabel_=new QLabel;statusBar()->addPermanentWidget(sleepLabel_);
   sleepInhibitor_=new SleepInhibitor(this);sleepInhibitor_->onChanged=[this]{updateSleepStatus();};
+  rnetDateLabel_=new QLabel;rnetDateLabel_->setObjectName("rnetDateStatus");rnetDateLabel_->setCursor(Qt::PointingHandCursor);
+  rnetDateLabel_->installEventFilter(this);statusBar()->addPermanentWidget(rnetDateLabel_);
+  rnetClockLabel_=new QLabel;rnetClockLabel_->setObjectName("rnetClockStatus");rnetClockLabel_->setCursor(Qt::PointingHandCursor);
+  rnetClockLabel_->installEventFilter(this);statusBar()->addPermanentWidget(rnetClockLabel_);
+  updateRnetClockStatus();
   heartbeat_=new CanHeartbeatIndicator(this);statusBar()->addPermanentWidget(heartbeat_);
   liveDumpRetry_=new QTimer(this);
   liveDumpRetry_->setInterval(1000);
   connect(liveDumpRetry_,&QTimer::timeout,this,&Window::ensureLiveCanDump);
+  connect(liveDumpRetry_,&QTimer::timeout,this,&Window::updateRnetClockStatus);
   liveDumpRetry_->start();
   connect(cancel_, &QPushButton::clicked, this, [this] { cancelTask(); });
   registerStaticTexts();
@@ -749,6 +755,10 @@ void Window::registerStaticTexts() {
     add(toolbar, "windowTitle");
 }
 bool Window::eventFilter(QObject *object,QEvent *event) {
+  if((object==rnetClockLabel_||object==rnetDateLabel_)&&event->type()==QEvent::MouseButtonRelease&&
+     static_cast<QMouseEvent*>(event)->button()==Qt::LeftButton){
+    guarded([this]{setRnetClockToHostTime();});return true;
+  }
   if((object==table_||object==tree_)&&event->type()==QEvent::KeyPress&&
       static_cast<QKeyEvent*>(event)->key()==Qt::Key_F1&&
       parameterHelpAction_&&parameterHelpAction_->isEnabled()){
@@ -765,6 +775,7 @@ void Window::changeEvent(QEvent *event) {
 void Window::retranslateUi() {
   QScopedValueRollback<bool> columnGuard(columnLayoutBusy_,true);
   updateSleepStatus();updateBlinkState();
+  updateRnetClockStatus();
   const auto query = search_->text(), group = proxy_->group;
   QSet<QString> expanded;
   for (QTreeWidgetItemIterator item(tree_); *item; ++item)
@@ -2355,6 +2366,7 @@ void Window::configureLiveCanDump(const QString &interface){
   canDump_->setAccessibleName(canDumpHeader_->text());
   if(interface!=liveDumpInterface_){
     closeLiveCanDump();
+    rnetClock_={};rnetClockAge_.invalidate();updateRnetClockStatus();
     liveDumpInterface_=interface;
     liveDumpLines_.clear();
     canCountTable_->resetCounts();
@@ -2405,6 +2417,19 @@ void Window::receiveLiveCanDump(){
     if(size<0&&(errno==EAGAIN||errno==EWOULDBLOCK))break;
     if(size<0&&errno==EINTR)continue;
     if(size!=sizeof(frame)||frame.can_dlc>8){closeLiveCanDump();break;}
+    const auto clock=decodeRnetClockFrame(frame.can_id,QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc));
+    if(clock.isValid()){
+      rnetClock_=clock;rnetClockAge_.restart();updateRnetClockStatus();
+      if(pendingRnetClock_.isValid()){
+        const QDateTime received(clock.date,clock.time);
+        const auto expected=pendingRnetClock_.addMSecs(pendingRnetClockAge_.elapsed());
+        if(qAbs(received.secsTo(expected))<=2){
+          pendingRnetClock_={};pendingRnetClockAge_.invalidate();
+          statusBar()->showMessage(QCoreApplication::translate("RNet","R-Net time confirmed by CAN readback"),5000);
+          log("RNET_CLOCK_SET_CONFIRMED");
+        }
+      }
+    }
     const bool extended=frame.can_id&CAN_EFF_FLAG;
     const auto id=frame.can_id&(extended?CAN_EFF_MASK:CAN_SFF_MASK);
     const auto payload=frame.can_id&CAN_RTR_FLAG?
@@ -2441,6 +2466,76 @@ void Window::receiveLiveCanDump(){
     else scroll->setValue(position);
   }else refreshLiveCanDump();
   if(systemTestDialog_)refreshSystemTest();
+}
+void Window::updateRnetClockStatus(){
+  if(!rnetDateLabel_||!rnetClockLabel_)return;
+  const bool fresh=rnetClock_.isValid()&&rnetClockAge_.isValid()&&rnetClockAge_.elapsed()<3000;
+  if(fresh){
+    const QDateTime received(rnetClock_.date,rnetClock_.time);
+    const auto rnetNow=received.addMSecs(rnetClockAge_.elapsed());
+    const auto hostNow=QDateTime::currentDateTime();
+    const auto difference=qAbs(rnetNow.msecsTo(hostNow));
+    const char *color=difference>15*60*1000?"#d32f2f":difference>=60*1000?"#e67e00":"#2e9b44";
+    rnetClockLabel_->setStyleSheet(QStringLiteral("color: %1").arg(QLatin1String(color)));
+    rnetDateLabel_->setStyleSheet(rnetNow.date()==hostNow.date()?QStringLiteral("color: #2e9b44"):
+                                                               QStringLiteral("color: #d32f2f"));
+    rnetDateLabel_->setText(QCoreApplication::translate("RNet","R-Net date %1").arg(rnetNow.date().toString(Qt::ISODate)));
+    rnetDateLabel_->show();
+  }else{
+    rnetDateLabel_->hide();
+    rnetDateLabel_->setStyleSheet({});
+    rnetClockLabel_->setStyleSheet({});
+  }
+  rnetClockLabel_->setText(fresh?QCoreApplication::translate("RNet","R-Net time %1").arg(rnetClock_.time.toString("HH:mm:ss")):
+                                QCoreApplication::translate("RNet","R-Net time unavailable"));
+  rnetClockLabel_->setToolTip(fresh?QCoreApplication::translate("RNet","R-Net date and time: %1 (received on %2). Click to set to computer time.")
+                                     .arg(rnetClock_.date.toString(Qt::ISODate)+" "+rnetClock_.time.toString("HH:mm:ss"),liveDumpInterface_):
+                                     QCoreApplication::translate("RNet","No current R-Net time received on %1").arg(liveDumpInterface_));
+  rnetDateLabel_->setToolTip(rnetClockLabel_->toolTip());
+}
+void Window::setRnetClockToHostTime(){
+  if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));
+  if(pendingRnetClock_.isValid())
+    throw UiError(QCoreApplication::translate("RNet","R-Net clock readback is still pending"));
+  if(!rnetClock_.isValid()||!rnetClockAge_.isValid()||rnetClockAge_.elapsed()>=3000)
+    throw UiError(QCoreApplication::translate("RNet","No current R-Net time received; clock not set"));
+  const auto hostPreview=QDateTime::currentDateTime();
+  const auto prompt=QCoreApplication::translate("RNet","Set the R-Net clock to this computer's time (%1)? This sends one CAN frame. Confirm that the wheelchair is stationary and driving is not needed.")
+      .arg(hostPreview.toString("yyyy-MM-dd HH:mm:ss"));
+  if(QMessageBox::question(this,QCoreApplication::translate("RNet","Set R-Net clock"),prompt,
+                           QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel)!=QMessageBox::Yes)return;
+  const auto host=QDateTime::currentDateTime();
+  const auto payload=encodeRnetClockTime(host);
+  if(payload.size()!=6)throw UiError(QCoreApplication::translate("RNet","Computer date is outside the supported R-Net clock range (2000–2099)"));
+  const auto name=settings_.canInterface.toLatin1();
+  if(name.isEmpty()||name.size()>=IFNAMSIZ)throw UiError(QCoreApplication::translate("RNet","Invalid CAN interface name"));
+  int fd=::socket(PF_CAN,SOCK_RAW|SOCK_CLOEXEC,CAN_RAW);
+  if(fd<0)throw UiError(QCoreApplication::translate("RNet","Cannot open SocketCAN"));
+  ifreq request{};std::copy(name.begin(),name.end(),request.ifr_name);
+  if(::ioctl(fd,SIOCGIFINDEX,&request)<0){
+    ::close(fd);throw UiError(QCoreApplication::translate("RNet","CAN interface is unavailable or down"));
+  }
+  const int index=request.ifr_ifindex;
+  if(::ioctl(fd,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP)){
+    ::close(fd);throw UiError(QCoreApplication::translate("RNet","CAN interface is unavailable or down"));
+  }
+  sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=index;
+  if(::bind(fd,reinterpret_cast<sockaddr*>(&address),sizeof(address))<0){
+    ::close(fd);throw UiError(QCoreApplication::translate("RNet","Cannot bind the CAN interface"));
+  }
+  can_frame frame{};frame.can_id=CAN_EFF_FLAG|rnetClockSetId;frame.can_dlc=6;
+  std::copy(payload.begin(),payload.end(),frame.data);
+  const auto written=::write(fd,&frame,sizeof(frame));::close(fd);
+  if(written!=ssize_t(sizeof(frame)))throw UiError(QCoreApplication::translate("RNet","Could not send R-Net clock frame"));
+  pendingRnetClock_=host;pendingRnetClockAge_.restart();
+  log("RNET_CLOCK_SET_TX " + settings_.canInterface + " 1C2C0001");
+  QTimer::singleShot(3500,this,[this]{
+    if(!pendingRnetClock_.isValid())return;
+    pendingRnetClock_={};pendingRnetClockAge_.invalidate();
+    log("RNET_CLOCK_SET_UNCONFIRMED");
+    QMessageBox::warning(this,QCoreApplication::translate("RNet","Set R-Net clock"),
+                         QCoreApplication::translate("RNet","No matching R-Net clock readback was received. The clock update is unconfirmed; no retry was sent."));
+  });
 }
 void Window::refreshLiveCanDump(){
   const bool follow=canDumpControls_->follow();

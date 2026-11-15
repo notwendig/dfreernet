@@ -4,6 +4,14 @@
 
 ## Unveröffentlicht
 
+## 1.3.0 — 15. November 2026
+
+- Aktuelle R-Net-Uhrzeit aus Time-of-Day-Frames in der Statusleiste anzeigen; nach Bestätigung einmalig auf die Computerzeit stellen und per CAN-Rückmeldung prüfen.
+- R-Net-Datum neben der Uhrzeit anzeigen: bei Übereinstimmung mit dem Host grün, sonst rot. Uhrzeit je nach absoluter Abweichung vom Host grün, orange oder rot markieren.
+- Optionale Einrichtung der CAN-Schnittstelle beim Start mit einstellbarer Bitrate nach Bestätigung des Starthinweises ergänzt.
+- CAN-Zähler rechtsbündig mit Leerzeichen statt führenden Nullen anzeigen.
+- CAN-Tabellenspalten per Kopfzeile auf- und absteigend sortieren; Reihenfolge beim Empfang und nach Neustart erhalten.
+
 ## 1.2.2 — 14. November 2026
 
 - Gemeinsame CAN-Zähltabellenklasse für Mitschnitt und passive Systemtests eingeführt.

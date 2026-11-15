@@ -29,6 +29,7 @@ private:
   std::map<QString, Count> counts_;
   QElapsedTimer elapsed_;
   QString layoutKey_;
+  QString sortKey_;
   QTimer *layoutSaveTimer_ = nullptr;
   bool layoutDirty_ = false;
   AverageUnit averageUnit_ = AverageUnit::Hertz;

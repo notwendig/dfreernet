@@ -5,13 +5,59 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QProcess>
 #include <QStandardPaths>
 #include <QSettings>
 #include <QTimer>
 #include <cstdio>
 using rnet::qt::UiError;
+namespace {
+void configureCan(const rnet::qt::AppSettings &settings) {
+  const auto interface=settings.validated().canInterface;
+  QFile type("/sys/class/net/"+interface+"/type");
+  if(!type.open(QIODevice::ReadOnly)||type.readAll().trimmed()!="280")
+    throw UiError(QCoreApplication::translate("RNet","Selected interface is not a Linux CAN interface: %1").arg(interface));
+  const auto ip=QStandardPaths::findExecutable("ip");
+  if(ip.isEmpty())throw UiError(QCoreApplication::translate("RNet","The ip command is required for CAN startup setup"));
+  auto execute=[&](const QString &program,const QStringList &args){
+    QProcess process;
+    process.start(program,args);
+    if(!process.waitForStarted(3000))
+      throw UiError(QCoreApplication::translate("RNet","Could not start CAN setup: %1").arg(process.errorString()));
+    if(!process.waitForFinished(5000)){
+      process.kill();process.waitForFinished();
+      throw UiError(QCoreApplication::translate("RNet","CAN setup timed out"));
+    }
+    if(process.exitStatus()!=QProcess::NormalExit||process.exitCode()!=0){
+      auto detail=QString::fromLocal8Bit(process.readAllStandardError()).trimmed();
+      if(detail.isEmpty())detail=QCoreApplication::translate("RNet","ip command failed");
+      return detail;
+    }
+    return QString();
+  };
+  auto run=[&](const QStringList &args){
+    auto detail=execute(ip,args);
+    if(detail.isEmpty())return;
+    const auto sudo=QStandardPaths::findExecutable("sudo");
+    if(!sudo.isEmpty()){
+      auto elevated=args;elevated.prepend(ip);elevated.prepend("-n");
+      detail=execute(sudo,elevated);
+      if(detail.isEmpty())return;
+    }
+    throw UiError(QCoreApplication::translate("RNet","CAN setup failed: %1").arg(detail));
+  };
+  run({"link","set","dev",interface,"down"});
+  try{run({"link","set","dev",interface,"type","can","bitrate",QString::number(settings.canBitrate)});}
+  catch(...){
+    try{run({"link","set","dev",interface,"up"});}catch(...){}
+    throw;
+  }
+  run({"link","set","dev",interface,"up"});
+}
+}
 int main(int argc, char **argv) {
   QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
   QApplication app(argc, argv);
@@ -89,6 +135,13 @@ int main(int argc, char **argv) {
       if(notice.exec()!=QDialog::Accepted)return 0;
     }
     app.setQuitOnLastWindowClosed(true);
+    if(preferences.configureCanOnStartup){
+      try{configureCan(preferences);}
+      catch(const std::exception &error){
+        QMessageBox::warning(nullptr,QCoreApplication::translate("RNet","CAN startup setup"),
+                             rnet::qt::localizedError(error.what()));
+      }
+    }
     rnet::qt::Window window(parser.isSet("output")?parser.value("output"):preferences.logDirectory);
     if (parser.isSet("document"))
       window.openDocument(parser.value("document"));
