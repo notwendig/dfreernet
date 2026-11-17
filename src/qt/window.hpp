@@ -6,6 +6,8 @@
 #include "icons.hpp"
 #include "app_settings.hpp"
 #include "rnet_clock.hpp"
+#include "rnet_distance.hpp"
+#include "can_send_queue.hpp"
 #include <QAbstractTableModel>
 #include <QElapsedTimer>
 #include <QMainWindow>
@@ -30,6 +32,7 @@ class QMenu;
 class QSocketNotifier;
 class QTimer;
 class QSplitter;
+struct can_frame;
 namespace rnet::qt {
 class CanFrameTable;
 class CanViewControls;
@@ -128,7 +131,7 @@ public:
   void startControllerRead(const QString &interface, const QString &destination,
                            bool stationaryConfirmed);
   void startControllerWrite(const QString &, const QString &, bool stationaryConfirmed);
-  bool monitoring() const { return monitorFd_ >= 0; }
+  bool monitoring() const { return monitorActive_; }
   quint64 receivedFrames() const { return frameCount_; }
 
 protected:
@@ -170,8 +173,16 @@ private:
   QElapsedTimer rnetClockAge_;
   QDateTime pendingRnetClock_;
   QElapsedTimer pendingRnetClockAge_;
+  RnetDistanceValue rnetDistance_;
+  QElapsedTimer rnetDistanceAge_;
+  int pendingDistanceReset_=0;
+  QElapsedTimer pendingDistanceAge_;
   void updateRnetClockStatus();
+  void showClockSettings();
+  void showDistance();
+  void clearRnetDistance(bool total);
   void setRnetClockToHostTime();
+  void setRnetClock(const QDateTime &target,bool computerTime);
   QAction *detailsAction_=nullptr;
   QAction *parameterHelpAction_=nullptr;
   QAction *listViewAction_=nullptr,*profileViewAction_=nullptr,*moduleViewAction_=nullptr;
@@ -213,12 +224,13 @@ private:
   QPlainTextEdit *taskLog_ = nullptr;
   QPushButton *cancel_ = nullptr;
   QWidget *taskPanel_ = nullptr;
-  int monitorFd_ = -1;
+  bool monitorActive_ = false;
+  // The Qt process owns one bound CAN socket. Live views and UI commands share it.
   int liveDumpFd_ = -1,liveDumpIndex_ = 0;
+  CanSendQueue canSender_;
   QSocketNotifier *liveDumpNotifier_ = nullptr;
   QTimer *liveDumpRetry_ = nullptr;
   QString liveDumpInterface_;
-  QSocketNotifier *notifier_ = nullptr;
   QTimer *monitorTimer_ = nullptr;
   quint64 frameCount_ = 0;
   struct Observed {
@@ -264,7 +276,7 @@ private:
   void command(unsigned);
   bool finishChanges();
   void closeDocument();
-  bool busy() const { return process_ || monitorFd_ >= 0; }
+  bool busy() const { return process_ || monitorActive_; }
   void selectOpen();
   void selectSaveAs();
   void selectExport();
@@ -276,7 +288,8 @@ private:
   void startTool(const QString &, const QStringList &, bool config);
   void processFinished(int, QProcess::ExitStatus);
   void cancelTask();
-  void receiveFrames();
+  void recordMonitorFrame(const can_frame &frame);
+  void sendCanFrame(const can_frame &frame);
   void configureLiveCanDump(const QString &interface);
   void ensureLiveCanDump();
   void receiveLiveCanDump();

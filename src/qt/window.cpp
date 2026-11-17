@@ -3,6 +3,8 @@
 #include "i18n.hpp"
 #include "value_editor.hpp"
 #include "settings_dialog.hpp"
+#include "ui_clock_settings.h"
+#include "ui_distance_dialog.h"
 #include "can_heartbeat.hpp"
 #include "sleep_inhibitor.hpp"
 #include "hazard_blink_cycle.hpp"
@@ -13,6 +15,7 @@
 #include <QtWidgets>
 #include <cerrno>
 #include <csignal>
+#include <cstring>
 #include <linux/can.h>
 #include <linux/can/raw.h>
 #include <net/if.h>
@@ -119,7 +122,7 @@ bool implemented(unsigned id) {
          id == 32831 || id == 32939 || id == 32803 || id == 32804 ||
          id == 32956 || id == 32955 || id == 32957 || id == 33390 ||
          id == 33343 || id == 33208 || id == 33392 || id == 33395 ||
-         id == 32817 || id == 33107;
+         id == 32817 || id == 33107 || id == 33051 || id == 33182;
 }
 bool isSystemTestCommand(unsigned id){
   switch(id){
@@ -294,7 +297,7 @@ Window::Window(const QString &output,
           .arg(qVersion())
           .arg(catalog_.parameters.size()));
 }
-Window::~Window() { flushColumnSave();stopMonitor(false);closeLiveCanDump(); }
+Window::~Window() { if(blinkCycle_)blinkCycle_->stop();flushColumnSave();stopMonitor(false);closeLiveCanDump(); }
 void Window::log(const QString &text) {
   QFile f(output_ + "/runtime.log");
   if (f.open(QIODevice::WriteOnly | QIODevice::Append))
@@ -716,7 +719,11 @@ void Window::buildUi() {
   blinkLabel_->setAlignment(Qt::AlignCenter);
   statusBar()->addPermanentWidget(blinkLabel_);
   blinkLabel_->hide();
-  blinkCycle_=new HazardBlinkCycle(this);blinkCycle_->canPulse=[this]{return !busy()&&heartbeat_&&heartbeat_->receiving();};blinkCycle_->onChanged=[this]{updateBlinkState();};blinkCycle_->onEvent=[this](const QString &message){log(message);};
+  blinkCycle_=new HazardBlinkCycle(this,[this](bool){
+    can_frame frame{};frame.can_id=CAN_EFF_FLAG|0x0c000403;frame.can_dlc=0;
+    try{sendCanFrame(frame);return true;}catch(const std::exception &e){log("BLINK_CAN_SEND_FAILED "+localizedError(e.what()));return false;}
+  });
+  blinkCycle_->canPulse=[this]{return !busy()&&heartbeat_&&heartbeat_->receiving();};blinkCycle_->onChanged=[this]{updateBlinkState();};blinkCycle_->onEvent=[this](const QString &message){log(message);};
   sleepLabel_=new QLabel;statusBar()->addPermanentWidget(sleepLabel_);
   sleepInhibitor_=new SleepInhibitor(this);sleepInhibitor_->onChanged=[this]{updateSleepStatus();};
   rnetDateLabel_=new QLabel;rnetDateLabel_->setObjectName("rnetDateStatus");rnetDateLabel_->setCursor(Qt::PointingHandCursor);
@@ -838,7 +845,7 @@ void Window::retranslateUi() {
   if(!restored&&row>=0&&row<model_->rowCount())
     table_->setCurrentIndex(proxy_->mapFromSource(model_->index(row,0)));
   table_->verticalScrollBar()->setValue(scroll);
-  if (monitorFd_ >= 0)
+  if (monitorActive_)
     cancel_->setText(QCoreApplication::translate("RNet", "Stop capture"));
   else
     cancel_->setText(QCoreApplication::translate(
@@ -1909,6 +1916,12 @@ void Window::command(unsigned id) {
   case 40040:
     openSettings();
     break;
+  case 33051:
+    showClockSettings();
+    break;
+  case 33182:
+    showDistance();
+    break;
   case 40002:
     decodeRnd();
     break;
@@ -1965,11 +1978,6 @@ void Window::startBlinkCycle(){
   if(blinkCycle_->active())return;
   if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));
   if(!heartbeatReceiving())throw UiError(QCoreApplication::translate("RNet","No current CAN heartbeat; blink test not started"));
-  if(QMessageBox::question(this,QCoreApplication::translate("RNet","Live signal: hazard lights"),
-      QCoreApplication::translate("RNet","Are the hazard lights OFF and the wheelchair stationary? This CAN command only toggles them. Starting while they are ON will leave them ON between pulses. The cycle does not prevent automatic power-off."),
-      QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel)!=QMessageBox::Yes){
-    settings_.liveSignalEnabled=false;return;
-  }
   blinkCycle_->configure(settings_.liveSignalIntervalSeconds * 1000, settings_.liveSignalDurationSeconds * 1000);
   blinkCycle_->start(settings_.canInterface);settings_.liveSignalEnabled=blinkCycle_->active();
 }
@@ -2052,16 +2060,10 @@ void Window::requestConfiguration() {
   text->setWordWrap(true);
   layout->addWidget(text);
   auto *target=new QLabel(QString(QCoreApplication::translate("RNet","Interface: %1\nBackup directory: %2")).arg(interface,settings_.backupDirectory));target->setWordWrap(true);layout->addWidget(target);
-  auto *stationary = new QCheckBox(QCoreApplication::translate(
-      "RNet", "The wheelchair is stationary; driving is not needed"));
-  layout->addWidget(stationary);
   auto *buttons =
       new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
   buttons->button(QDialogButtonBox::Ok)
       ->setText(QCoreApplication::translate("RNet", "Read only"));
-  buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
-  connect(stationary, &QCheckBox::toggled,
-          buttons->button(QDialogButtonBox::Ok), &QWidget::setEnabled);
   connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
   connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
   layout->addWidget(buttons);
@@ -2113,13 +2115,8 @@ void Window::requestControllerWrite() {
   description->setWordWrap(true);layout->addWidget(description);
   auto *target=new QLabel(QString(QCoreApplication::translate("RNet","Interface: %1\nBackup directory: %2")).arg(interface,settings_.backupDirectory));target->setWordWrap(true);layout->addWidget(target);
   auto *changes=new QPlainTextEdit(preview);changes->setReadOnly(true);layout->addWidget(changes);
-  auto *stationary=new QCheckBox(QCoreApplication::translate("RNet",
-      "The wheelchair is stationary; driving is not needed until readback finishes"));
-  layout->addWidget(stationary);
   auto *buttons=new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
   buttons->button(QDialogButtonBox::Ok)->setText(QCoreApplication::translate("RNet", "Write and verify"));
-  buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
-  connect(stationary,&QCheckBox::toggled,buttons->button(QDialogButtonBox::Ok),&QWidget::setEnabled);
   connect(buttons,&QDialogButtonBox::accepted,&dialog,&QDialog::accept);
   connect(buttons,&QDialogButtonBox::rejected,&dialog,&QDialog::reject);
   layout->addWidget(buttons);dialog.resize(660,420);
@@ -2158,6 +2155,7 @@ void Window::startTool(const QString &tool, const QStringList &args,
   if (!QFileInfo::exists(executable))
     throw UiError(QCoreApplication::translate(
         "RNet", "The native CAN read tool is missing"));
+  closeLiveCanDump();
   process_ = new QProcess(this);
   process_->setProcessChannelMode(QProcess::MergedChannels);
   configTask_ = config;
@@ -2187,6 +2185,7 @@ void Window::startTool(const QString &tool, const QStringList &args,
               process_->deleteLater();
               process_ = nullptr;
               cancel_->setEnabled(false);
+              ensureLiveCanDump();
               updateActions();
               QMessageBox::warning(
                   this, QCoreApplication::translate("RNet", "CAN read"),
@@ -2206,6 +2205,7 @@ void Window::processFinished(int code, QProcess::ExitStatus status) {
   processText_ += QString::fromUtf8(process_->readAllStandardOutput());
   process_->deleteLater();
   process_ = nullptr;
+  ensureLiveCanDump();
   cancel_->setEnabled(false);
   updateActions();
   log(QString("CAN_TOOL_FINISHED code=%1 cancelled=%2")
@@ -2266,40 +2266,22 @@ void Window::cancelTask() {
       ::kill(pid_t(process_->processId()), SIGINT);
     taskLog_->appendPlainText(QCoreApplication::translate(
         "RNet", "Cancellation requested; releasing active access…"));
-  } else if (monitorFd_ >= 0)
+  } else if (monitorActive_)
     stopMonitor();
 }
 void Window::startMonitor(const QString &interface, int milliseconds) {
   if (busy())
     throw UiError(
         QCoreApplication::translate("RNet", "A CAN task is already running"));
-  auto bytes = interface.toLatin1();
-  if (bytes.isEmpty() || bytes.size() >= IFNAMSIZ || milliseconds < 1)
+  if (interface != liveDumpInterface_ || milliseconds < 1)
     throw UiError(QCoreApplication::translate(
         "RNet", "Invalid CAN interface / duration"));
-  int fd = ::socket(PF_CAN, SOCK_RAW | SOCK_NONBLOCK, CAN_RAW);
-  if (fd < 0)
-    throw UiError(QCoreApplication::translate("RNet", "Cannot open SocketCAN"));
-  ifreq request{};
-  std::copy(bytes.begin(), bytes.end(), request.ifr_name);
-  sockaddr_can address{};
-  address.can_family = AF_CAN;
-  if (ioctl(fd, SIOCGIFINDEX, &request) < 0) {
-    ::close(fd);
-    throw UiError(QCoreApplication::translate("RNet", "Unknown CAN interface"));
-  }
-  address.can_ifindex = request.ifr_ifindex;
-  if (::bind(fd, reinterpret_cast<sockaddr *>(&address), sizeof(address)) < 0) {
-    ::close(fd);
-    throw UiError(
-        QCoreApplication::translate("RNet", "Cannot bind the CAN interface"));
-  }
-  monitorFd_ = fd;
+  ensureLiveCanDump();
+  if(liveDumpFd_<0)
+    throw UiError(QCoreApplication::translate("RNet", "CAN interface is unavailable or down"));
+  monitorActive_ = true;
   frameCount_ = 0;
   observed_.clear();
-  notifier_ = new QSocketNotifier(fd, QSocketNotifier::Read, this);
-  connect(notifier_, &QSocketNotifier::activated, this,
-          [this] { guarded([this] { receiveFrames(); }); });
   monitorTimer_ = new QTimer(this);
   monitorTimer_->setSingleShot(true);
   connect(monitorTimer_, &QTimer::timeout, this, [this] { stopMonitor(); });
@@ -2314,41 +2296,21 @@ void Window::startMonitor(const QString &interface, int milliseconds) {
   updateActions();
   log("CAN_MONITOR_START " + interface + " RX only");
 }
-void Window::receiveFrames() {
-  for (int batch = 0; batch < 512 && monitorFd_ >= 0; ++batch) {
-    can_frame frame{};
-    auto n = ::read(monitorFd_, &frame, sizeof(frame));
-    if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-      break;
-    if (n < 0 && errno == EINTR)
-      continue;
-    if (n != sizeof(frame)) {
-      stopMonitor(false);
-      throw UiError(
-          QCoreApplication::translate("RNet", "CAN reception failed"));
-    }
-    if (frame.can_id & (CAN_ERR_FLAG | CAN_RTR_FLAG) || frame.can_dlc > 8)
-      continue;
-    unsigned id = frame.can_id &
-                  ((frame.can_id & CAN_EFF_FLAG) ? CAN_EFF_MASK : CAN_SFF_MASK);
-    auto &sample = observed_[id];
-    ++sample.count;
-    sample.data =
-        QByteArray(reinterpret_cast<const char *>(frame.data), frame.can_dlc);
-    ++frameCount_;
-  }
+void Window::recordMonitorFrame(const can_frame &frame) {
+  if(!monitorActive_||(frame.can_id&(CAN_ERR_FLAG|CAN_RTR_FLAG))||frame.can_dlc>8)return;
+  const unsigned id=frame.can_id&((frame.can_id&CAN_EFF_FLAG)?CAN_EFF_MASK:CAN_SFF_MASK);
+  auto &sample=observed_[id];
+  ++sample.count;
+  sample.data=QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc);
+  ++frameCount_;
 }
 void Window::stopMonitor(bool show) {
-  if (monitorFd_ < 0)
+  if (!monitorActive_)
     return;
-  notifier_->setEnabled(false);
-  notifier_->deleteLater();
-  notifier_ = nullptr;
+  monitorActive_=false;
   monitorTimer_->stop();
   monitorTimer_->deleteLater();
   monitorTimer_ = nullptr;
-  ::close(monitorFd_);
-  monitorFd_ = -1;
   cancel_->setEnabled(false);
   if (show)
     showMonitorCapture();
@@ -2356,9 +2318,12 @@ void Window::stopMonitor(bool show) {
 void Window::closeLiveCanDump(){
   delete liveDumpNotifier_;
   liveDumpNotifier_=nullptr;
+  canSender_.detach();
   if(liveDumpFd_>=0)::close(liveDumpFd_);
   liveDumpFd_=-1;
   liveDumpIndex_=0;
+  if(heartbeat_)heartbeat_->setSocketState(false);
+  if(monitorActive_)stopMonitor(false);
 }
 void Window::configureLiveCanDump(const QString &interface){
   canDumpHeader_->setText(QCoreApplication::translate("RNet","CAN dump · %1 (receive only)").arg(interface));
@@ -2367,6 +2332,8 @@ void Window::configureLiveCanDump(const QString &interface){
   if(interface!=liveDumpInterface_){
     closeLiveCanDump();
     rnetClock_={};rnetClockAge_.invalidate();updateRnetClockStatus();
+    rnetDistance_={};rnetDistanceAge_.invalidate();
+    pendingDistanceReset_=0;pendingDistanceAge_.invalidate();
     liveDumpInterface_=interface;
     liveDumpLines_.clear();
     canCountTable_->resetCounts();
@@ -2380,15 +2347,19 @@ void Window::configureLiveCanDump(const QString &interface){
   ensureLiveCanDump();
 }
 void Window::ensureLiveCanDump(){
+  if(process_)return;
   if(liveDumpInterface_.isEmpty()||liveDumpInterface_.toLatin1().size()>=IFNAMSIZ)return;
   ifreq request{};
   const auto name=liveDumpInterface_.toLatin1();
   std::copy(name.begin(),name.end(),request.ifr_name);
   if(liveDumpFd_>=0){
-    if(::ioctl(liveDumpFd_,SIOCGIFINDEX,&request)<0||request.ifr_ifindex!=liveDumpIndex_||
-       ::ioctl(liveDumpFd_,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP))
+    const bool valid=canSender_.inspect([&](int fd){
+      return ::ioctl(fd,SIOCGIFINDEX,&request)>=0&&request.ifr_ifindex==liveDumpIndex_&&
+             ::ioctl(fd,SIOCGIFFLAGS,&request)>=0&&(request.ifr_flags&IFF_UP);
+    });
+    if(!valid)
       closeLiveCanDump();
-    else return;
+    else {if(heartbeat_)heartbeat_->setSocketState(true);return;}
   }
   canDump_->setPlaceholderText(QCoreApplication::translate("RNet","CAN interface %1 unavailable; waiting…").arg(liveDumpInterface_));
   liveDumpFd_=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC,CAN_RAW);
@@ -2396,7 +2367,8 @@ void Window::ensureLiveCanDump(){
   if(::ioctl(liveDumpFd_,SIOCGIFINDEX,&request)<0){closeLiveCanDump();return;}
   const int index=request.ifr_ifindex;
   if(::ioctl(liveDumpFd_,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP)){
-    closeLiveCanDump();return;
+    const bool down=!(request.ifr_flags&IFF_UP);
+    closeLiveCanDump();if(heartbeat_)heartbeat_->setSocketState(false,down);return;
   }
   sockaddr_can address{};
   address.can_family=AF_CAN;
@@ -2405,6 +2377,8 @@ void Window::ensureLiveCanDump(){
     closeLiveCanDump();return;
   }
   liveDumpIndex_=index;
+  canSender_.attach(liveDumpFd_);
+  if(heartbeat_)heartbeat_->setSocketState(true);
   canDump_->setPlaceholderText(QCoreApplication::translate("RNet","Waiting for CAN frames on %1…").arg(liveDumpInterface_));
   liveDumpNotifier_=new QSocketNotifier(liveDumpFd_,QSocketNotifier::Read,this);
   connect(liveDumpNotifier_,&QSocketNotifier::activated,this,&Window::receiveLiveCanDump);
@@ -2413,10 +2387,12 @@ void Window::receiveLiveCanDump(){
   QStringList lines;
   for(int batch=0;batch<256&&liveDumpFd_>=0;++batch){
     can_frame frame{};
-    const auto size=::read(liveDumpFd_,&frame,sizeof(frame));
+    const auto size=canSender_.read(frame);
     if(size<0&&(errno==EAGAIN||errno==EWOULDBLOCK))break;
     if(size<0&&errno==EINTR)continue;
     if(size!=sizeof(frame)||frame.can_dlc>8){closeLiveCanDump();break;}
+    if(heartbeat_)heartbeat_->observe(frame);
+    recordMonitorFrame(frame);
     const auto clock=decodeRnetClockFrame(frame.can_id,QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc));
     if(clock.isValid()){
       rnetClock_=clock;rnetClockAge_.restart();updateRnetClockStatus();
@@ -2428,6 +2404,15 @@ void Window::receiveLiveCanDump(){
           statusBar()->showMessage(QCoreApplication::translate("RNet","R-Net time confirmed by CAN readback"),5000);
           log("RNET_CLOCK_SET_CONFIRMED");
         }
+      }
+    }
+    const auto distance=decodeRnetDistanceFrame(frame.can_id,QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc));
+    if(distance.valid){
+      rnetDistance_=distance;rnetDistanceAge_.restart();
+      if((pendingDistanceReset_==1&&distance.tripMetres==0)||
+         (pendingDistanceReset_==2&&distance.totalMetres==0)){
+        log(pendingDistanceReset_==1?"RNET_TRIP_CLEAR_CONFIRMED":"RNET_TOTAL_CLEAR_CONFIRMED");
+        pendingDistanceReset_=0;pendingDistanceAge_.invalidate();
       }
     }
     const bool extended=frame.can_id&CAN_EFF_FLAG;
@@ -2493,41 +2478,144 @@ void Window::updateRnetClockStatus(){
                                      QCoreApplication::translate("RNet","No current R-Net time received on %1").arg(liveDumpInterface_));
   rnetDateLabel_->setToolTip(rnetClockLabel_->toolTip());
 }
+void Window::showClockSettings(){
+  QDialog dialog(this);
+  dialog.setObjectName("clockSettingsDialog");
+  Ui::ClockSettingsDialog ui;
+  ui.setupUi(&dialog);
+  dialog.setWindowTitle(QCoreApplication::translate("RNet","Clock settings"));
+  ui.hostTitle->setText(QCoreApplication::translate("RNet","Computer time"));
+  ui.rnetTitle->setText(QCoreApplication::translate("RNet","R-Net time"));
+  ui.clockHostToRnet->setText(QCoreApplication::translate("RNet","Host → R-Net"));
+  ui.setRnetClockButton->setText(QCoreApplication::translate("RNet","Set R-Net clock"));
+  ui.clockCloseButton->setText(QCoreApplication::translate("RNet","Close"));
+  const bool german=languages().language().startsWith("de",Qt::CaseInsensitive);
+  const QString timeFormat=QStringLiteral("HH:mm:ss");
+  const QString dateFormat=german?QStringLiteral("dd.MM.yyyy"):QStringLiteral("yyyy-MM-dd");
+  ui.clockComputerTime->setDisplayFormat(timeFormat);
+  ui.clockRnetTime->setDisplayFormat(timeFormat);
+  ui.clockComputerDate->setDisplayFormat(dateFormat);
+  ui.clockRnetDate->setDisplayFormat(dateFormat);
+  const auto now=QDateTime::currentDateTime();
+  ui.clockComputerTime->setTime(now.time());
+  ui.clockComputerDate->setDate(now.date());
+  ui.clockRnetDate->setDate(now.date());
+  ui.clockRnetTime->setTime(now.time());
+  bool targetEdited=false;
+  connect(ui.clockRnetDate,&QDateEdit::dateChanged,&dialog,[&targetEdited]{targetEdited=true;});
+  connect(ui.clockRnetTime,&QTimeEdit::timeChanged,&dialog,[&targetEdited]{targetEdited=true;});
+  connect(ui.clockCloseButton,&QPushButton::clicked,&dialog,&QDialog::reject);
+  connect(ui.clockHostToRnet,&QPushButton::clicked,&dialog,[this]{guarded([this]{setRnetClockToHostTime();});});
+  connect(ui.setRnetClockButton,&QPushButton::clicked,&dialog,[this,&ui]{
+    guarded([this,&ui]{setRnetClock(QDateTime(ui.clockRnetDate->date(),ui.clockRnetTime->time()),false);});
+  });
+  auto refresh=[this,&ui,&targetEdited]{
+    const auto host=QDateTime::currentDateTime();
+    ui.clockComputerTime->setTime(host.time());
+    ui.clockComputerDate->setDate(host.date());
+    const bool fresh=rnetClock_.isValid()&&rnetClockAge_.isValid()&&rnetClockAge_.elapsed()<3000;
+    if(fresh&&!targetEdited){
+      const auto received=QDateTime(rnetClock_.date,rnetClock_.time).addMSecs(rnetClockAge_.elapsed());
+      const QSignalBlocker dateBlock(ui.clockRnetDate),timeBlock(ui.clockRnetTime);
+      ui.clockRnetDate->setDate(received.date());
+      ui.clockRnetTime->setTime(received.time());
+    }
+    ui.clockStatus->setText(pendingRnetClock_.isValid()?QCoreApplication::translate("RNet","R-Net clock readback is still pending"):
+                    fresh?QCoreApplication::translate("RNet","Received on %1").arg(liveDumpInterface_):
+                          QCoreApplication::translate("RNet","No current R-Net time received on %1").arg(liveDumpInterface_));
+    const bool ready=fresh&&!pendingRnetClock_.isValid()&&!busy();
+    ui.setRnetClockButton->setEnabled(ready);
+    ui.clockHostToRnet->setEnabled(ready);
+    ui.clockRnetDate->setEnabled(fresh);
+    ui.clockRnetTime->setEnabled(fresh);
+  };
+  QTimer timer(&dialog);
+  connect(&timer,&QTimer::timeout,&dialog,refresh);
+  timer.start(250);refresh();
+  dialog.exec();
+}
+void Window::showDistance(){
+  QDialog dialog(this);
+  dialog.setObjectName("distanceDialog");
+  Ui::DistanceDialog ui;
+  ui.setupUi(&dialog);
+  dialog.setWindowTitle(QCoreApplication::translate("RNet","Distance"));
+  ui.totalTitle->setText(QCoreApplication::translate("RNet","Total distance"));
+  ui.tripTitle->setText(QCoreApplication::translate("RNet","Trip distance"));
+  ui.clearTripDistance->setText(QCoreApplication::translate("RNet","Clear trip distance"));
+  ui.clearTotalDistance->setText(QCoreApplication::translate("RNet","Clear total distance"));
+  ui.distanceClose->setText(QCoreApplication::translate("RNet","Close"));
+  bool unconfirmed=false;
+  auto refresh=[&]{
+    const bool fresh=rnetDistance_.valid&&rnetDistanceAge_.isValid()&&rnetDistanceAge_.elapsed()<3000&&
+                     liveDumpInterface_==settings_.canInterface&&liveDumpFd_>=0;
+    ui.totalDistance->setText(fresh?QLocale().toString(qulonglong(rnetDistance_.totalMetres)):QStringLiteral("—"));
+    ui.tripDistance->setText(fresh?QLocale().toString(qulonglong(rnetDistance_.tripMetres)):QStringLiteral("—"));
+    if(pendingDistanceReset_&&pendingDistanceAge_.isValid()&&pendingDistanceAge_.elapsed()>=3500){
+      log("RNET_DISTANCE_CLEAR_UNCONFIRMED");
+      pendingDistanceReset_=0;pendingDistanceAge_.invalidate();unconfirmed=true;
+    }
+    if(pendingDistanceReset_)
+      ui.distanceStatus->setText(QCoreApplication::translate("RNet","Waiting for R-Net distance readback…"));
+    else if(unconfirmed)
+      ui.distanceStatus->setText(QCoreApplication::translate("RNet","No matching distance readback received; the clear request is unconfirmed."));
+    else if(fresh)
+      ui.distanceStatus->clear();
+    else
+      ui.distanceStatus->setText(QCoreApplication::translate("RNet","Distance values are not available."));
+    ui.clearTripDistance->setEnabled(fresh&&!pendingDistanceReset_);
+    ui.clearTotalDistance->setEnabled(fresh&&!pendingDistanceReset_);
+  };
+  QTimer timer(&dialog);connect(&timer,&QTimer::timeout,&dialog,refresh);timer.start(250);refresh();
+  connect(ui.clearTripDistance,&QPushButton::clicked,&dialog,[this,&refresh,&unconfirmed]{
+    guarded([this,&refresh,&unconfirmed]{clearRnetDistance(false);unconfirmed=false;refresh();});
+  });
+  connect(ui.clearTotalDistance,&QPushButton::clicked,&dialog,[this,&dialog,&refresh,&unconfirmed]{
+    if(QMessageBox::question(&dialog,QCoreApplication::translate("RNet","Clear total distance"),
+        QCoreApplication::translate("RNet","Clear the total R-Net distance?"))!=QMessageBox::Yes)return;
+    guarded([this,&refresh,&unconfirmed]{clearRnetDistance(true);unconfirmed=false;refresh();});
+  });
+  connect(ui.distanceClose,&QPushButton::clicked,&dialog,&QDialog::reject);
+  dialog.exec();
+}
+void Window::clearRnetDistance(bool total){
+  if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));
+  if(!rnetDistance_.valid||!rnetDistanceAge_.isValid()||rnetDistanceAge_.elapsed()>=3000||
+     liveDumpInterface_!=settings_.canInterface||liveDumpFd_<0)
+    throw UiError(QCoreApplication::translate("RNet","No current R-Net distance received; distance not cleared"));
+  if(pendingDistanceReset_)throw UiError(QCoreApplication::translate("RNet","R-Net distance readback is still pending"));
+  // The original programmer's CCANMsg stores the payload length at +0x14.
+  // Both odometer reset messages set it to zero; +0x18 is a message type.
+  // The former four-byte frame matches the reported 0x8104 DLC fault.
+  can_frame frame{};frame.can_id=CAN_EFF_FLAG|(total?rnetClearTotalId:rnetClearTripId);frame.can_dlc=0;
+  sendCanFrame(frame);
+  pendingDistanceReset_=total?2:1;pendingDistanceAge_.restart();
+  log(total?"RNET_TOTAL_CLEAR_TX 18300F06 DLC0":"RNET_TRIP_CLEAR_TX 18300F05 DLC0");
+}
+void Window::sendCanFrame(const can_frame &frame){
+  if(liveDumpFd_<0||liveDumpInterface_!=settings_.canInterface)
+    throw UiError(QCoreApplication::translate("RNet","CAN interface is unavailable or down"));
+  const auto sent=canSender_.send(frame);
+  if(sent.bytes!=ssize_t(sizeof(frame)))
+    throw UiError(QCoreApplication::translate("RNet","Could not send CAN frame")+
+                  QStringLiteral(": ")+QString::fromLocal8Bit(std::strerror(sent.error)));
+}
 void Window::setRnetClockToHostTime(){
+  setRnetClock(QDateTime::currentDateTime(),true);
+}
+void Window::setRnetClock(const QDateTime &target,bool computerTime){
   if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));
   if(pendingRnetClock_.isValid())
     throw UiError(QCoreApplication::translate("RNet","R-Net clock readback is still pending"));
   if(!rnetClock_.isValid()||!rnetClockAge_.isValid()||rnetClockAge_.elapsed()>=3000)
     throw UiError(QCoreApplication::translate("RNet","No current R-Net time received; clock not set"));
-  const auto hostPreview=QDateTime::currentDateTime();
-  const auto prompt=QCoreApplication::translate("RNet","Set the R-Net clock to this computer's time (%1)? This sends one CAN frame. Confirm that the wheelchair is stationary and driving is not needed.")
-      .arg(hostPreview.toString("yyyy-MM-dd HH:mm:ss"));
-  if(QMessageBox::question(this,QCoreApplication::translate("RNet","Set R-Net clock"),prompt,
-                           QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel)!=QMessageBox::Yes)return;
-  const auto host=QDateTime::currentDateTime();
-  const auto payload=encodeRnetClockTime(host);
-  if(payload.size()!=6)throw UiError(QCoreApplication::translate("RNet","Computer date is outside the supported R-Net clock range (2000–2099)"));
-  const auto name=settings_.canInterface.toLatin1();
-  if(name.isEmpty()||name.size()>=IFNAMSIZ)throw UiError(QCoreApplication::translate("RNet","Invalid CAN interface name"));
-  int fd=::socket(PF_CAN,SOCK_RAW|SOCK_CLOEXEC,CAN_RAW);
-  if(fd<0)throw UiError(QCoreApplication::translate("RNet","Cannot open SocketCAN"));
-  ifreq request{};std::copy(name.begin(),name.end(),request.ifr_name);
-  if(::ioctl(fd,SIOCGIFINDEX,&request)<0){
-    ::close(fd);throw UiError(QCoreApplication::translate("RNet","CAN interface is unavailable or down"));
-  }
-  const int index=request.ifr_ifindex;
-  if(::ioctl(fd,SIOCGIFFLAGS,&request)<0||!(request.ifr_flags&IFF_UP)){
-    ::close(fd);throw UiError(QCoreApplication::translate("RNet","CAN interface is unavailable or down"));
-  }
-  sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=index;
-  if(::bind(fd,reinterpret_cast<sockaddr*>(&address),sizeof(address))<0){
-    ::close(fd);throw UiError(QCoreApplication::translate("RNet","Cannot bind the CAN interface"));
-  }
+  const auto selected=computerTime?QDateTime::currentDateTime():target;
+  const auto payload=encodeRnetClockTime(selected);
+  if(payload.size()!=6)throw UiError(QCoreApplication::translate("RNet","Date is outside the supported R-Net clock range (2000–2099)"));
   can_frame frame{};frame.can_id=CAN_EFF_FLAG|rnetClockSetId;frame.can_dlc=6;
   std::copy(payload.begin(),payload.end(),frame.data);
-  const auto written=::write(fd,&frame,sizeof(frame));::close(fd);
-  if(written!=ssize_t(sizeof(frame)))throw UiError(QCoreApplication::translate("RNet","Could not send R-Net clock frame"));
-  pendingRnetClock_=host;pendingRnetClockAge_.restart();
+  sendCanFrame(frame);
+  pendingRnetClock_=selected;pendingRnetClockAge_.restart();
   log("RNET_CLOCK_SET_TX " + settings_.canInterface + " 1C2C0001");
   QTimer::singleShot(3500,this,[this]{
     if(!pendingRnetClock_.isValid())return;

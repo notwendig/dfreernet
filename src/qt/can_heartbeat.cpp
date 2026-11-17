@@ -1,73 +1,36 @@
 #include "can_heartbeat.hpp"
 #include <QtWidgets>
 #include <cmath>
-#include <cerrno>
-#include <cstring>
 #include <linux/can.h>
-#include <linux/can/raw.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <unistd.h>
 namespace rnet::qt {
 CanHeartbeatIndicator::CanHeartbeatIndicator(QWidget *parent):QWidget(parent),timer_(new QTimer(this)){
   setObjectName("canHeartbeat");setFixedSize(34,26);animation_.start();
-  connect(timer_,&QTimer::timeout,this,[this]{
-    if(enabled_&&fd_>=0&&(!probe_.isValid()||probe_.elapsed()>250))checkSocketState();
-    if(enabled_&&fd_<0&&(!retry_.isValid()||retry_.elapsed()>1000))openSocket();
-    refresh();
-  });
+  connect(timer_,&QTimer::timeout,this,[this]{refresh();});
 }
-CanHeartbeatIndicator::~CanHeartbeatIndicator(){closeSocket();}
-void CanHeartbeatIndicator::closeSocket(){delete notifier_;notifier_=nullptr;if(fd_>=0)::close(fd_);fd_=-1;boundIndex_=0;lastFrame_.invalidate();}
 void CanHeartbeatIndicator::configure(const QString &interface,bool enabled,int timeoutMs){
-  closeSocket();interface_=interface;enabled_=enabled;timeoutMs_=qBound(500,timeoutMs,10000);
-  if(enabled_){openSocket();timer_->start(40);}else timer_->stop();refresh();
+  if(interface_!=interface)lastFrame_.invalidate();
+  interface_=interface;enabled_=enabled;timeoutMs_=qBound(500,timeoutMs,10000);
+  if(enabled_)timer_->start(40);else timer_->stop();refresh();
 }
-void CanHeartbeatIndicator::openSocket(){
-  retry_.restart();interfaceDown_=false;if(interface_.isEmpty()||interface_.size()>=IFNAMSIZ)return;
-  fd_=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK|SOCK_CLOEXEC,CAN_RAW);if(fd_<0)return;
-  ifreq request{};auto name=interface_.toLatin1();std::memcpy(request.ifr_name,name.constData(),name.size());
-  if(::ioctl(fd_,SIOCGIFINDEX,&request)<0){closeSocket();return;}
-  const int index=request.ifr_ifindex;
-  if(::ioctl(fd_,SIOCGIFFLAGS,&request)<0){closeSocket();return;}
-  if(!(request.ifr_flags&IFF_UP)){interfaceDown_=true;closeSocket();return;}
-  // Observed seven-byte extended JSM device heartbeat. The 0x00E serial
-  // announcement alone does not establish that normal cyclic traffic started.
-  can_filter filter{CAN_EFF_FLAG|0x03c30f0fU,CAN_EFF_MASK|CAN_EFF_FLAG|CAN_RTR_FLAG};
-  if(::setsockopt(fd_,SOL_CAN_RAW,CAN_RAW_FILTER,&filter,sizeof(filter))){closeSocket();return;}
-  sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=index;
-  if(::bind(fd_,reinterpret_cast<sockaddr*>(&address),sizeof(address))){closeSocket();return;}
-  boundIndex_=index;probe_.restart();
-  notifier_=new QSocketNotifier(fd_,QSocketNotifier::Read,this);
-  connect(notifier_,&QSocketNotifier::activated,this,[this]{receive();});
+void CanHeartbeatIndicator::setSocketState(bool available,bool interfaceDown){
+  if(socketAvailable_!=available||interfaceDown_!=interfaceDown)lastFrame_.invalidate();
+  socketAvailable_=available;interfaceDown_=interfaceDown;refresh();
 }
-void CanHeartbeatIndicator::checkSocketState(){
-  probe_.restart();if(fd_<0)return;
-  ifreq request{};const auto name=interface_.toLatin1();std::memcpy(request.ifr_name,name.constData(),name.size());
-  if(::ioctl(fd_,SIOCGIFINDEX,&request)<0){interfaceDown_=false;closeSocket();retry_.restart();return;}
-  if(request.ifr_ifindex!=boundIndex_){closeSocket();openSocket();return;}
-  if(::ioctl(fd_,SIOCGIFFLAGS,&request)<0){interfaceDown_=false;closeSocket();retry_.restart();return;}
-  if(!(request.ifr_flags&IFF_UP)){interfaceDown_=true;closeSocket();retry_.restart();}
-}
-void CanHeartbeatIndicator::receive(){
-  for(int count=0;count<64;++count){
-    can_frame frame{};auto length=::read(fd_,&frame,sizeof(frame));
-    if(length<0&&(errno==EAGAIN||errno==EWOULDBLOCK))break;
-    if(length!=sizeof(frame)){closeSocket();break;}
-    if(frame.can_id==(CAN_EFF_FLAG|0x03c30f0fU)&&frame.can_dlc==7){
-      bool complete=true;for(int i=0;i<7;++i)complete=complete&&frame.data[i]==0x87;
-      if(complete)lastFrame_.restart();
-    }
+void CanHeartbeatIndicator::observe(const can_frame &frame){
+  if(!enabled_||!socketAvailable_)return;
+  // The 0x00E serial announcement does not establish cyclic traffic.
+  if(frame.can_id==(CAN_EFF_FLAG|0x03c30f0fU)&&frame.can_dlc==7){
+    bool complete=true;for(int i=0;i<7;++i)complete=complete&&frame.data[i]==0x87;
+    if(complete)lastFrame_.restart();
   }
   refresh();
 }
-bool CanHeartbeatIndicator::receiving()const{return enabled_&&lastFrame_.isValid()&&lastFrame_.elapsed()<timeoutMs_;}
+bool CanHeartbeatIndicator::receiving()const{return enabled_&&socketAvailable_&&lastFrame_.isValid()&&lastFrame_.elapsed()<timeoutMs_;}
 void CanHeartbeatIndicator::refresh(){
   QString state;
   if(!enabled_)state=QCoreApplication::translate("RNet","CAN heartbeat disabled");
   else if(interfaceDown_)state=QCoreApplication::translate("RNet","CAN %1: interface is down").arg(interface_);
-  else if(fd_<0)state=QCoreApplication::translate("RNet","CAN %1: interface unavailable").arg(interface_);
+  else if(!socketAvailable_)state=QCoreApplication::translate("RNet","CAN %1: interface unavailable").arg(interface_);
   else if(receiving())state=QCoreApplication::translate("RNet","CAN %1: heartbeat received (receive only)").arg(interface_);
   else state=QCoreApplication::translate("RNet","CAN %1: no heartbeat").arg(interface_);
   if(state!=status_){status_=state;setToolTip(state);setAccessibleName(state);}

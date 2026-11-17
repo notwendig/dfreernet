@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 15 November 2026. Application: dfreernet 1.3.0, native Linux / Qt 6.
+Status: 17 November 2026. Application: dfreernet 1.3.1, native Linux / Qt 6.
+
+For 1.3.1, `scripts/test.sh` passed all 10 fixture-free offline test targets. Five targeted Qt cases passed for the clock and distance dialogs, zero-length clear frames, and the shared CAN socket. `QT_QPA_PLATFORM=offscreen build/RELEASE/dfreernet --version` reported 1.3.1. Dialog screenshots are in `docs/screens/`. No physical distance reset or application-driven clock write was performed for this release; their physical behavior remains unverified.
 
 ## Hardware scope
 

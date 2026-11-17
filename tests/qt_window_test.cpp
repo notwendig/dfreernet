@@ -567,13 +567,6 @@ private slots:
     QCoreApplication::sendPostedEvents(nullptr,QEvent::LanguageChange);
     QTRY_VERIFY(label->text().contains("R-Net-Zeit"));
     QVERIFY(w->grab().save(root_+"/analysis/rnet-clock-status-de.png"));
-    QTimer::singleShot(0,w.get(),[this]{
-      auto *dialog=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-      QVERIFY(dialog);QVERIFY(dialog->text().contains("stillsteht"));
-      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-clock-confirm-de.png"));
-      dialog->reject();
-    });
-    QTest::mouseClick(label,Qt::LeftButton);
     QVERIFY(!w->pendingRnetClock_.isValid());
     w->rnetClockAge_.invalidate();w->updateRnetClockStatus();
     QVERIFY(label->text().contains("nicht verfügbar"));
@@ -637,18 +630,7 @@ private slots:
     QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
     auto *label=w->findChild<QLabel*>("rnetClockStatus");QVERIFY(label);
     QTRY_VERIFY_WITH_TIMEOUT(label->text().contains("04:22:40"),2000);
-    QString unexpectedDialog;
-    QTimer modal;
-    QObject::connect(&modal,&QTimer::timeout,w.get(),[&]{
-      auto *dialog=qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-      if(!dialog)return;
-      if(dialog->text().contains("stationary"))dialog->button(QMessageBox::Yes)->click();
-      else {unexpectedDialog=dialog->text();dialog->accept();}
-    });
-    modal.start(20);
     QTest::mouseClick(label,Qt::LeftButton);
-    modal.stop();
-    QVERIFY2(unexpectedDialog.isEmpty(),qPrintable(unexpectedDialog));
     QVERIFY(w->pendingRnetClock_.isValid());
     can_frame sent{};bool found=false;QElapsedTimer deadline;deadline.start();
     while(deadline.elapsed()<2000&&!found){
@@ -713,14 +695,210 @@ private slots:
     QTimer::singleShot(50, w.get(), [&] {
       if (auto *dialog = qobject_cast<QDialog *>(QApplication::activeModalWidget())) {
         dialogSeen = dialog->windowTitle()=="Request and read configuration only" && !qobject_cast<QInputDialog*>(dialog);
+        QVERIFY(dialog->findChildren<QCheckBox*>().isEmpty());
+        auto *buttons=dialog->findChild<QDialogButtonBox*>();
+        QVERIFY(buttons&&buttons->button(QDialogButtonBox::Ok)->isEnabled());
+        QVERIFY(dialog->grab().save(root_+"/analysis/controller-read-dialog.png"));
         dialog->reject();
       }
     });
     read->trigger();
     QVERIFY(dialogSeen);
     QVERIFY(w->process_ == nullptr);
-    w->openDocument(fixture_);
-    QVERIFY(read->isEnabled());
+    if(QFileInfo::exists(fixture_)){
+      w->openDocument(fixture_);
+      QVERIFY(read->isEnabled());
+    }
+  }
+  void clockMenuOpensSettingsWithoutSending() {
+    auto w=make();
+    auto *action=w->findChild<QAction*>("command33051");
+    QVERIFY(action&&action->isEnabled());
+    bool dialogSeen=false;
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);
+      dialogSeen=dialog->objectName()=="clockSettingsDialog";
+      auto *host=dialog->findChild<QTimeEdit*>("clockComputerTime");
+      auto *time=dialog->findChild<QTimeEdit*>("clockRnetTime");
+      auto *hostDate=dialog->findChild<QDateEdit*>("clockComputerDate");
+      auto *date=dialog->findChild<QDateEdit*>("clockRnetDate");
+      QVERIFY(host&&hostDate&&date&&time);
+      QVERIFY(host->isReadOnly());
+      QVERIFY(hostDate->isReadOnly());
+      QCOMPARE(host->displayFormat(),QString("HH:mm:ss"));
+      QCOMPARE(time->displayFormat(),QString("HH:mm:ss"));
+      auto *grid=dialog->findChild<QGridLayout*>("clockGrid");
+      QVERIFY(grid);
+      QCOMPARE(grid->rowCount(),4);
+      QCOMPARE(grid->columnCount(),3);
+      int row=0,column=0,rowSpan=0,columnSpan=0;
+      grid->getItemPosition(grid->indexOf(hostDate),&row,&column,&rowSpan,&columnSpan);
+      QCOMPARE(row,2);QCOMPARE(column,0);
+      grid->getItemPosition(grid->indexOf(date),&row,&column,&rowSpan,&columnSpan);
+      QCOMPARE(row,2);QCOMPARE(column,2);
+      QCOMPARE(date->minimumDate(),QDate(2000,1,1));
+      QCOMPARE(date->maximumDate(),QDate(2099,12,31));
+      auto *copy=dialog->findChild<QPushButton*>("clockHostToRnet");
+      QVERIFY(copy);
+      QVERIFY(!copy->isEnabled());
+      auto *set=dialog->findChild<QPushButton*>("setRnetClockButton");
+      QVERIFY(set);
+      QVERIFY(!set->isEnabled());
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-clock-dialog.png"));
+      dialog->reject();
+    });
+    action->trigger();
+    QVERIFY(dialogSeen);
+    QVERIFY(!w->pendingRnetClock_.isValid());
+  }
+  void distanceMenuOpensWithoutSending(){
+    auto w=make();
+    languages().setLanguage("de_DE");
+    auto *action=w->findChild<QAction*>("command33182");
+    QVERIFY(action&&action->isEnabled());
+    bool seen=false;
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);
+      seen=dialog->objectName()=="distanceDialog";
+      QCOMPARE(dialog->findChild<QLabel*>("totalDistance")->text(),QString("—"));
+      QCOMPARE(dialog->findChild<QLabel*>("tripDistance")->text(),QString("—"));
+      QVERIFY(!dialog->findChild<QPushButton*>("clearTripDistance")->isEnabled());
+      QVERIFY(!dialog->findChild<QPushButton*>("clearTotalDistance")->isEnabled());
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-distance-dialog.png"));
+      dialog->reject();
+    });
+    action->trigger();
+    QVERIFY(seen);
+    QVERIFY(!w->pendingRnetClock_.isValid());
+  }
+  void distanceMenuShowsReceivedValues(){
+    auto w=make();
+    languages().setLanguage("de_DE");
+    w->rnetDistance_=decodeRnetDistanceFrame(CAN_EFF_FLAG|rnetDistanceBroadcastId,
+                                             QByteArray::fromHex("F2F60500F2F60500"));
+    QVERIFY(w->rnetDistance_.valid);
+    w->rnetDistanceAge_.restart();
+    w->liveDumpInterface_=w->settings_.canInterface;
+    w->liveDumpFd_=::socket(AF_UNIX,SOCK_DGRAM,0); // Offline UI fixture; never bound to CAN.
+    QVERIFY(w->liveDumpFd_>=0);
+    w->canSender_.attach(w->liveDumpFd_);
+    bool seen=false;
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);
+      seen=dialog->objectName()=="distanceDialog";
+      QCOMPARE(dialog->findChild<QLabel*>("totalDistance")->text(),QLocale().toString(qulonglong(390898)));
+      QCOMPARE(dialog->findChild<QLabel*>("tripDistance")->text(),QLocale().toString(qulonglong(390898)));
+      QVERIFY(dialog->findChild<QPushButton*>("clearTripDistance")->isEnabled());
+      QVERIFY(dialog->findChild<QPushButton*>("clearTotalDistance")->isEnabled());
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-distance-live-dialog.png"));
+      dialog->reject();
+    });
+    w->findChild<QAction*>("command33182")->trigger();
+    QVERIFY(seen);
+  }
+  void distanceClearMatchesOriginalZeroLengthFrame(){
+    auto w=make();
+    int sockets[2]={-1,-1};
+    QVERIFY(::socketpair(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0,sockets)==0);
+    w->liveDumpFd_=sockets[0];w->canSender_.attach(sockets[0]);
+    w->liveDumpInterface_=w->settings_.canInterface;
+    w->rnetDistance_={390898,390898,true};w->rnetDistanceAge_.restart();
+    w->clearRnetDistance(false);
+    can_frame frame{};
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),MSG_DONTWAIT),ssize_t(sizeof(frame)));
+    QCOMPARE(frame.can_id,canid_t(CAN_EFF_FLAG|rnetClearTripId));
+    QCOMPARE(frame.can_dlc,quint8(0));
+    can_frame readback{};readback.can_id=CAN_EFF_FLAG|rnetDistanceBroadcastId;readback.can_dlc=8;
+    const auto tripCleared=QByteArray::fromHex("F2F6050000000000");
+    std::copy(tripCleared.begin(),tripCleared.end(),readback.data);
+    QCOMPARE(::write(sockets[1],&readback,sizeof(readback)),ssize_t(sizeof(readback)));
+    w->receiveLiveCanDump();
+    QCOMPARE(w->pendingDistanceReset_,0);
+    QCOMPARE(w->rnetDistance_.tripMetres,quint32(0));
+    w->clearRnetDistance(true);
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),MSG_DONTWAIT),ssize_t(sizeof(frame)));
+    QCOMPARE(frame.can_id,canid_t(CAN_EFF_FLAG|rnetClearTotalId));
+    QCOMPARE(frame.can_dlc,quint8(0));
+    const auto totalCleared=QByteArray::fromHex("0000000000000000");
+    std::copy(totalCleared.begin(),totalCleared.end(),readback.data);
+    QCOMPARE(::write(sockets[1],&readback,sizeof(readback)),ssize_t(sizeof(readback)));
+    w->receiveLiveCanDump();
+    QCOMPARE(w->pendingDistanceReset_,0);
+    QCOMPARE(w->rnetDistance_.totalMetres,quint32(0));
+    ::close(sockets[1]);
+  }
+  void oneSocketFeedsAllWidgetsAndClockSend(){
+    auto w=make();
+    QVERIFY(w->liveDumpFd_<0);
+    int sockets[2]={-1,-1};
+    QVERIFY(::socketpair(AF_UNIX,SOCK_DGRAM|SOCK_NONBLOCK,0,sockets)==0);
+    w->liveDumpFd_=sockets[0];
+    w->canSender_.attach(w->liveDumpFd_);
+    w->liveDumpInterface_=w->settings_.canInterface;
+    w->heartbeat_->setSocketState(true);
+    w->monitorActive_=true;
+    w->monitorTimer_=new QTimer(w.get());
+    const auto inject=[&](quint32 id,const QByteArray &payload){
+      can_frame frame{};frame.can_id=CAN_EFF_FLAG|id;frame.can_dlc=quint8(payload.size());
+      std::copy(payload.begin(),payload.end(),frame.data);
+      QCOMPARE(::write(sockets[1],&frame,sizeof(frame)),ssize_t(sizeof(frame)));
+    };
+    inject(0x03c30f0fU,QByteArray(7,char(0x87)));
+    inject(rnetDistanceBroadcastId,QByteArray::fromHex("F2F60500F2F60500"));
+    inject(rnetClockBroadcastId,QByteArray::fromHex("281604ef0b1a"));
+    w->receiveLiveCanDump();
+    QVERIFY(w->heartbeat_->receiving());
+    QVERIFY(w->rnetDistance_.valid);
+    QCOMPARE(w->rnetDistance_.totalMetres,quint32(390898));
+    QVERIFY(w->rnetClock_.isValid());
+    QCOMPARE(w->frameCount_,quint64(3));
+    w->stopMonitor(false);
+    w->startBlinkCycle();
+    can_frame sent{};
+    QCOMPARE(::recv(sockets[1],&sent,sizeof(sent),MSG_DONTWAIT),ssize_t(sizeof(sent)));
+    QCOMPARE(sent.can_id,canid_t(CAN_EFF_FLAG|0x0c000403U));
+    w->blinkCycle_->quiesce();
+    QCOMPARE(::recv(sockets[1],&sent,sizeof(sent),MSG_DONTWAIT),ssize_t(sizeof(sent)));
+    QCOMPARE(sent.can_id,canid_t(CAN_EFF_FLAG|0x0c000403U));
+    w->blinkCycle_->stop();
+    w->setRnetClock(QDateTime(QDate(2026,11,17),QTime(12,30,0)),false);
+    QCOMPARE(::recv(sockets[1],&sent,sizeof(sent),MSG_DONTWAIT),ssize_t(sizeof(sent)));
+    QCOMPARE(sent.can_id,canid_t(CAN_EFF_FLAG|rnetClockSetId));
+    QCOMPARE(sent.can_dlc,quint8(6));
+    ::close(sockets[1]);
+  }
+  void clockSettingsManualTimeNeedsNoStationaryPrompt() {
+    auto w=make();
+    languages().setLanguage("de_DE");
+    const auto host=QDateTime::currentDateTime();
+    w->rnetClock_={host.date(),host.time()};
+    w->rnetClockAge_.restart();
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);
+      auto *date=dialog->findChild<QDateEdit*>("clockRnetDate");
+      auto *time=dialog->findChild<QTimeEdit*>("clockRnetTime");
+      auto *hostTime=dialog->findChild<QTimeEdit*>("clockComputerTime");
+      auto *set=dialog->findChild<QPushButton*>("setRnetClockButton");
+      auto *copy=dialog->findChild<QPushButton*>("clockHostToRnet");
+      QVERIFY(date&&time&&hostTime&&set&&copy);
+      QCOMPARE(hostTime->displayFormat(),QString("HH:mm:ss"));
+      QCOMPARE(time->displayFormat(),QString("HH:mm:ss"));
+      QCOMPARE(date->displayFormat(),QString("dd.MM.yyyy"));
+      QVERIFY(set->isEnabled());
+      QVERIFY(copy->isEnabled());
+      date->setDate(QDate(2030,4,5));
+      time->setTime(QTime(12,34,56));
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-clock-settings.png"));
+      dialog->reject();
+    });
+    w->findChild<QAction*>("command33051")->trigger();
+    QVERIFY_THROWS_EXCEPTION(UiError,w->setRnetClock(QDateTime(QDate(2030,4,5),QTime(12,34,56)),false));
+    QVERIFY(QApplication::activeModalWidget()==nullptr);
+    QVERIFY(!w->pendingRnetClock_.isValid());
   }
   void typedEditorsValidateOriginalMappings() {
     auto w=make();w->openDocument(root_+"/tests/fixtures/pid68-before-full.R-net");

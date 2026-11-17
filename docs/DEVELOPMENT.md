@@ -42,7 +42,7 @@ RND imports create new database files using a transaction and readback checks; e
 
 ## Preferences and translation
 
-Application identity: `LocalRNet` / `dfreernet`, version 1.3.0. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. Other persisted paths remain intact; default application-local paths use the new application name.
+Application identity: `LocalRNet` / `dfreernet`, version 1.3.1. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. Other persisted paths remain intact; default application-local paths use the new application name.
 
 English (US) is the source language; German uses a compiled Qt `.qm` resource. Add translated strings with the existing `RNet` context, preserve placeholders, update the `.ts` catalog and run translation tests. Qt standard widgets use the installed Qt German translations.
 
@@ -54,8 +54,8 @@ GitHub Actions runs the fixture-free `scripts/test.sh` suite for both RELEASE an
 
 ```bash
 scripts/test.sh
-# Optional isolated heartbeat integration check (host must support unshare/vcan):
-unshare --user --map-root-user --net python3 scripts/test_can_heartbeat.py
+# Shared heartbeat decoder check (offline):
+QT_QPA_PLATFORM=offscreen build/RELEASE/rnet_preferences_test heartbeatConsumesSharedFrames
 ```
 
 Do not point integration tests at a live CAN interface. Standard checks run offline. A local checkout with private fixtures has 17 test targets; the private Git snapshot runs the fixture-free subset. Visual changes should include Qt screenshots; tests already capture settings and startup layouts into `analysis/`. Physical access requires a stationary wheelchair and an explicitly authorized operation. Never infer a write authorization from a code change request.
@@ -74,6 +74,8 @@ Independently authored code is GPL-3.0-only within the scope stated in `SCOPE.md
 
 `SleepInhibitor` uses asynchronous QtDBus calls: a logind file descriptor for `sleep:idle` (fallback `sleep`) and a desktop inhibition cookie. Disabling/exiting releases handles; late replies after cancellation or owner destruction are cleaned up as well. Only the main window holds these locks; controller helpers do not. Tests use a private D-Bus and fake services to verify acquisition, release and late replies. Ordinary UI tests disable real sleep inhibitors.
 
-The passive CAN indicator also checks interface identity and IFF_UP. It rebinds after USB re-enumeration. The virtual regression suppresses the old error notification and replaces the interface; the heart must react to genuine test heartbeat frames afterwards. It verifies three sender frames before replacement and one afterwards, with zero indicator transmissions.
+The Qt process binds one SocketCAN raw socket. The window receives frames through it and forwards them to the heartbeat indicator, clock, distance dialog, live dump, and bounded monitor. A `CanSendQueue` thread waits for queued frames and writes them through that same socket. A mutex serializes reads, writes, interface checks, and detach before close. The window rebinds after interface loss or USB re-enumeration; the heartbeat indicator never opens a socket or transmits. The offline regression checks complete heartbeat frames, loss of the shared socket, and recovery. Controller helper executables run as separate processes and retain their own transport and interface lease.
+
+The original programmer's distance-clear messages are extended CAN IDs `0x18300F05` (trip) and `0x18300F06` (total), both with **DLC 0**. In its `CCANMsg` structure, the payload length is at offset `+0x14`; the value `4` at `+0x18` is a message type. An earlier implementation sent DLC 4 and was followed by a reported PM system trip `8104` (unexpected receive DLC). The offline dialog test asserts both zero-length frames. Do not test a reset on physical hardware without explicit authorization and a stationary wheelchair.
 
 Primary references: [systemd Inhibitor Locks](https://systemd.io/INHIBITOR_LOCKS/), [Idle Inhibition Service](https://specifications.freedesktop.org/idle-inhibit/0.1/index.html).

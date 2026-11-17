@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 15. November 2026. Anwendung: dfreernet 1.3.0, natives Linux / Qt 6.
+Stand: 17. November 2026. Anwendung: dfreernet 1.3.1, natives Linux / Qt 6.
+
+Für 1.3.1 bestand `scripts/test.sh` alle 10 referenzdatenfreien Offline-Testziele. Fünf gezielte Qt-Testfälle für Uhr- und Entfernungsdialoge, Löschframes ohne Nutzdaten und den gemeinsamen CAN-Socket bestanden ebenfalls. `QT_QPA_PLATFORM=offscreen build/RELEASE/dfreernet --version` meldete 1.3.1. Dialogbilder liegen unter `docs/screens/`. Für diese Version wurde weder eine physische Streckenrücksetzung noch ein Uhrschreibbefehl aus der Anwendung ausgeführt; deren Verhalten an echter Hardware bleibt ungeprüft.
 
 ## Hardwareumfang
 

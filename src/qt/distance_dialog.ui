@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DistanceDialog</class>
+ <widget class="QDialog" name="DistanceDialog">
+  <property name="windowTitle"><string>Distance</string></property>
+  <property name="minimumSize"><size><width>420</width><height>0</height></size></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="distanceForm">
+     <item row="0" column="0"><widget class="QLabel" name="totalTitle"><property name="text"><string>Total distance</string></property></widget></item>
+     <item row="0" column="1"><widget class="QLabel" name="totalDistance"><property name="text"><string>—</string></property><property name="alignment"><set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set></property></widget></item>
+     <item row="0" column="2"><widget class="QLabel" name="totalUnit"><property name="text"><string>m</string></property></widget></item>
+     <item row="1" column="0"><widget class="QLabel" name="tripTitle"><property name="text"><string>Trip distance</string></property></widget></item>
+     <item row="1" column="1"><widget class="QLabel" name="tripDistance"><property name="text"><string>—</string></property><property name="alignment"><set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set></property></widget></item>
+     <item row="1" column="2"><widget class="QLabel" name="tripUnit"><property name="text"><string>m</string></property></widget></item>
+    </layout>
+   </item>
+   <item><widget class="QLabel" name="distanceStatus"><property name="text"><string>Distance values are not available.</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item><widget class="QPushButton" name="clearTripDistance"><property name="text"><string>Clear trip distance</string></property></widget></item>
+     <item><widget class="QPushButton" name="clearTotalDistance"><property name="text"><string>Clear total distance</string></property></widget></item>
+     <item><widget class="QPushButton" name="distanceClose"><property name="text"><string>Close</string></property></widget></item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

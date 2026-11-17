@@ -10,11 +10,16 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.3.0
+## Version 1.3.1
 
-Diese Version zeigt R-Net-Datum und -Uhrzeit in der Statusleiste, markiert Abweichungen zur Host-Zeit farbig und bietet nach Bestätigung das einmalige Stellen der Uhr mit CAN-Rücklesung. Hinzu kommen die optionale Einrichtung der CAN-Schnittstelle beim Start und sortierbare CAN-Zähltabellen. Sie bleibt experimentell: Controllerkompatibilität und Parameter-Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Diese Version ergänzt Dialoge für Uhr und Entfernung. Im Uhrdialog stehen beide Uhren und Daten; die R-Net-Uhr kann auf die Host-Zeit oder einen gewählten Wert gestellt werden. Der Entfernungsdialog zeigt Gesamt- und Tripstrecke live an und bietet Rücksetzbefehle mit Rückmeldung. Die Qt-Oberfläche verwendet nun einen gemeinsamen CAN-Socket und eine zentrale Sendewarteschlange. Sie bleibt experimentell: Controllerkompatibilität und Parameter-Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
 
 ## Bildschirmfotos
+
+Uhr- und Entfernungsdialog in 1.3.1:
+
+![Uhreinstellungen](docs/screens/clock-1.3.1-en.png)
+![Entfernung mit Live-Werten](docs/screens/distance-1.3.1-de.png)
 
 Startwarnung mit illustriertem Rollstuhl:
 

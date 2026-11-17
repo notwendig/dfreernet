@@ -2,9 +2,13 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
-## Unveröffentlicht
+## 1.3.1 — 17. November 2026
 
 - Englische und deutsche Bildschirmfotos der aktuellen Oberfläche erneuern; Über-Dialog für vollständig sichtbaren Text vergrößern und R-Net-Datum in der Statusleiste lesbar halten.
+- Qt-Designer-Uhrdialog mit laufender Host- und R-Net-Uhrzeit samt Datum, Host-zu-R-Net-Schaltfläche und bearbeitbarem R-Net-Ziel ergänzt; beide Uhren verwenden in beiden Sprachen das 24-Stunden-Format.
+- Werkzeuge → Entfernung zeigt Gesamt- und Tripstrecke live an und kann beide Zähler mit den ursprünglichen CAN-Nachrichten ohne Nutzdaten zurücksetzen. Eine passende Rückmeldung bestätigt das Löschen; beliebige Streckenwerte lassen sich nicht setzen.
+- Einen gemeinsamen CAN-Socket für Live-Anzeige, Uhr, Entfernung, Herz und Monitor eingeführt; ein zentraler Thread sendet Nachrichten aus einer Warteschlange.
+- Überflüssige Stillstandsabfragen bei Uhr und Entfernung entfernt. Das Schreiben der Controllerkonfiguration benötigt weiterhin eine eigene Freigabe und Stillstandsbestätigung.
 
 ## 1.3.0 — 15. November 2026
 

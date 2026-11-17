@@ -125,31 +125,19 @@ private slots:
     for(int i=0;i<4;++i){tabs->setCurrentRow(i);QTest::qWait(20);QVERIFY(dialog.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/settings-page-"+QString::number(i)+"-de.png"));}
     dialog.reject();languages().setLanguage("en_US");
   }
-  void passiveHeartbeatOnPrivateVcan(){
-    auto interface=qEnvironmentVariable("RNET_HEARTBEAT_VCAN");if(interface.isEmpty())QSKIP("Private vcan harness only");
-    CanHeartbeatIndicator heart;heart.configure(interface,true,500);heart.show();QVERIFY(!heart.receiving());
-    auto openSender=[&]{int fd=::socket(PF_CAN,SOCK_RAW,CAN_RAW);if(fd<0)return -1;ifreq request{};auto name=interface.toLatin1();std::memcpy(request.ifr_name,name.constData(),name.size());if(::ioctl(fd,SIOCGIFINDEX,&request)<0){::close(fd);return -1;}sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=request.ifr_ifindex;if(::bind(fd,reinterpret_cast<sockaddr*>(&address),sizeof(address))){::close(fd);return -1;}return fd;};
-    int fd=openSender();QVERIFY(fd>=0);
-    can_frame frame{};frame.can_id=0x123;frame.can_dlc=8;QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));QTest::qWait(50);QVERIFY(!heart.receiving());
-    frame.can_id=0x00e;frame.can_dlc=8;QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));QTest::qWait(50);QVERIFY(!heart.receiving());
-    frame.can_id=CAN_EFF_FLAG|0x03c30f0fU;frame.can_dlc=7;
-    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));QTest::qWait(50);QVERIFY(!heart.receiving());
+  void heartbeatConsumesSharedFrames(){
+    CanHeartbeatIndicator heart;heart.configure("rnetOffline",true,500);heart.show();
+    heart.setSocketState(true);
+    can_frame frame{};frame.can_id=CAN_EFF_FLAG|0x03c30f0fU;frame.can_dlc=7;
+    heart.observe(frame);QVERIFY(!heart.receiving());
     for(int i=0;i<7;++i)frame.data[i]=0x87;
-    QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));QTRY_VERIFY(heart.receiving());QVERIFY(heart.toolTip().contains("receive only"));
-    QTest::qWait(80);QVERIFY(heart.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/settings-heartbeat-active.png"));
-    QTest::qWait(550);QVERIFY(!heart.receiving());QVERIFY(heart.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/settings-heartbeat-stale.png"));
-    auto txCount=[&](){QProcess process;process.start("ip",{"-j","-s","link","show",interface});if(!process.waitForFinished(5000)||process.exitCode())return -1;const auto rows=QJsonDocument::fromJson(process.readAllStandardOutput()).array();if(rows.isEmpty())return -1;const auto object=rows.first().toObject();const auto stats=object.value(object.contains("stats64")?"stats64":"stats").toObject();return stats.value("tx").toObject().value("packets").toInt(-1);};
-    QCOMPARE(txCount(),4);::close(fd);
-    // Fault injection: a USB reset may not produce a readable socket error.
-    auto *notifier=heart.findChild<QSocketNotifier*>();QVERIFY(notifier);notifier->setEnabled(false);
-    auto link=[&](const QStringList &args){return QProcess::execute("ip",QStringList{"link"}+args);};
-    QCOMPARE(link({"set",interface,"down"}),0);QTest::qWait(1100);const bool downShown=heart.toolTip().contains("interface is down");
-    QCOMPARE(link({"delete",interface}),0);QTest::qWait(100);
-    QCOMPARE(link({"add",interface,"type","vcan"}),0);QCOMPARE(link({"set",interface,"up"}),0);
-    QTRY_VERIFY(heart.toolTip().contains("no heartbeat"));
-    fd=openSender();QVERIFY(fd>=0);QCOMPARE(::write(fd,&frame,sizeof(frame)),ssize_t(sizeof(frame)));
-    QTRY_VERIFY(heart.receiving());QVERIFY(downShown);::close(fd);
-    QTest::qWait(30);QCOMPARE(txCount(),1);
+    heart.observe(frame);QVERIFY(heart.receiving());
+    QVERIFY(heart.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/settings-heartbeat-active.png"));
+    heart.setSocketState(false,true);QVERIFY(!heart.receiving());QVERIFY(heart.toolTip().contains("interface is down"));
+    heart.setSocketState(true);QVERIFY(!heart.receiving());
+    heart.observe(frame);QVERIFY(heart.receiving());
+    QTest::qWait(550);QVERIFY(!heart.receiving());
+    QVERIFY(heart.grab().save(QString::fromUtf8(RNET_SOURCE_DIR)+"/analysis/settings-heartbeat-stale.png"));
   }
 };
 QTEST_MAIN(PreferencesTest)

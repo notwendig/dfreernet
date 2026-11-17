@@ -1443,6 +1443,122 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>R-Net-Zeit %1</translation>
         </message>
         <message>
+            <source>Clock settings</source>
+            <translation>Uhreinstellungen</translation>
+        </message>
+        <message>
+            <source>Distance</source>
+            <translation>Entfernung</translation>
+        </message>
+        <message>
+            <source>Total distance</source>
+            <translation>Gesamtstrecke</translation>
+        </message>
+        <message>
+            <source>Trip distance</source>
+            <translation>Tripstrecke</translation>
+        </message>
+        <message>
+            <source>Distance values are not available.</source>
+            <translation>Entfernungswerte sind nicht verfügbar.</translation>
+        </message>
+        <message>
+            <source>Clear trip distance</source>
+            <translation>Tripstrecke löschen</translation>
+        </message>
+        <message>
+            <source>Clear total distance</source>
+            <translation>Gesamtstrecke löschen</translation>
+        </message>
+        <message>
+            <source>Clear the total R-Net distance?</source>
+            <translation>Die gesamte R-Net-Strecke löschen?</translation>
+        </message>
+        <message>
+            <source>Waiting for R-Net distance readback…</source>
+            <translation>Warte auf die Rückmeldung der R-Net-Strecke…</translation>
+        </message>
+        <message>
+            <source>No matching distance readback received; the clear request is unconfirmed.</source>
+            <translation>Keine passende Streckenrückmeldung empfangen; das Löschen ist nicht bestätigt.</translation>
+        </message>
+        <message>
+            <source>No current R-Net distance received; distance not cleared</source>
+            <translation>Keine aktuellen R-Net-Streckenwerte empfangen; Strecke nicht gelöscht</translation>
+        </message>
+        <message>
+            <source>R-Net distance readback is still pending</source>
+            <translation>Die Rückmeldung der R-Net-Strecke steht noch aus</translation>
+        </message>
+        <message>
+            <source>Could not send R-Net distance clear frame</source>
+            <translation>R-Net-Befehl zum Löschen der Strecke konnte nicht gesendet werden</translation>
+        </message>
+        <message>
+            <source>Could not send CAN frame</source>
+            <translation>CAN-Nachricht konnte nicht gesendet werden</translation>
+        </message>
+        <message>
+            <source>Computer time</source>
+            <translation>Computerzeit</translation>
+        </message>
+        <message>
+            <source>R-Net time</source>
+            <translation>R-Net-Zeit</translation>
+        </message>
+        <message>
+            <source>R-Net date</source>
+            <translation>R-Net-Datum</translation>
+        </message>
+        <message>
+            <source>Host → R-Net</source>
+            <translation>Host → R-Net</translation>
+        </message>
+        <message>
+            <source>R-Net date and time</source>
+            <translation>R-Net-Datum und -Uhrzeit</translation>
+        </message>
+        <message>
+            <source>Computer date and time</source>
+            <translation>Computerdatum und -uhrzeit</translation>
+        </message>
+        <message>
+            <source>Selected date and time</source>
+            <translation>Ausgewähltes Datum und Uhrzeit</translation>
+        </message>
+        <message>
+            <source>Selected date</source>
+            <translation>Ausgewähltes Datum</translation>
+        </message>
+        <message>
+            <source>Selected time</source>
+            <translation>Ausgewählte Uhrzeit</translation>
+        </message>
+        <message>
+            <source>Close</source>
+            <translation>Schließen</translation>
+        </message>
+        <message>
+            <source>Use computer time</source>
+            <translation>Computerzeit übernehmen</translation>
+        </message>
+        <message>
+            <source>Use R-Net time</source>
+            <translation>R-Net-Zeit übernehmen</translation>
+        </message>
+        <message>
+            <source>Set selected time</source>
+            <translation>Ausgewählte Zeit einstellen</translation>
+        </message>
+        <message>
+            <source>Synchronize with computer</source>
+            <translation>Mit Computer synchronisieren</translation>
+        </message>
+        <message>
+            <source>Received on %1</source>
+            <translation>Empfangen auf %1</translation>
+        </message>
+        <message>
             <source>R-Net time unavailable</source>
             <translation>R-Net-Zeit nicht verfügbar</translation>
         </message>
@@ -1467,12 +1583,20 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>R-Net-Uhr auf die Zeit dieses Computers (%1) stellen? Dabei wird ein CAN-Frame gesendet. Bestätigen Sie, dass der Rollstuhl stillsteht und nicht gefahren werden muss.</translation>
         </message>
         <message>
+            <source>Set the R-Net clock to the selected date and time (%1)? This sends one CAN frame. Confirm that the wheelchair is stationary and driving is not needed.</source>
+            <translation>R-Net-Uhr auf das ausgewählte Datum und die Uhrzeit (%1) stellen? Dabei wird ein CAN-Frame gesendet. Bestätigen Sie, dass der Rollstuhl stillsteht und nicht gefahren werden muss.</translation>
+        </message>
+        <message>
             <source>Set R-Net clock</source>
             <translation>R-Net-Uhr stellen</translation>
         </message>
         <message>
             <source>Computer date is outside the supported R-Net clock range (2000–2099)</source>
             <translation>Das Computerdatum liegt außerhalb des unterstützten R-Net-Uhrbereichs (2000–2099)</translation>
+        </message>
+        <message>
+            <source>Date is outside the supported R-Net clock range (2000–2099)</source>
+            <translation>Das Datum liegt außerhalb des unterstützten R-Net-Uhrbereichs (2000–2099)</translation>
         </message>
         <message>
             <source>CAN interface is unavailable or down</source>

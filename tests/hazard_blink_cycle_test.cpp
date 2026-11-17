@@ -37,7 +37,8 @@ private slots:
     auto interface=qEnvironmentVariable("RNET_BLINK_VCAN");if(interface.isEmpty())QSKIP("Isolated vcan harness only");
     int receiver=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK,CAN_RAW);QVERIFY(receiver>=0);sockaddr_can address{};address.can_family=AF_CAN;address.can_ifindex=::if_nametoindex(interface.toLatin1().constData());QVERIFY(address.can_ifindex>0);QVERIFY(::bind(receiver,reinterpret_cast<sockaddr*>(&address),sizeof(address))==0);
     std::vector<can_frame> frames;QSocketNotifier notifier(receiver,QSocketNotifier::Read);connect(&notifier,&QSocketNotifier::activated,this,[&]{can_frame f;while(::read(receiver,&f,sizeof(f))==sizeof(f))frames.push_back(f);});
-    HazardBlinkCycle cycle;cycle.canPulse=[]{return true;};cycle.pulseMs_=10;cycle.start(interface);cycle.pulse();QTRY_COMPARE(frames.size(),std::size_t(2));cycle.stop();for(const auto &f:frames){QCOMPARE(f.can_id,canid_t(CAN_EFF_FLAG|0x0c000403));QCOMPARE(f.can_dlc,0);}::close(receiver);
+    int sender=::socket(PF_CAN,SOCK_RAW|SOCK_NONBLOCK,CAN_RAW);QVERIFY(sender>=0);QVERIFY(::bind(sender,reinterpret_cast<sockaddr*>(&address),sizeof(address))==0);
+    HazardBlinkCycle cycle(nullptr,[&](bool){can_frame frame{};frame.can_id=CAN_EFF_FLAG|0x0c000403;return ::send(sender,&frame,sizeof(frame),MSG_DONTWAIT|MSG_NOSIGNAL)==sizeof(frame);});cycle.canPulse=[]{return true;};cycle.pulseMs_=10;cycle.start(interface);cycle.pulse();QTRY_COMPARE(frames.size(),std::size_t(2));cycle.stop();for(const auto &f:frames){QCOMPARE(f.can_id,canid_t(CAN_EFF_FLAG|0x0c000403));QCOMPARE(f.can_dlc,0);}::close(sender);::close(receiver);
   }
 };
 }

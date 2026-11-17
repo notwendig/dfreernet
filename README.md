@@ -10,11 +10,16 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.3.0
+## Version 1.3.1
 
-This version shows the R-Net date and time in the status bar, colors differences from the host, and offers a confirmed one-frame clock update with CAN readback. It also adds optional CAN interface setup at startup and sortable CAN count tables. It remains experimental: controller compatibility and the parameter write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+This version adds clock and distance dialogs. The clock dialog shows both clocks and dates, and can set the R-Net clock from host time or a selected value. The distance dialog shows live total and trip distance and offers reset commands with readback. The Qt interface now shares one CAN socket and uses a central send queue. It remains experimental: controller compatibility and the parameter write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
 
 ## Screenshots
+
+Clock settings and distance dialogs in 1.3.1:
+
+![Clock settings dialog](docs/screens/clock-1.3.1-en.png)
+![Distance dialog with live values](docs/screens/distance-1.3.1-de.png)
 
 Startup warning with the illustrated wheelchair:
 

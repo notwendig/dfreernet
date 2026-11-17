@@ -2,9 +2,13 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
-## Unreleased
+## 1.3.1 — 2026-11-17
 
 - Refresh the English and German screenshots for the current UI; expand the About dialog so its text is fully visible and keep the R-Net date readable in the status bar.
+- Add a Qt Designer clock dialog with live host and R-Net time and date, a host-to-R-Net action, and an editable R-Net target; use 24-hour clocks in both languages.
+- Add Tools → Distance with live total and trip values and original zero-length CAN commands to clear either counter. Show whether the reset is confirmed by a matching readback; arbitrary distance values cannot be set.
+- Share one application CAN socket across the live display, clock, distance, heartbeat, and monitor; serialize outgoing frames through a dedicated send-queue thread.
+- Remove redundant stationary-wheelchair prompts from the clock and distance tools. Controller configuration writes still require their own authorization and stationary confirmation.
 
 ## 1.3.0 — 2026-11-15
 

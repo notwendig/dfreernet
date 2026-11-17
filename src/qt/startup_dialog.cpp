@@ -38,12 +38,10 @@ StartupDialog::StartupDialog(QWidget *parent):QDialog(parent){
       "<p style='color:#a51b1b;font-weight:bold'>"+
       tr("Incorrect settings can cause unintended movement, loss of control and serious injury. They can permanently damage or even destroy the wheelchair's motors and control electronics.")+"</p>"+
       para(tr("Only change parameters you understand and are authorized to change."))+
-      "<ul><li>"+tr("Keep the wheelchair stationary during controller access. Driving must not be needed until readback and release of programming access are complete.")+"</li><li>"+
-      tr("Back up the configuration, check the selected Dongle access level, and verify written values by reading them back. Do not repeat an unverified write.")+"</li></ul>"+
+      para(tr("Back up the configuration, check the selected Dongle access level, and verify written values by reading them back. Do not repeat an unverified write."))+
       section(tr("Disclaimer"))+
       para(tr("This software is provided without any assurance of completeness, freedom from defects or suitability for a particular purpose. Use is at your own risk. You are responsible for checking and approving changes."))+
-      para(tr("Liability is excluded only to the extent permitted by applicable law. Mandatory statutory liability remains unaffected."))+
-      para(tr("This notice does not replace training, the manufacturer's instructions or the confirmation required before a controller operation.")));
+      para(tr("Liability is excluded only to the extent permitted by applicable law. Mandatory statutory liability remains unaffected.")));
   layout->addWidget(notice,1);
   auto *buttons=new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
   auto *proceed=buttons->button(QDialogButtonBox::Ok);proceed->setObjectName("startupContinue");

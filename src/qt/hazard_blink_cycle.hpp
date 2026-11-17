@@ -10,16 +10,14 @@ class HazardBlinkCycle final : public QObject {
   QTimer interval_,endPulse_,watchdog_;
   QString interface_,error_;
   bool active_=false,pending_=false;
-  int fd_=-1,index_=0,pulseMs_=60000;
+  int pulseMs_=60000;
   std::function<bool(bool)> sender_;
-  bool transmit(bool first);
-  void closeSocket();
   void pulse();
   void finishPulse();
   void fail(const QString &message);
   void changed();
 public:
-  explicit HazardBlinkCycle(QObject *parent=nullptr,std::function<bool(bool)> sender={});
+  explicit HazardBlinkCycle(QObject *parent,std::function<bool(bool)> sender);
   ~HazardBlinkCycle() override;
   bool configure(int intervalMs,int durationMs);
   int intervalMs()const{return interval_.interval();}
