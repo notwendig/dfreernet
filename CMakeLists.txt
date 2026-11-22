@@ -163,3 +163,8 @@ if(BUILD_TESTING)
     endif()
   endif()
 endif()
+
+# Native transport and offline checks; build the PE32 DLL separately with wine/build.sh.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_subdirectory(wine)
+endif()

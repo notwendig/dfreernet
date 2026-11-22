@@ -79,3 +79,13 @@ The Qt process binds one SocketCAN raw socket. The window receives frames throug
 The original programmer's distance-clear messages are extended CAN IDs `0x18300F05` (trip) and `0x18300F06` (total), both with **DLC 0**. In its `CCANMsg` structure, the payload length is at offset `+0x14`; the value `4` at `+0x18` is a message type. An earlier implementation sent DLC 4 and was followed by a reported PM system trip `8104` (unexpected receive DLC). The offline dialog test asserts both zero-length frames. Do not test a reset on physical hardware without explicit authorization and a stationary wheelchair.
 
 Primary references: [systemd Inhibitor Locks](https://systemd.io/INHIBITOR_LOCKS/), [Idle Inhibition Service](https://specifications.freedesktop.org/idle-inhibit/0.1/index.html).
+
+## Optional Wine programmer subproject
+
+[`wine/README.md`](../wine/README.md) describes the separate PE32 `ftd2xx.dll`,
+local USB-command processing and native UDP/SocketCAN proxy. Build with
+`wine/build.sh`; `python3 wine/tests/offline.py` exercises the DLL under Wine
+without opening CAN. `wine/run.sh --prepare-only` stages a private copy of the
+installed OEM Programmer. Actual `wine/run.sh` operation forwards Programmer
+CAN requests to `can0` and requires explicitly authorized stationary hardware
+use. The native dfreernet application does not depend on this DLL.
