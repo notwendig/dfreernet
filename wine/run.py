@@ -11,10 +11,13 @@ import socket
 import subprocess
 import sys
 import time
+from patch_factory import write_factory_copy
 
 root = Path(__file__).resolve().parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--prepare-only', action='store_true')
+parser.add_argument('--factory-exe', action='store_true',
+                    help='Use a separately patched EXE with application access limit 3')
 parser.add_argument('--interface', default='can0', help='Existing canN interface (default: can0)')
 parser.add_argument('--programmer', type=Path, default=Path.home() / '.wine/drive_c/Program Files (x86)/PG Drives Technology/R-net Programmer OEM Generic/RNet Programmer6 OEM.exe')
 args = parser.parse_args()
@@ -36,6 +39,13 @@ shutil.copytree(source.parent, runtime, dirs_exist_ok=True,
                 ignore=shutil.ignore_patterns('*.zip', '*.log', 'ftd2xx.dll', 'ftd2xx-emu.ini'))
 shutil.copy2(dll, runtime / 'ftd2xx.dll')
 app_name = source.name
+if args.factory_exe:
+    print('Factory EXE: access limit 3; classic file dialog for Wine compatibility.', flush=True)
+    app_name = 'RNet Programmer6 Factory.exe'
+    try:
+        write_factory_copy(runtime / source.name, runtime / app_name)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
 (runtime / 'ftd2xx-emu.ini').write_text(f'[emulator]\nDevice={args.interface}\n')
 print(f'Programmer copy: {runtime / app_name}\nDongle: {profile}', flush=True)
 if args.prepare_only:

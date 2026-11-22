@@ -10,9 +10,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.4.0
+## Version 1.4.1
 
-Version 1.4.0 adds an optional [Wine/FTD2XX subproject](wine/README.md) for an existing 32-bit OEM Programmer installation. The DLL handles USB dongle messages locally and forwards CAN messages through a native SocketCAN proxy, preserving extended IDs and remote frames. Select the virtual dongle identity with `DONGLE=Dealer`, `OEM` or `Factory`; the Programmer EXE retains its own access limits. Offline Wine tests cover all profiles, framing and transport. The release contains no Programmer EXE patches or proprietary binaries. The native dfreernet application still runs independently of Wine.
+Version 1.4.1 adds an optional, verified Factory patch for a separate copy of the supported OEM Programmer EXE. Start it with `DONGLE=Factory wine/run.sh --factory-exe`. The patch raises the application access limit to 3 and selects the classic file dialog for Wine compatibility. Original binaries remain unchanged and are not distributed. Offline testing confirmed Generic Factory, file promotion, Save As and reopening the saved file; controller writes were not tested. See the [Wine subproject](wine/README.md) for supported checksums and usage. The native dfreernet application remains independent of Wine.
 
 ## Screenshots
 

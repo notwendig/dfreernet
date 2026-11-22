@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.1 — 22. November 2026
+
+- `--factory-exe` erzeugt eine separate Factory-fähige Kopie des unterstützten OEM-Programmers mit SHA256-Prüfung von Quelle und Ergebnis. Originaldatei erhalten und unbekannte Zieldateien ablehnen.
+- Anwendungsstufe von 2 auf 3 anheben und für Wine-Kompatibilität den klassischen MFC-Dateidialog wählen; `DONGLE=Dealer|OEM|Factory` bleibt separat wählbar.
+- Offline-Patch-Prüfungen und Stufentest mit extrahierten Instruktionen ergänzen. Generic Factory, Dateianhebung, Speichern unter und erneutes Öffnen einer privaten Datei im isolierten Wine-Profil mit UDP-Replay bestätigt; kein physischer CAN-Zugriff und keine Controller-Schreibvorgänge. Proprietäre Binärdateien bleiben ausgeschlossen.
+
 ## 1.4.0 — 22. November 2026
 
 - Optionale PE32-FTD2XX-DLL und nativen UDP-/SocketCAN-Proxy für eine vorhandene OEM-Programmer-Installation unter Wine ergänzt; CUSBMsg lokal verarbeiten und CCANMsg in beide Richtungen weiterleiten.

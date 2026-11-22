@@ -20,9 +20,6 @@ Die Umgebungsvariable `DONGLE` bestimmt das simulierte Profil:
 | `OEM` | 2 |
 | `Factory` | 3 |
 
-Das Profil bestimmt die Dongle-Kennung. Die Berechtigungsgrenzen der
-installierten Programmer-EXE bleiben bestehen.
-
 Ohne `DONGLE` gilt weiterhin `OEM`. Die Schreibweise ist verbindlich; leere
 oder andere Werte werden vor dem Öffnen des Transports abgewiesen.
 Die DLL liest die Variable einmal beim Initialisieren ein. Eine laufende
@@ -121,9 +118,73 @@ EXT/RTR-Transport, lokale Peer-Prüfung, Filterstatus, statische MinGW-Laufzeit,
 Tests und den separaten Startpfad. Dies dokumentiert die Herkunft und trifft
 keine zusätzliche Lizenzzusage für übernommene oder proprietäre Bestandteile.
 
-## Optionale Fehlerdiagnose
+## Separate EXE-Kopie für Factory
 
-`RNET_DEBUG_CRASH=1 DONGLE=OEM wine/run.sh` zeichnet bei Zugriffsverletzungen
-Register und Stack-Adressen unter `build/wine/logs/<Lauf>/ftd2xx.log.fault` auf.
-Die Diagnose verändert weder die Ausnahmebehandlung noch CAN-Nachrichten und
-benötigt keinen angehängten Debugger. Fehlerberichte bleiben lokale Artefakte.
+Die bekannte OEM-EXE begrenzt die wirksame Stufe auf
+`min(Anwendungsstufe 2, Dongle-Stufe)`. Die Option `--factory-exe` erstellt
+zusätzlich `build/wine/runtime/RNet Programmer6 Factory.exe` mit Anwendungsstufe
+`3`. Damit bleibt die wirksame Stufe vom gewählten Dongle abhängig: Dealer=1,
+OEM=2, Factory=3.
+
+```bash
+DONGLE=Factory wine/run.sh --factory-exe --prepare-only
+DONGLE=Factory wine/run.sh --factory-exe
+```
+
+`wine/patch_factory.py QUELLE.exe ZIEL.exe` erzeugt die Kopie auch separat.
+Der Patcher akzeptiert ausschließlich den geprüften SHA256-Stand
+`d5f8773a64d9259e57f3dfb0d0da93c6e6cfdc2377dc854dc0216fd402fd91ec`.
+Er ändert genau zwei Bytes: Datei-Offset `0x18B2F5`, Immediate der Instruktion
+bei VA `0x0058BEEF` (`mov dword ptr [0x006CE33C], 2` wird zu `3`), und
+Datei-Offset `0x1D7AB5`: `bVistaStyle` beim MFC-Dateidialog von TRUE auf FALSE.
+Dadurch verwendet die Kopie den klassischen Dateidialog.
+Die Ziel-Prüfsumme lautet
+`919deed14f206ddc7d23ad2429b0070f523fa895cfcdd8f0716ba1050a515751`.
+Eine vorhandene, exakt bekannte ältere Ein-Byte-Patchkopie wird unter
+`.exe.v1.bak` gesichert und aktualisiert; unbekannte Zieldateien werden abgelehnt.
+Die Änderung macht die ursprüngliche digitale Signatur ungültig; diese Kopie
+ist eine lokale Modifikation. Sie ergänzt keine in der OEM-Version fehlenden
+Factory-Funktionen. Beide EXE-Dateien bleiben im ignorierten Build-Verzeichnis.
+
+Die Patch-Guards laufen im normalen CTest. Gegen die lokal vorhandene EXE:
+
+```bash
+python3 wine/tests/factory_patch_test.py --original 'build/wine/runtime/RNet Programmer6 OEM.exe'
+wine build/wine/mingw32/wine_factory_limit_test.exe \
+  'Z:\home\juergen\Projects\dfreernet\build\wine\runtime\RNet Programmer6 OEM.exe' \
+  'Z:\home\juergen\Projects\dfreernet\build\wine\runtime\RNet Programmer6 Factory.exe'
+```
+
+Der Windows-Prüfer führt nur die extrahierten Initialisierungs- und
+Stufenbegrenzungs-Instruktionen aus (die globale Adresse wird dabei auf
+Testspeicher umgesetzt). Er lädt den Programmer nicht und öffnet
+keinen CAN-Zugang. Eine vollständige Factory-Sitzung mit der Oberfläche wird
+damit nicht geprüft.
+
+
+### Speichertest und Wine-Registrierung
+
+Die isolierte Stufenprüfung ist kein vollständiger Speichertest. Den gemeldeten
+Nullzeigerzugriff im Wine-Dateidialog beim Speichern einer `.R-net`-Datei führte
+der Benutzer auf die Wine-Registrierung zurück. Die konkrete Registry-Änderung
+ist hier nicht dokumentiert; eine allgemeine Registry-Reparatur wird deshalb
+nicht automatisiert. Version 1.4.1 enthält den optionalen Patcher, keine EXE.
+
+Nach der Registry-Reparatur wurden im geklonten Wine-Profil mit der aktuellen
+Zwei-Byte-Patchkopie und `DONGLE=Factory` die Anzeige „Generic Factory“, die
+Anhebung einer privaten Datei, „Save As“ und das erneute Öffnen erfolgreich
+geprüft. Originaldatei unverändert, kein Absturzprotokoll. Der Test nutzte nur
+lokales UDP-Replay ohne SocketCAN-Proxy. Nicht alle Diagnoseabfragen waren im
+Replay vorhanden; physische Controller-Schreibvorgänge wurden nicht geprüft.
+
+Für eine gezielte Fehleraufzeichnung beim üblichen Start:
+
+```bash
+RNET_DEBUG_CRASH=1 DONGLE=Factory wine/run.sh --factory-exe
+```
+
+Die optionale DLL-Diagnose protokolliert Zugriffsverletzungen mit Registern und
+Stack-Adressen unter `build/wine/logs/<Lauf>/ftd2xx.log.fault`. Sie verändert
+weder die Ausnahmebehandlung noch die CAN-Nachrichten. Diese Diagnose benötigt
+keinen angehängten WineDbg-Prozess. Bei einer getrennten Diagnosekopie trat
+zusätzlich eine SftTree-Lizenzmeldung auf; Lizenzprüfungen werden nicht gepatcht.

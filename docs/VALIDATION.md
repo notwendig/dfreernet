@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 22 November 2026. Application: dfreernet 1.4.0, native Linux / Qt 6 with an optional Wine bridge.
+Status: 22 November 2026. Application: dfreernet 1.4.1, native Linux / Qt 6 with an optional Wine bridge.
+
+For 1.4.1, `scripts/test.sh` passed all 12 fixture-free offline test targets from the isolated release source; `dfreernet --version` reported 1.4.1. The separate PE32 build and all Wine DLL/profile/UDP tests also passed. Fixture-dependent tests were unavailable in this checkout. Offline Factory patch checks validate the exact two-byte change and SHA256 guards against the locally installed original. The extracted-instruction test confirms effective levels 1/2/3 for the Factory copy and 1/2/2 for the original OEM EXE. An isolated Wine profile with loopback UDP replay showed Generic Factory and successfully promoted, saved and reopened a private file without a crash; the input stayed unchanged. This release includes the optional patcher, no proprietary binaries or registry changes. Controller writes and complete diagnostic replay were not tested.
 
 For 1.4.0, the isolated release source passed all 11 fixture-free offline test targets. The separate PE32 DLL build and Wine tests passed for Dealer, OEM and Factory identities, default selection, invalid-profile rejection, USB responses and UDP transport without opening SocketCAN. These checks do not validate a physical configuration write or expand the hardware compatibility claim. Proprietary Programmer binaries and EXE patches are not part of this release. A reported Wine save-dialog crash was attributed by the user to Wine registry configuration; the release does not modify that registry configuration.
 

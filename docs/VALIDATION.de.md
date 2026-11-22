@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 22. November 2026. Anwendung: dfreernet 1.4.0, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+Stand: 22. November 2026. Anwendung: dfreernet 1.4.1, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+
+Für 1.4.1 bestand `scripts/test.sh` alle 12 referenzdatenfreien Offline-Testziele aus dem isolierten Release-Quellstand; `dfreernet --version` meldete 1.4.1. Der separate PE32-Build und alle Wine-DLL-/Profil-/UDP-Tests bestanden ebenfalls. Referenzdatenabhängige Tests waren in diesem Checkout nicht verfügbar. Offline-Factory-Tests prüfen die exakte Zwei-Byte-Änderung und SHA256-Guards gegen das lokal installierte Original. Der Test extrahierter Instruktionen bestätigt wirksame Stufen 1/2/3 für die Factory-Kopie und 1/2/2 für die OEM-EXE. Ein isoliertes Wine-Profil mit lokalem UDP-Replay zeigte Generic Factory und konnte eine private Datei anheben, speichern und erneut öffnen, ohne Absturz; die Eingabe blieb unverändert. Die Version enthält den optionalen Patcher, keine proprietären Binärdateien oder Registry-Änderungen. Controller-Schreibvorgänge und vollständiger Diagnose-Replay wurden nicht geprüft.
 
 Für 1.4.0 bestand der isolierte Release-Quellstand alle 11 referenzdatenfreien Offline-Testziele. Der separate PE32-DLL-Build und die Wine-Tests für Dealer-, OEM- und Factory-Kennungen, Standardauswahl, Ablehnung ungültiger Profile, USB-Antworten und UDP-Transport bestanden ohne SocketCAN-Zugriff. Diese Prüfungen bestätigen weder physische Konfigurationsschreibvorgänge noch weitere Hardwarekompatibilität. Proprietäre Programmer-Binärdateien und EXE-Patches gehören nicht zu dieser Version. Einen gemeldeten Absturz im Wine-Speicherdialog führte der Benutzer auf die Wine-Registrierung zurück; diese Registrierung wird durch die Version nicht verändert.
 

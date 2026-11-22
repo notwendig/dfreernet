@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.1 — 2026-11-22
+
+- Add `--factory-exe` to create a separate Factory-capable copy of the supported OEM Programmer, guarded by source and output SHA256 checks. Preserve the original and refuse unknown output files.
+- Raise the application access limit from 2 to 3 and select the classic MFC file dialog for Wine compatibility; keep `DONGLE=Dealer|OEM|Factory` selection independent.
+- Add offline patch guards and an extracted-instruction access-limit test. Verify Generic Factory, file promotion, Save As and reopening a private file in an isolated Wine profile with UDP replay; no physical CAN access or controller writes. Proprietary binaries remain excluded.
+
 ## 1.4.0 — 2026-11-22
 
 - Add an optional PE32 FTD2XX DLL and native UDP/SocketCAN proxy for an existing OEM Programmer installation under Wine; process CUSBMsg locally and forward CCANMsg in both directions.
