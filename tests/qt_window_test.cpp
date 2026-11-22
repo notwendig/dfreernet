@@ -773,6 +773,205 @@ private slots:
     QVERIFY(seen);
     QVERIFY(!w->pendingRnetClock_.isValid());
   }
+  void systemTimersMenuShowsReadOnlyDialog(){
+    auto w=make();
+    w->closeLiveCanDump();
+    int sockets[2];
+    QCOMPARE(::socketpair(AF_UNIX, SOCK_DGRAM|SOCK_NONBLOCK, 0, sockets),0);
+    QFile peer;
+    QVERIFY(peer.open(sockets[1],QIODevice::ReadOnly,QFileDevice::AutoCloseHandle));
+    w->liveDumpFd_=sockets[0];
+    w->liveDumpInterface_=w->settings_.canInterface;
+    w->canSender_.attach(sockets[0]);
+    auto *action=w->findChild<QAction*>("command32979");
+    QVERIFY(action&&action->isEnabled());
+    bool seen=false;
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      QVERIFY(dialog);
+      QTimer::singleShot(2500,dialog,&QDialog::reject);
+      seen=dialog->objectName()=="systemTimersDialog";
+      auto *table=dialog->findChild<QTreeWidget*>("systemTimersTable");
+      auto *status=dialog->findChild<QLabel*>("systemTimersStatus");
+      auto *stationary=dialog->findChild<QCheckBox*>("systemTimersStationary");
+      auto *read=dialog->findChild<QPushButton*>("systemTimersRead");
+      QVERIFY(table&&status&&stationary&&read);
+      QCOMPARE(table->columnCount(),3);
+      QCOMPARE(table->topLevelItemCount(),15);
+      for (int row=0;row<15;++row) {
+        QCOMPARE(table->topLevelItem(row)->text(0),QString::number(row));
+        QCOMPARE(table->topLevelItem(row)->text(1),QString("Not queried"));
+        QCOMPARE(table->topLevelItem(row)->text(2),QString("Not queried"));
+      }
+      QVERIFY(!read->isEnabled());
+      can_frame request{};
+      QCOMPARE(::recv(sockets[1],&request,sizeof(request),0),ssize_t(-1));
+      stationary->setChecked(true);
+      read->click();
+      for (unsigned node=0;node<15;++node) {
+        QCOMPARE(::recv(sockets[1],&request,sizeof(request),0),ssize_t(sizeof(request)));
+        QCOMPARE(request.can_id,0x78fu);
+        QCOMPARE(request.can_dlc,8);
+        QCOMPARE(QByteArray(reinterpret_cast<const char*>(request.data),8),
+                 QByteArray::fromHex("4010020000000000").replace(0,1,QByteArray(1,char(0x40|node))));
+        if (node==3) {
+          QTRY_COMPARE_WITH_TIMEOUT(table->topLevelItem(node)->text(2),QString("No reply"),1000);
+        } else {
+          can_frame reply=request;
+          reply.can_id=0x790+node;
+          reply.data[0]=node<2 ? 0x2f : 0xcf;
+          if (node==0)
+            reply.data[4]=125;
+          if (node==1) {
+            reply.data[4]=reply.data[5]=reply.data[6]=0xff;
+            reply.data[7]=0x7f;
+          }
+          if (node>=2)
+            reply.data[4]=0x20;
+          QCOMPARE(::send(sockets[1],&reply,sizeof(reply),0),ssize_t(sizeof(reply)));
+          w->receiveLiveCanDump();
+        }
+        QCOMPARE(::recv(sockets[1],&request,sizeof(request),0),ssize_t(sizeof(request)));
+        QCOMPARE(request.can_id,0x78fu);
+        QCOMPARE(request.can_dlc,8);
+        QCOMPARE(QByteArray(reinterpret_cast<const char*>(request.data),8),
+                 QByteArray::fromHex("40C7000000000000").replace(0,1,QByteArray(1,char(0x40|node))));
+        can_frame reply=request;
+        reply.can_id=0x790+node;
+        reply.data[0]=node<4 ? 0x2f : 0xcf;
+        const unsigned char moduleTypes[]{1,3,4,2};
+        reply.data[4]=node<4 ? moduleTypes[node] : 0x20;
+        QCOMPARE(::send(sockets[1],&reply,sizeof(reply),0),ssize_t(sizeof(reply)));
+        w->receiveLiveCanDump();
+      }
+      QCOMPARE(table->topLevelItemCount(),15);
+      QCOMPARE(table->topLevelItem(0)->text(1),QString("PM"));
+      QCOMPARE(table->topLevelItem(1)->text(1),QString("ISM"));
+      QCOMPARE(table->topLevelItem(2)->text(1),QString("Dual"));
+      QCOMPARE(table->topLevelItem(3)->text(1),QString("JSM"));
+      QCOMPARE(table->topLevelItem(14)->text(0),QString("14"));
+      QCOMPARE(table->topLevelItem(0)->text(2),QString("2 h 5 min"));
+      QCOMPARE(table->topLevelItem(1)->text(2),QString("Timer unavailable"));
+      QCOMPARE(table->topLevelItem(2)->text(2),QString("Query rejected (0x20)"));
+      QCOMPARE(table->topLevelItem(3)->text(2),QString("No reply"));
+      QCOMPARE(table->topLevelItem(14)->text(2),QString("Query rejected (0x20)"));
+      QCOMPARE(table->topLevelItem(14)->text(1),QString("Query rejected (0x20)"));
+      QCOMPARE(status->text(),QString("Timer read complete."));
+      QCOMPARE(::recv(sockets[1],&request,sizeof(request),0),ssize_t(-1));
+      QVERIFY(dialog->grab().save(root_+"/analysis/rnet-system-timers-dialog.png"));
+      dialog->reject();
+    });
+    action->trigger();
+    QVERIFY(seen);
+    QVERIFY(!w->systemTimerReply_);
+  }
+  void diagnosticsMenuOpensDialog(){
+    auto w=make();
+    auto *action=w->findChild<QAction*>("command32965");
+    QVERIFY(action&&action->isEnabled());
+    can_frame fault{};
+    fault.can_id=CAN_EFF_FLAG|CAN_RTR_FLAG|0x1c200300;
+    fault.can_dlc=5;
+    fault.data[0]=0x04;
+    fault.data[1]=0x81;
+    fault.data[4]=0x03;
+    w->observeDiagnostics(fault);
+    QVERIFY(!w->diagnosticReceivedAt_.isValid());
+    fault.can_id &= ~CAN_RTR_FLAG;
+    w->observeDiagnostics(fault);
+    QVERIFY(w->diagnosticReceivedAt_.isValid());
+    QTimer watchdog;
+    watchdog.setSingleShot(true);
+    connect(&watchdog,&QTimer::timeout,w.get(),[]{
+      if (auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget()))
+        dialog->reject();
+    });
+    bool seen=false;
+    QTimer::singleShot(0,w.get(),[&]{
+      auto *dialog=qobject_cast<QDialog*>(QApplication::activeModalWidget());
+      if (!dialog)
+        return;
+      auto *status=dialog->findChild<QLabel*>("diagnosticsStatus");
+      seen=dialog->objectName()=="diagnosticsDialog" && status &&
+           status->text().contains("8104") && status->text().contains("1C200300#04 81 00 00 03");
+      const auto screenshot=dialog->grab();
+      dialog->reject();
+      QVERIFY(screenshot.save(root_+"/analysis/rnet-diagnostics.png"));
+    });
+    watchdog.start(1000);
+    action->trigger();
+    QVERIFY(seen);
+  }
+  void systemLogsMenuReadsPowerModuleEntries(){
+    auto w=make();
+    w->closeLiveCanDump();
+    int sockets[2];
+    QCOMPARE(::socketpair(AF_UNIX, SOCK_DGRAM|SOCK_NONBLOCK, 0, sockets),0);
+    QFile peer;
+    QVERIFY(peer.open(sockets[1],QIODevice::ReadOnly,QFileDevice::AutoCloseHandle));
+    w->liveDumpFd_=sockets[0];
+    w->liveDumpInterface_=w->settings_.canInterface;
+    w->canSender_.attach(sockets[0]);
+    auto *action=w->findChild<QAction*>("command32876");
+    QVERIFY(action&&action->isEnabled());
+    w->show();
+    action->trigger();
+    auto *dock=w->findChild<QWidget*>("systemLogsDock");
+    QVERIFY(dock&&dock->isVisible());
+    auto *read=dock->findChild<QPushButton*>("systemLogsRead");
+    auto *status=dock->findChild<QLabel*>("systemLogsStatus");
+    auto *entries=dock->findChild<QListWidget*>("systemLogsEntries");
+    QVERIFY(read&&status&&entries);
+    can_frame frame{};
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(-1));
+    read->click();
+    QVERIFY(!read->isEnabled());
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(sizeof(frame)));
+    QCOMPARE(frame.can_id,0x78fu);
+    QCOMPARE(frame.can_dlc,8);
+    QCOMPARE(QByteArray(reinterpret_cast<const char*>(frame.data),8).toHex(),
+             QByteArray("2000020000000000"));
+    frame.can_id=0x790;
+    frame.data[0]=0x4f;
+    frame.data[2]=0x03;
+    w->receiveSystemLogsReply(frame);
+    QVERIFY(!read->isEnabled());
+    frame.data[2]=0x02;
+    w->receiveSystemLogsReply(frame);
+    QVERIFY(!read->isEnabled());
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(sizeof(frame)));
+    QCOMPARE(frame.can_id,0x78fu);
+    QCOMPARE(QByteArray(reinterpret_cast<const char*>(frame.data),8).toHex(),
+             QByteArray("4002020000000000"));
+    frame.can_id=0x790;
+    frame.data[0]=0x2f;
+    frame.data[4]=0x04;
+    frame.data[5]=0x81;
+    frame.data[6]=0x03;
+    frame.data[7]=0x07;
+    w->receiveSystemLogsReply(frame);
+    QCOMPARE(entries->count(),1);
+    QCOMPARE(entries->item(0)->text(),QString("8104 · Unexpected CAN payload length · 7×"));
+    QCOMPARE(entries->item(0)->toolTip(),QString("04 81 03 07"));
+    QVERIFY(!read->isEnabled());
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(sizeof(frame)));
+    QCOMPARE(QByteArray(reinterpret_cast<const char*>(frame.data),8).toHex(),
+             QByteArray("2000020001000000"));
+    frame.can_id=0x790;
+    frame.data[0]=0x4f;
+    frame.data[4]=0;
+    w->receiveSystemLogsReply(frame);
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(sizeof(frame)));
+    QCOMPARE(QByteArray(reinterpret_cast<const char*>(frame.data),8).toHex(),
+             QByteArray("4002020000000000"));
+    frame.can_id=0x790;
+    frame.data[0]=0x2f;
+    w->receiveSystemLogsReply(frame);
+    QVERIFY(read->isEnabled());
+    QCOMPARE(entries->count(),1);
+    QCOMPARE(::recv(sockets[1],&frame,sizeof(frame),0),ssize_t(-1));
+    QVERIFY(w->grab().save(root_+"/analysis/rnet-system-logs.png"));
+  }
   void distanceMenuShowsReceivedValues(){
     auto w=make();
     languages().setLanguage("de_DE");

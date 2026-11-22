@@ -91,6 +91,14 @@ std::vector<MenuItem> bundled_menus(){
   std::function<std::vector<MenuItem>(unsigned,unsigned)> build=[&](unsigned parent,unsigned depth){if(depth>16)throw std::runtime_error("Invalid menu recursion");auto &list=children[parent];std::sort(list.begin(),list.end());std::vector<MenuItem> result;for(const auto &[ordinal,id]:list){(void)ordinal;auto item=nodes.at(id);item.children=build(id,depth+1);result.push_back(std::move(item));}return result;};return build(0,0);
 }
 std::vector<TextResource> bundled_text_resources(){Database d;auto q=d.query("SELECT id,text FROM resource_texts ORDER BY ordinal");std::vector<TextResource> result;while(q.next())result.push_back({q.value(0).toUInt(),text(q.value(1))});return result;}
+std::map<std::uint32_t, std::u16string> bundled_module_names(){
+  Database database;
+  auto query = database.query("SELECT type,name FROM module_names ORDER BY type");
+  std::map<std::uint32_t, std::u16string> result;
+  while (query.next())
+    result.emplace(query.value(0).toUInt(), text(query.value(1)));
+  return result;
+}
 void write_catalog_database(const Bytes &plain,const std::filesystem::path &path){
   const auto catalog=ParameterCatalog::read(plain); // Validate before creating output.
   ensureCoreApplication();const auto target=QString::fromStdString(path.string());

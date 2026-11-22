@@ -5,6 +5,7 @@ root=Path(__file__).resolve().parents[1]
 with sqlite3.connect(f'file:{root/"resources/dfreernet.sqlite3"}?mode=ro',uri=True) as db:
     assert db.execute('pragma integrity_check').fetchone()==('ok',)
     assert not db.execute('pragma foreign_key_check').fetchall()
+    assert db.execute('select type,name from module_names order by type').fetchall()==[(1,'PM'),(2,'JSM'),(3,'ISM'),(4,'Dual')]
     assert db.execute('pragma user_version').fetchone()==(1,)
     for table,count in [('parameters',2154),('storage_maps',29),('editors',164),('resource_texts',1454),('parameter_fields',2154*30),('parameter_texts',2154*12),('editor_options',164*33)]:
         assert db.execute('select count(*) from '+table).fetchone()==(count,),table

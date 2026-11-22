@@ -5,6 +5,7 @@
 #include "settings_dialog.hpp"
 #include "ui_clock_settings.h"
 #include "ui_distance_dialog.h"
+#include "ui_system_timers_dialog.h"
 #include "can_heartbeat.hpp"
 #include "sleep_inhibitor.hpp"
 #include "hazard_blink_cycle.hpp"
@@ -25,6 +26,26 @@
 #include <unistd.h>
 namespace rnet::qt {
 namespace {
+constexpr unsigned systemLogsCommand = 32876;
+constexpr unsigned diagnosticsCommand = 32965;
+constexpr unsigned maxSystemLogEntries = 32;
+
+QString powerModuleTripDescription(unsigned code) {
+  // Power-module meanings from open-rnet/docs/RNET_ERROR_CODES.md.
+  switch (code) {
+  case 0x1506:
+    return QCoreApplication::translate("RNet", "M2 solenoid brake fault");
+  case 0x2f01:
+    return QCoreApplication::translate("RNet", "Joystick out of center");
+  case 0x8104:
+    return QCoreApplication::translate("RNet", "Unexpected CAN payload length");
+  case 0x810d:
+    return QCoreApplication::translate("RNet", "Configuration repository node missing");
+  default:
+    return QCoreApplication::translate("RNet", "Unknown fault description");
+  }
+}
+
 QColor accessColor(int level){
   static const QColor colors[]{QColor("#FFEB3B"),QColor("#4CAF50"),QColor("#1976D2"),QColor("#D32F2F")};
   return level>=0&&level<4?colors[level]:QColor(Qt::gray);
@@ -122,7 +143,8 @@ bool implemented(unsigned id) {
          id == 32831 || id == 32939 || id == 32803 || id == 32804 ||
          id == 32956 || id == 32955 || id == 32957 || id == 33390 ||
          id == 33343 || id == 33208 || id == 33392 || id == 33395 ||
-         id == 32817 || id == 33107 || id == 33051 || id == 33182;
+         id == 32817 || id == 33107 || id == 32979 || id == 33051 || id == 33182 ||
+         id == systemLogsCommand || id == diagnosticsCommand;
 }
 bool isSystemTestCommand(unsigned id){
   switch(id){
@@ -1919,6 +1941,15 @@ void Window::command(unsigned id) {
   case 33051:
     showClockSettings();
     break;
+  case 32979:
+    showSystemTimers();
+    break;
+  case systemLogsCommand:
+    showSystemLogs();
+    break;
+  case diagnosticsCommand:
+    showDiagnostics();
+    break;
   case 33182:
     showDistance();
     break;
@@ -2316,6 +2347,10 @@ void Window::stopMonitor(bool show) {
     showMonitorCapture();
 }
 void Window::closeLiveCanDump(){
+  diagnosticReceivedAt_ = {};
+  diagnosticDetails_.clear();
+  if(systemLogsTimeout_ && systemLogsTimeout_->isActive())
+    finishSystemLogsRead(QCoreApplication::translate("RNet", "CAN connection closed."));
   delete liveDumpNotifier_;
   liveDumpNotifier_=nullptr;
   canSender_.detach();
@@ -2393,6 +2428,10 @@ void Window::receiveLiveCanDump(){
     if(size!=sizeof(frame)||frame.can_dlc>8){closeLiveCanDump();break;}
     if(heartbeat_)heartbeat_->observe(frame);
     recordMonitorFrame(frame);
+    receiveSystemLogsReply(frame);
+    observeDiagnostics(frame);
+    if (systemTimerReply_)
+      systemTimerReply_(frame);
     const auto clock=decodeRnetClockFrame(frame.can_id,QByteArray(reinterpret_cast<const char*>(frame.data),frame.can_dlc));
     if(clock.isValid()){
       rnetClock_=clock;rnetClockAge_.restart();updateRnetClockStatus();
@@ -2577,6 +2616,286 @@ void Window::showDistance(){
   });
   connect(ui.distanceClose,&QPushButton::clicked,&dialog,&QDialog::reject);
   dialog.exec();
+}
+void Window::showSystemTimers(){
+  constexpr int nodeCount = 15;
+  const auto moduleNames = bundled_module_names();
+  const auto trTimer = [](const char *source) { return QCoreApplication::translate("RNet", source); };
+  QDialog dialog(this);
+  dialog.setObjectName("systemTimersDialog");
+  Ui::SystemTimersDialog ui;
+  ui.setupUi(&dialog);
+  dialog.setWindowTitle(QCoreApplication::translate("RNet","System timers"));
+  ui.systemTimersTable->headerItem()->setText(0,QCoreApplication::translate("RNet","Node"));
+  ui.systemTimersTable->headerItem()->setText(1,QCoreApplication::translate("RNet","Name"));
+  ui.systemTimersTable->headerItem()->setText(2,QCoreApplication::translate("RNet","Timer"));
+  ui.systemTimersStatus->setText(trTimer("Select Read timers to query the connected modules."));
+  auto *stationary = new QCheckBox(trTimer("The wheelchair is stationary; driving is not needed"), &dialog);
+  stationary->setObjectName("systemTimersStationary");
+  ui.verticalLayout->insertWidget(2, stationary);
+  auto *read = new QPushButton(trTimer("Read timers"), &dialog);
+  read->setObjectName("systemTimersRead");
+  read->setEnabled(false);
+  ui.buttonsLayout->insertWidget(0, read);
+  ui.systemTimersTable->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+  ui.systemTimersTable->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+  for (int node = 0; node < nodeCount; ++node)
+    new QTreeWidgetItem(ui.systemTimersTable, {QString::number(node), trTimer("Not queried"), trTimer("Not queried")});
+
+  QTimer timeout;
+  timeout.setSingleShot(true);
+  int node = -1;
+  int receivedValues = 0;
+  bool readingModuleType = false;
+  const auto finish = [&] {
+    timeout.stop();
+    node = -1;
+    stationary->setEnabled(true);
+    stationary->setChecked(false);
+  };
+  const auto next = [&] {
+    // Query each node's module type even if its timer did not respond.
+    readingModuleType = !readingModuleType;
+    if (!readingModuleType && ++node >= nodeCount) {
+      ui.systemTimersStatus->setText(receivedValues
+          ? trTimer("Timer read complete.")
+          : trTimer("No module reported a timer value."));
+      finish();
+      return;
+    }
+    // OEM QuickUpload objects 0x000210 and 0x0000c7 return timer minutes and module type.
+    can_frame frame{};
+    frame.can_id = 0x78f;
+    frame.can_dlc = 8;
+    frame.data[0] = static_cast<unsigned char>(0x40 | node);
+    frame.data[1] = readingModuleType ? 0xc7 : 0x10;
+    frame.data[2] = readingModuleType ? 0 : 0x02;
+    try {
+      sendCanFrame(frame);
+      ui.systemTimersTable->topLevelItem(node)->setText(readingModuleType ? 1 : 2, trTimer("Waiting for reply…"));
+      timeout.start(300);
+    } catch (const std::exception &error) {
+      ui.systemTimersTable->topLevelItem(node)->setText(readingModuleType ? 1 : 2, trTimer("Could not send query"));
+      ui.systemTimersStatus->setText(localizedError(error.what()));
+      finish();
+    }
+  };
+  connect(stationary, &QCheckBox::toggled, read, &QPushButton::setEnabled);
+  connect(&timeout, &QTimer::timeout, &dialog, [&] {
+    ui.systemTimersTable->topLevelItem(node)->setText(readingModuleType ? 1 : 2, trTimer("No reply"));
+    next();
+  });
+  connect(read, &QPushButton::clicked, &dialog, [&] {
+    if (!stationary->isChecked() || node >= 0)
+      return;
+    if (busy() || (systemLogsTimeout_ && systemLogsTimeout_->isActive())) {
+      ui.systemTimersStatus->setText(trTimer("A CAN task is already running"));
+      return;
+    }
+    read->setEnabled(false);
+    stationary->setEnabled(false);
+    receivedValues = 0;
+    readingModuleType = true;
+    for (int row = 0; row < nodeCount; ++row) {
+      auto *item = ui.systemTimersTable->topLevelItem(row);
+      item->setText(1, trTimer("Not queried"));
+      item->setText(2, trTimer("Not queried"));
+    }
+    ui.systemTimersStatus->setText(trTimer("Reading system timers…"));
+    next();
+  });
+  QScopedValueRollback replyHandler(systemTimerReply_, std::function<void(const can_frame &)>(
+      [&](const can_frame &frame) {
+        if (node < 0 || !timeout.isActive() ||
+            frame.can_id != static_cast<quint32>(0x790 + node) || frame.can_dlc != 8 ||
+            (frame.data[0] != 0x2f && frame.data[0] != 0xcf) ||
+            frame.data[1] != (readingModuleType ? 0xc7 : 0x10) ||
+            frame.data[2] != (readingModuleType ? 0 : 0x02) || frame.data[3] != 0)
+          return;
+        quint32 value = 0;
+        for (unsigned i = 0; i < 4; ++i)
+          value |= quint32(frame.data[4 + i]) << (8 * i);
+        auto *row = ui.systemTimersTable->topLevelItem(node);
+        if (readingModuleType) {
+          const auto name = moduleNames.find(value);
+          if (frame.data[0] == 0x2f && name != moduleNames.end())
+            row->setText(1, fromU16(name->second));
+          else if (frame.data[0] == 0xcf)
+            row->setText(1, trTimer("Query rejected (0x%1)").arg(QString::number(value, 16).toUpper()));
+          else
+            row->setText(1, trTimer("Unknown module type (0x%1)").arg(QString::number(value, 16).toUpper()));
+          next();
+          return;
+        }
+        if (frame.data[0] == 0xcf) {
+          row->setText(2, trTimer("Query rejected (0x%1)").arg(QString::number(value, 16).toUpper()));
+        } else if (value >= 0x7fffffffu) {
+          row->setText(2, trTimer("Timer unavailable"));
+        } else {
+          ++receivedValues;
+          row->setText(2, trTimer("%1 h %2 min").arg(value / 60).arg(value % 60));
+        }
+        next();
+      }));
+  ui.systemTimersClose->setText(QCoreApplication::translate("RNet","Close"));
+  connect(ui.systemTimersClose,&QPushButton::clicked,&dialog,&QDialog::reject);
+  dialog.exec();
+}
+void Window::observeDiagnostics(const can_frame &frame){
+  // open-rnet RNET_FRAME_DICTIONARY.md: 1C200X00 is the JSM fault indication.
+  constexpr quint32 familyMask = CAN_EFF_MASK & ~0x00000f00u;
+  if ((frame.can_id & (CAN_EFF_FLAG | CAN_RTR_FLAG | CAN_ERR_FLAG | familyMask)) !=
+          (CAN_EFF_FLAG | 0x1c200000u) || frame.can_dlc != 5)
+    return;
+  const unsigned code = unsigned(frame.data[0]) | (unsigned(frame.data[1]) << 8);
+  if (!code)
+    return;
+  const auto codeText = QString::number(code, 16).rightJustified(4, '0').toUpper();
+  const auto payload = QByteArray(reinterpret_cast<const char *>(frame.data), 5).toHex(' ').toUpper();
+  diagnosticDetails_ = QStringLiteral("%1\n%2#%3")
+      .arg(codeText, QString::number(frame.can_id & CAN_EFF_MASK, 16).toUpper(),
+           QString::fromLatin1(payload));
+  diagnosticReceivedAt_ = QDateTime::currentDateTime();
+}
+void Window::showDiagnostics(){
+  QDialog dialog(this);
+  dialog.setObjectName("diagnosticsDialog");
+  dialog.setWindowTitle(QCoreApplication::translate("RNet", "Diagnostics"));
+  auto *layout = new QVBoxLayout(&dialog);
+  auto *status = new QLabel(&dialog);
+  status->setObjectName("diagnosticsStatus");
+  status->setWordWrap(true);
+  status->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  status->setTextFormat(Qt::PlainText);
+  const auto refresh = [this, status] {
+    if (!diagnosticReceivedAt_.isValid()) {
+      status->setText(QCoreApplication::translate("RNet", "No R-Net fault indication received."));
+      return;
+    }
+    status->setText(QCoreApplication::translate("RNet", "Last fault indication received at %1\n%2")
+                        .arg(QLocale().toString(diagnosticReceivedAt_, QLocale::ShortFormat),
+                             diagnosticDetails_));
+  };
+  refresh();
+  QTimer refreshTimer;
+  connect(&refreshTimer, &QTimer::timeout, &dialog, refresh);
+  refreshTimer.start(250);
+  layout->addWidget(status);
+  auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, &dialog);
+  buttons->button(QDialogButtonBox::Close)->setText(QCoreApplication::translate("RNet", "Close"));
+  connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+  layout->addWidget(buttons);
+  dialog.resize(420, dialog.sizeHint().height());
+  dialog.exec();
+}
+void Window::showSystemLogs(){
+  if (!systemLogsDock_) {
+    systemLogsDock_ = new QDockWidget(this);
+    systemLogsDock_->setObjectName("systemLogsDock");
+    auto *content = new QWidget(systemLogsDock_);
+    auto *layout = new QVBoxLayout(content);
+    systemLogsRead_ = new QPushButton(content);
+    systemLogsRead_->setObjectName("systemLogsRead");
+    systemLogsStatus_ = new QLabel(content);
+    systemLogsStatus_->setObjectName("systemLogsStatus");
+    systemLogsStatus_->setWordWrap(true);
+    systemLogsStatus_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    systemLogsEntries_ = new QListWidget(content);
+    systemLogsEntries_->setObjectName("systemLogsEntries");
+    systemLogsEntries_->setMinimumWidth(150);
+    layout->addWidget(systemLogsRead_, 0, Qt::AlignLeft);
+    layout->addWidget(systemLogsStatus_);
+    layout->addWidget(systemLogsEntries_);
+    systemLogsDock_->setWidget(content);
+
+    systemLogsTimeout_ = new QTimer(systemLogsDock_);
+    systemLogsTimeout_->setSingleShot(true);
+    connect(systemLogsTimeout_, &QTimer::timeout, this, [this]{
+      finishSystemLogsRead(QCoreApplication::translate("RNet", "No reply to the system log request."));
+    });
+    connect(systemLogsRead_, &QPushButton::clicked, this, [this]{
+      guarded([this]{ readSystemLogs(); });
+    });
+    systemLogsStatus_->setText(QCoreApplication::translate("RNet",
+        "Read diagnostic entries from the power module."));
+    addDockWidget(Qt::LeftDockWidgetArea, systemLogsDock_);
+  }
+  systemLogsDock_->setWindowTitle(QCoreApplication::translate("RNet", "System logs"));
+  systemLogsRead_->setText(QCoreApplication::translate("RNet", "Read logs"));
+  systemLogsDock_->show();
+  systemLogsDock_->raise();
+}
+void Window::readSystemLogs(){
+  if (systemLogsTimeout_->isActive())
+    return;
+  if (busy())
+    throw UiError(QCoreApplication::translate("RNet", "A CAN task is already running"));
+
+  systemLogIndex_=0;
+  requestSystemLogEntry(true);
+  systemLogsEntries_->clear();
+  systemLogsRead_->setEnabled(false);
+  systemLogsStatus_->setText(QCoreApplication::translate("RNet", "Waiting for the system log reply…"));
+}
+void Window::requestSystemLogEntry(bool selectIndex){
+  // OEM Log > Read selects the record index with object 0x200 and reads it with 0x202.
+  can_frame request{};
+  request.can_id = 0x78f;
+  request.can_dlc = 8;
+  request.data[0] = selectIndex ? 0x20 : 0x40;
+  request.data[1] = selectIndex ? 0 : 0x02;
+  request.data[2] = 0x02;
+  if (selectIndex)
+    request.data[4] = static_cast<unsigned char>(systemLogIndex_);
+  sendCanFrame(request);
+  waitingForSystemLogEntry_ = !selectIndex;
+  systemLogsTimeout_->start(1500);
+}
+void Window::receiveSystemLogsReply(const can_frame &frame){
+  if (!systemLogsTimeout_ || !systemLogsTimeout_->isActive() ||
+      frame.can_id != 0x790 || frame.can_dlc != 8 ||
+      (frame.data[0] != (waitingForSystemLogEntry_ ? 0x2f : 0x4f) && frame.data[0] != 0xcf) ||
+      frame.data[1] != (waitingForSystemLogEntry_ ? 0x02 : 0) ||
+      frame.data[2] != 0x02 || frame.data[3] != 0)
+    return;
+
+  const auto data = QByteArray(reinterpret_cast<const char *>(frame.data + 4), 4);
+  const auto payload = QString::fromLatin1(data.toHex(' ').toUpper());
+  if (frame.data[0] == 0xcf) {
+    finishSystemLogsRead(QCoreApplication::translate("RNet", "System log request rejected (%1).").arg(payload));
+    return;
+  }
+  if (waitingForSystemLogEntry_) {
+    const bool endOfLog = data == QByteArray(4, '\0') || data == QByteArray::fromHex("FFFF00FF");
+    if (!endOfLog) {
+      // The OEM formatter uses the low word as trip code and the high byte
+      // as occurrence count. Preserve the entire record for inspection.
+      const auto code = unsigned(frame.data[4]) | (unsigned(frame.data[5]) << 8);
+      const auto codeText = QString::number(code, 16).rightJustified(4, '0').toUpper();
+      auto *item = new QListWidgetItem(
+          QCoreApplication::translate("RNet", "%1 · %2 · %3×")
+              .arg(codeText, powerModuleTripDescription(code)).arg(frame.data[7]),
+          systemLogsEntries_);
+      item->setToolTip(payload);
+      ++systemLogIndex_;
+    }
+    if (endOfLog || systemLogIndex_ == maxSystemLogEntries) {
+      finishSystemLogsRead(systemLogIndex_ == 0
+          ? QCoreApplication::translate("RNet", "The power module log is empty.")
+          : QCoreApplication::translate("RNet", "Power module entries"));
+      return;
+    }
+  }
+  try {
+    requestSystemLogEntry(waitingForSystemLogEntry_);
+  } catch (const std::exception &error) {
+    finishSystemLogsRead(localizedError(error.what()));
+  }
+}
+void Window::finishSystemLogsRead(const QString &status){
+  systemLogsTimeout_->stop();
+  systemLogsStatus_->setText(status);
+  systemLogsRead_->setEnabled(true);
 }
 void Window::clearRnetDistance(bool total){
   if(busy())throw UiError(QCoreApplication::translate("RNet","A CAN task is already running"));

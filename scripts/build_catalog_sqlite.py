@@ -27,6 +27,8 @@ CREATE TABLE file_names(id INTEGER PRIMARY KEY,name TEXT NOT NULL);
 CREATE TABLE menus(node INTEGER PRIMARY KEY,parent INTEGER REFERENCES menus(node),ordinal INTEGER,command INTEGER,flags INTEGER,text TEXT NOT NULL);
 CREATE INDEX menu_order ON menus(parent,ordinal);
 CREATE TABLE resource_texts(ordinal INTEGER PRIMARY KEY,id INTEGER,text TEXT NOT NULL);
+CREATE TABLE module_names(type INTEGER PRIMARY KEY,name TEXT NOT NULL);
+INSERT INTO module_names VALUES(1,'PM'),(2,'JSM'),(3,'ISM'),(4,'Dual');
 CREATE TABLE asset_blobs(name TEXT PRIMARY KEY,data BLOB NOT NULL);
 CREATE TABLE provenance(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 ''')

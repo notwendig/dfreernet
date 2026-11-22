@@ -226,6 +226,20 @@ USB-Geräte:
             <translation>&amp;Diagnose</translation>
         </message>
         <message>
+            <source>Diagnostics</source>
+            <translation>Diagnose</translation>
+        </message>
+        <message>
+            <source>No R-Net fault indication received.</source>
+            <translation>Keine R-Net-Störungsmeldung empfangen.</translation>
+        </message>
+        <message>
+            <source>Last fault indication received at %1
+%2</source>
+            <translation>Letzte Störungsmeldung empfangen um %1
+%2</translation>
+        </message>
+        <message>
             <location filename="../src/qt/translation_keys.hpp" line="20" />
             <source>&amp;Edit</source>
             <translation>&amp;Bearbeiten</translation>
@@ -1040,9 +1054,145 @@ Rekonstruktion weiterhin unvollständig: weitere Dateiversionen, Parameterumrech
             <translation>System&amp;protokolle</translation>
         </message>
         <message>
+            <source>System logs</source>
+            <translation>Systemprotokolle</translation>
+        </message>
+        <message>
+            <source>Read logs</source>
+            <translation>Protokolle lesen</translation>
+        </message>
+        <message>
+            <source>Read diagnostic entries from the power module.</source>
+            <translation>Diagnoseeinträge des Leistungsmoduls lesen.</translation>
+        </message>
+        <message>
+            <source>Waiting for the system log reply…</source>
+            <translation>Warte auf die Antwort zur Systemprotokollabfrage…</translation>
+        </message>
+        <message>
+            <source>No reply to the system log request.</source>
+            <translation>Keine Antwort auf die Systemprotokollabfrage.</translation>
+        </message>
+        <message>
+            <source>CAN connection closed.</source>
+            <translation>CAN-Verbindung geschlossen.</translation>
+        </message>
+        <message>
+            <source>System log request rejected (%1).</source>
+            <translation>Systemprotokollabfrage abgelehnt (%1).</translation>
+        </message>
+        <message>
+            <source>The power module log is empty.</source>
+            <translation>Das Protokoll des Leistungsmoduls ist leer.</translation>
+        </message>
+        <message>
+            <source>Power module entries</source>
+            <translation>Einträge des Leistungsmoduls</translation>
+        </message>
+        <message>
+            <source>%1 · %2 · %3×</source>
+            <translation>%1 · %2 · %3×</translation>
+        </message>
+        <message>
+            <source>M2 solenoid brake fault</source>
+            <translation>Fehler der Magnetbremse M2</translation>
+        </message>
+        <message>
+            <source>Joystick out of center</source>
+            <translation>Joystick außerhalb der Mittelstellung</translation>
+        </message>
+        <message>
+            <source>Unexpected CAN payload length</source>
+            <translation>Unerwartete Länge der CAN-Nutzdaten</translation>
+        </message>
+        <message>
+            <source>Configuration repository node missing</source>
+            <translation>Knoten für den Konfigurationsspeicher fehlt</translation>
+        </message>
+        <message>
+            <source>Unknown fault description</source>
+            <translation>Keine Fehlerbeschreibung verfügbar</translation>
+        </message>
+        <message>
             <location filename="../src/qt/translation_keys.hpp" line="81" />
             <source>System &amp;Timers</source>
             <translation>System&amp;zähler</translation>
+        </message>
+        <message>
+            <source>System timers</source>
+            <translation>Systemzähler</translation>
+        </message>
+        <message>
+            <source>Module</source>
+            <translation>Modul</translation>
+        </message>
+        <message>
+            <source>Timer</source>
+            <translation>Zähler</translation>
+        </message>
+        <message>
+            <source>Select Read timers to query the connected modules.</source>
+            <translation>Mit „Zähler lesen“ werden die verbundenen Module abgefragt.</translation>
+        </message>
+        <message>
+            <source>Read timers</source>
+            <translation>Zähler lesen</translation>
+        </message>
+        <message>
+            <source>Reading system timers…</source>
+            <translation>Systemzähler werden gelesen…</translation>
+        </message>
+        <message>
+            <source>Timer read complete.</source>
+            <translation>Systemzähler gelesen.</translation>
+        </message>
+        <message>
+            <source>No module reported a timer value.</source>
+            <translation>Kein Modul hat einen Zählerwert gemeldet.</translation>
+        </message>
+        <message>
+            <source>%1 h %2 min</source>
+            <translation>%1 Std. %2 Min.</translation>
+        </message>
+        <message>
+            <source>Node %1</source>
+            <translation>Knoten %1</translation>
+        </message>
+        <message>
+            <source>Node</source>
+            <translation>Knoten</translation>
+        </message>
+        <message>
+            <source>Name</source>
+            <translation>Name</translation>
+        </message>
+        <message>
+            <source>Unknown module type (0x%1)</source>
+            <translation>Unbekannter Modultyp (0x%1)</translation>
+        </message>
+        <message>
+            <source>Not queried</source>
+            <translation>Noch nicht abgefragt</translation>
+        </message>
+        <message>
+            <source>Waiting for reply…</source>
+            <translation>Warte auf Antwort…</translation>
+        </message>
+        <message>
+            <source>No reply</source>
+            <translation>Keine Antwort</translation>
+        </message>
+        <message>
+            <source>Could not send query</source>
+            <translation>Abfrage konnte nicht gesendet werden</translation>
+        </message>
+        <message>
+            <source>Query rejected (0x%1)</source>
+            <translation>Abfrage abgelehnt (0x%1)</translation>
+        </message>
+        <message>
+            <source>Timer unavailable</source>
+            <translation>Zähler nicht verfügbar</translation>
         </message>
         <message>
             <location filename="../src/qt/window.cpp" line="1214" />

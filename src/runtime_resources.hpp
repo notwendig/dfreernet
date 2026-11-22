@@ -9,5 +9,6 @@ void write_catalog_database(const Bytes &plain, const std::filesystem::path &pat
 const Bytes &bundled_default_document();
 std::vector<MenuItem> bundled_menus();
 std::vector<TextResource> bundled_text_resources();
+std::map<std::uint32_t, std::u16string> bundled_module_names();
 namespace assets { Bytes database(); Bytes catalog(); Bytes document(); Bytes seed(); Bytes menu(); Bytes texts(); }
 }
