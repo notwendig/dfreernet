@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 17 November 2026. Application: dfreernet 1.3.1, native Linux / Qt 6.
+Status: 22 November 2026. Application: dfreernet 1.4.0, native Linux / Qt 6 with an optional Wine bridge.
+
+For 1.4.0, the isolated release source passed all 11 fixture-free offline test targets. The separate PE32 DLL build and Wine tests passed for Dealer, OEM and Factory identities, default selection, invalid-profile rejection, USB responses and UDP transport without opening SocketCAN. These checks do not validate a physical configuration write or expand the hardware compatibility claim. Proprietary Programmer binaries and EXE patches are not part of this release. A reported Wine save-dialog crash was attributed by the user to Wine registry configuration; the release does not modify that registry configuration.
 
 For 1.3.1, `scripts/test.sh` passed all 10 fixture-free offline test targets. Five targeted Qt cases passed for the clock and distance dialogs, zero-length clear frames, and the shared CAN socket. `QT_QPA_PLATFORM=offscreen build/RELEASE/dfreernet --version` reported 1.3.1. Dialog screenshots are in `docs/screens/`. No physical distance reset or application-driven clock write was performed for this release; their physical behavior remains unverified.
 

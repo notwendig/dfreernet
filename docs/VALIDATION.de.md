@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 17. November 2026. Anwendung: dfreernet 1.3.1, natives Linux / Qt 6.
+Stand: 22. November 2026. Anwendung: dfreernet 1.4.0, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+
+Für 1.4.0 bestand der isolierte Release-Quellstand alle 11 referenzdatenfreien Offline-Testziele. Der separate PE32-DLL-Build und die Wine-Tests für Dealer-, OEM- und Factory-Kennungen, Standardauswahl, Ablehnung ungültiger Profile, USB-Antworten und UDP-Transport bestanden ohne SocketCAN-Zugriff. Diese Prüfungen bestätigen weder physische Konfigurationsschreibvorgänge noch weitere Hardwarekompatibilität. Proprietäre Programmer-Binärdateien und EXE-Patches gehören nicht zu dieser Version. Einen gemeldeten Absturz im Wine-Speicherdialog führte der Benutzer auf die Wine-Registrierung zurück; diese Registrierung wird durch die Version nicht verändert.
 
 Für 1.3.1 bestand `scripts/test.sh` alle 10 referenzdatenfreien Offline-Testziele. Fünf gezielte Qt-Testfälle für Uhr- und Entfernungsdialoge, Löschframes ohne Nutzdaten und den gemeinsamen CAN-Socket bestanden ebenfalls. `QT_QPA_PLATFORM=offscreen build/RELEASE/dfreernet --version` meldete 1.3.1. Dialogbilder liegen unter `docs/screens/`. Für diese Version wurde weder eine physische Streckenrücksetzung noch ein Uhrschreibbefehl aus der Anwendung ausgeführt; deren Verhalten an echter Hardware bleibt ungeprüft.
 

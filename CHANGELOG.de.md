@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.0 — 22. November 2026
+
+- Optionale PE32-FTD2XX-DLL und nativen UDP-/SocketCAN-Proxy für eine vorhandene OEM-Programmer-Installation unter Wine ergänzt; CUSBMsg lokal verarbeiten und CCANMsg in beide Richtungen weiterleiten.
+- Extended-CAN-IDs, RTR-Kennzeichen, Frames ohne Nutzdaten, fragmentierte Schreibaufrufe und Dreier-Bursts erhalten; dauerhafte Sendesperre nach Power-Off beibehalten.
+- `DONGLE=Dealer|OEM|Factory` mit passenden EEPROM-CRCs, OEM als Standard und Ablehnung ungültiger Profile vor dem Transportstart unterstützen.
+- Repository-Knoten durch den Original-Programmer suchen lassen, statt die Initialisierung auf Knoten 0 festzulegen; separate Laufzeitkopie und Protokolle pro Lauf verwenden.
+- Offline-Tests für DLL, Transport und Profile sowie optionale Absturzaufzeichnung ergänzt. Proprietäre Binärdateien und Programmer-EXE-Patches sind ausgeschlossen.
+
 ## 1.3.1 — 17. November 2026
 
 - Englische und deutsche Bildschirmfotos der aktuellen Oberfläche erneuern; Über-Dialog für vollständig sichtbaren Text vergrößern und R-Net-Datum in der Statusleiste lesbar halten.

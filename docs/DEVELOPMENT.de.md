@@ -42,7 +42,7 @@ RND-Importe erzeugen neue Datenbankdateien in einer Transaktion mit Rückprüfun
 
 ## Einstellungen und Übersetzung
 
-Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 1.3.1. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
+Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 1.4.0. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
 
 US-Englisch ist die Quellsprache; Deutsch verwendet eine kompilierte Qt-`.qm`-Ressource. Übersetzungstexte im vorhandenen Kontext `RNet` ergänzen, Platzhalter erhalten, den `.ts`-Katalog aktualisieren und Übersetzungstests ausführen. Qt-Standardwidgets verwenden die installierten deutschen Qt-Übersetzungen.
 
@@ -77,3 +77,14 @@ Eigenständig erstellter Code steht im Geltungsbereich von `SCOPE.de.md` unter G
 Der passive CAN-Indikator prüft zusätzlich Schnittstellenindex und IFF_UP. Nach USB-Neuanmeldung wird der Socket neu gebunden. Der virtuelle Regressionstest unterdrückt absichtlich die alte Fehlerbenachrichtigung und ersetzt die Schnittstelle; das Herz muss anschließend wieder auf echte Test-Heartbeat-Frames reagieren. Er prüft drei Testsendeframes vor und einen nach dem Schnittstellenwechsel, null vom Indikator.
 
 Primärquellen: [systemd Inhibitor Locks](https://systemd.io/INHIBITOR_LOCKS/), [Idle Inhibition Service](https://specifications.freedesktop.org/idle-inhibit/0.1/index.html).
+
+## Optionales Wine-Programmer-Unterprojekt
+
+[`wine/README.md`](../wine/README.md) beschreibt die separate PE32-`ftd2xx.dll`,
+die lokale Verarbeitung von USB-Kommandos und den nativen UDP-/SocketCAN-Proxy.
+`wine/build.sh` baut das Unterprojekt; `python3 wine/tests/offline.py` prüft die
+DLL unter Wine ohne CAN-Zugriff. `wine/run.sh --prepare-only` legt eine private
+Kopie des installierten OEM-Programmers an. Der tatsächliche Start mit
+`wine/run.sh` leitet CAN-Anforderungen des Programmers an `can0` weiter und
+benötigt ausdrücklich freigegebene, stationäre Hardware. Die native Anwendung
+ist nicht von dieser DLL abhängig.

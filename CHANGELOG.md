@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.0 — 2026-11-22
+
+- Add an optional PE32 FTD2XX DLL and native UDP/SocketCAN proxy for an existing OEM Programmer installation under Wine; process CUSBMsg locally and forward CCANMsg in both directions.
+- Preserve extended CAN identifiers, RTR flags, zero-length frames, fragmented writes and three-frame bursts; retain the sticky Power-Off transmit gate.
+- Support `DONGLE=Dealer|OEM|Factory` with matching EEPROM CRCs, OEM as default, and rejection of invalid profiles before transport startup.
+- Let the original Programmer discover its repository node instead of fixing initialization to node 0; stage the runtime separately and keep per-run logs.
+- Add offline DLL/transport/profile checks and optional crash-context logging. Proprietary binaries and Programmer EXE patches are excluded.
+
 ## 1.3.1 — 2026-11-17
 
 - Refresh the English and German screenshots for the current UI; expand the About dialog so its text is fully visible and keep the R-Net date readable in the status bar.

@@ -3,16 +3,16 @@
 [English](README.md) | [Deutsch](README.de.md)
 
 **Dongle free R-Net Programmer** · Native Linux application · C++17 / Qt 6 / SocketCAN
-![](../../../../tmp/ghostwriter-aVSbem/main-window-1.3.0-en.png)
+
 An experimental desktop application for reading R-Net controller configurations, editing supported parameters, and saving configuration files. It connects through Linux SocketCAN without a programmer dongle, Wine, or FTDI/CUSBMsg runtime DLLs. The verified parameter catalog, menu/text resources, cryptographic constants and configuration-document template are embedded in the native binaries. Build and runtime use only checked-in resources and installed Linux libraries.
 
 **License:** Original code is [GPL-3.0-only](LICENSE). The bundled catalog and other third-party-derived materials are excluded; see the [license scope](SCOPE.md). A complete bundled application is not cleared for redistribution.
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.3.1
+## Version 1.4.0
 
-This version adds clock and distance dialogs. The clock dialog shows both clocks and dates, and can set the R-Net clock from host time or a selected value. The distance dialog shows live total and trip distance and offers reset commands with readback. The Qt interface now shares one CAN socket and uses a central send queue. It remains experimental: controller compatibility and the parameter write path are only partly verified. The repository excludes private controller fixtures, captures and backups; local reference tests require those fixtures.
+Version 1.4.0 adds an optional [Wine/FTD2XX subproject](wine/README.md) for an existing 32-bit OEM Programmer installation. The DLL handles USB dongle messages locally and forwards CAN messages through a native SocketCAN proxy, preserving extended IDs and remote frames. Select the virtual dongle identity with `DONGLE=Dealer`, `OEM` or `Factory`; the Programmer EXE retains its own access limits. Offline Wine tests cover all profiles, framing and transport. The release contains no Programmer EXE patches or proprietary binaries. The native dfreernet application still runs independently of Wine.
 
 ## Screenshots
 

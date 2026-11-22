@@ -10,9 +10,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.3.1
+## Version 1.4.0
 
-Diese Version ergänzt Dialoge für Uhr und Entfernung. Im Uhrdialog stehen beide Uhren und Daten; die R-Net-Uhr kann auf die Host-Zeit oder einen gewählten Wert gestellt werden. Der Entfernungsdialog zeigt Gesamt- und Tripstrecke live an und bietet Rücksetzbefehle mit Rückmeldung. Die Qt-Oberfläche verwendet nun einen gemeinsamen CAN-Socket und eine zentrale Sendewarteschlange. Sie bleibt experimentell: Controllerkompatibilität und Parameter-Schreibpfad sind nur teilweise verifiziert. Private Controller-Referenzdaten, Mitschnitte und Sicherungen fehlen im Repository; lokale Referenztests benötigen sie.
+Version 1.4.0 ergänzt ein optionales [Wine-/FTD2XX-Unterprojekt](wine/README.md) für eine vorhandene Installation des 32-Bit-OEM-Programmers. Die DLL verarbeitet USB-Dongle-Nachrichten lokal und leitet CAN-Nachrichten über einen nativen SocketCAN-Proxy weiter; Extended-IDs und Remote-Frames bleiben erhalten. Die virtuelle Dongle-Kennung wird mit `DONGLE=Dealer`, `OEM` oder `Factory` gewählt; die Programmer-EXE behält ihre eigenen Berechtigungsgrenzen. Offline-Wine-Tests prüfen alle Profile, Rahmenformate und den Transport. EXE-Patches und proprietäre Binärdateien sind nicht Bestandteil der Version. Die native dfreernet-Anwendung bleibt unabhängig von Wine.
 
 ## Bildschirmfotos
 
