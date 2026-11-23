@@ -8,6 +8,8 @@
 
 ## Requirements and startup
 
+For the hardware, wiring overview and Linux setup, start with [Connecting a wheelchair to a computer or Raspberry Pi](../README.md#connecting-a-wheelchair-to-a-computer-or-raspberry-pi).
+
 Linux with Qt 6.10 or later and a suitable SocketCAN interface. Interface, wiring and bitrate must match the actual controller. By default, the application uses an interface already configured in Linux. An optional setting configures and enables it after the startup warning. The development setup used `can0` at 125 kbit/s; this is not an automatic recommendation for other systems.
 
 The verified catalog, UI texts and snapshot template are embedded in the application. The app uses its embedded resources and Linux SocketCAN. For a copied standalone directory, launch `bin/dfreernet` and keep its controller helpers beside it. Installed Qt 6.10+ including the Sql module/QSQLITE driver, and zlib are still required.

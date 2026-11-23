@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 22. November 2026. Anwendung: dfreernet 1.4.1, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+Stand: 23. November 2026. Anwendung: dfreernet 1.4.2, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+
+Für 1.4.2 bestand `scripts/test.sh` alle 16 registrierten Offline-Testziele im Entwicklungscheckout, einschließlich Diagnosen, Systemtimer und Wine-Download-Fristprüfungen. Die gebaute Anwendung meldet `dfreernet 1.4.2`. Zusätzliche Prüfungen mit lokalen Originaldateien bestanden alle fünf Download-Frist-Patchtests und alle drei Factory-Patchtests; sie lesen lokale Originale und erzeugen nur temporäre Kopien. Für diesen Release lief kein physischer CAN-Integrationstest. Die Anschlussanleitung bestätigt keinen bestimmten Adapter, kein Kabel und keinen Raspberry Pi. Bisherige Nachweise und Einschränkungen folgen.
 
 Für 1.4.1 bestand `scripts/test.sh` alle 12 referenzdatenfreien Offline-Testziele aus dem isolierten Release-Quellstand; `dfreernet --version` meldete 1.4.1. Der separate PE32-Build und alle Wine-DLL-/Profil-/UDP-Tests bestanden ebenfalls. Referenzdatenabhängige Tests waren in diesem Checkout nicht verfügbar. Offline-Factory-Tests prüfen die exakte Zwei-Byte-Änderung und SHA256-Guards gegen das lokal installierte Original. Der Test extrahierter Instruktionen bestätigt wirksame Stufen 1/2/3 für die Factory-Kopie und 1/2/2 für die OEM-EXE. Ein isoliertes Wine-Profil mit lokalem UDP-Replay zeigte Generic Factory und konnte eine private Datei anheben, speichern und erneut öffnen, ohne Absturz; die Eingabe blieb unverändert. Die Version enthält den optionalen Patcher, keine proprietären Binärdateien oder Registry-Änderungen. Controller-Schreibvorgänge und vollständiger Diagnose-Replay wurden nicht geprüft.
 

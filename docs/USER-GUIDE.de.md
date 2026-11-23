@@ -8,6 +8,8 @@
 
 ## Voraussetzungen und Start
 
+Hardware, Anschlussübersicht und Linux-Einrichtung stehen unter [Rollstuhl mit PC oder Raspberry Pi verbinden](../README.de.md#rollstuhl-mit-pc-oder-raspberry-pi-verbinden).
+
 Linux mit Qt 6.10 oder neuer und einer passenden SocketCAN-Schnittstelle. Schnittstelle, Verkabelung und Bitrate müssen zur tatsächlichen Steuerung passen. Standardmäßig verwendet die Anwendung eine bereits unter Linux eingerichtete Schnittstelle. Eine optionale Einstellung richtet sie nach dem Starthinweis ein und aktiviert sie. Auf dem bisherigen Entwicklungsaufbau wurde `can0` mit 125 kbit/s verwendet; das ist keine automatische Vorgabe für andere Systeme.
 
 Der geprüfte Katalog, Oberflächentexte und die Snapshotvorlage sind eingebettet. Die App verwendet ihre eingebetteten Ressourcen und Linux SocketCAN. Ein kopiertes eigenständiges Programmverzeichnis über `bin/dfreernet` starten und die Controller-Hilfsprogramme daneben erhalten. Installiertes Qt ab 6.10 einschließlich Sql-Modul/QSQLITE-Treiber und zlib bleiben erforderlich.

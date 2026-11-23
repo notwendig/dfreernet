@@ -12,6 +12,8 @@ import subprocess
 import sys
 import time
 from patch_factory import write_factory_copy
+from patch_download_timeout import (patch_image as check_download_timeout,
+                                    write_timeout_copy, write_programmer_copy)
 
 root = Path(__file__).resolve().parent
 parser = argparse.ArgumentParser(description=__doc__)
@@ -28,16 +30,42 @@ if not re.fullmatch(r'can(?:0|[1-9][0-9]{0,2})', args.interface):
     parser.error('interface must be can0..can999')
 build = Path(os.environ.get('DFREERNET_WINE_BUILD', root.parent / 'build/wine')).resolve()
 source = args.programmer.resolve()
+# Validate the DLL before staging can replace an existing runtime copy.
+try:
+    check_download_timeout((source.parent / 'DongleInterface.dll').read_bytes())
+except (ValueError, OSError) as error:
+    parser.error(str(error))
 dll = build / 'mingw32/ftd2xx.dll'
 proxy = build / 'native/dfreernet-wine-can-proxy'
 for required in (source, dll, proxy):
     if not required.is_file():
         parser.error(f'missing {required}; run wine/build.sh first')
+if not args.prepare_only:
+    socket.if_nametoindex(args.interface)
+    # Do not replace runtime files while another proxy owns this interface.
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+        try:
+            probe.bind(('127.0.0.1', 39000 + int(args.interface[3:])))
+        except OSError as error:
+            parser.error(f'CAN proxy already active or unavailable; close the other Programmer first: {error}')
 runtime = build / 'runtime'
 # Keep all runtime resources, but leave research archives and old logs in place.
 shutil.copytree(source.parent, runtime, dirs_exist_ok=True,
                 ignore=shutil.ignore_patterns('*.zip', '*.log', 'ftd2xx.dll', 'ftd2xx-emu.ini'))
 shutil.copy2(dll, runtime / 'ftd2xx.dll')
+try:
+    write_timeout_copy(source.parent / 'DongleInterface.dll', runtime / 'DongleInterface.dll')
+except (ValueError, OSError) as error:
+    parser.error(str(error))
+print('Wine download deadline: 5000 ms allowance plus original per-byte time.', flush=True)
+# Fedora's 32-bit Wine-Mono needs these MinGW libraries to start IRConfigurator.
+# Keep the dependencies beside the staged app, without modifying the Wine prefix.
+mono_runtime = Path(os.environ.get('DFREERNET_MINGW32_RUNTIME_DIR',
+                                  '/usr/i686-w64-mingw32/sys-root/mingw/bin'))
+for name in ('libgcc_s_dw2-1.dll', 'libwinpthread-1.dll'):
+    dependency = mono_runtime / name
+    if dependency.is_file():
+        shutil.copy2(dependency, runtime / name)
 app_name = source.name
 if args.factory_exe:
     print('Factory EXE: access limit 3; classic file dialog for Wine compatibility.', flush=True)
@@ -46,6 +74,13 @@ if args.factory_exe:
         write_factory_copy(runtime / source.name, runtime / app_name)
     except (ValueError, OSError) as error:
         parser.error(str(error))
+if source.name.lower() != 'irconfigurator.exe':
+    timeout_name = Path(app_name).stem + ' Wine.exe'
+    try:
+        write_programmer_copy(runtime / app_name, runtime / timeout_name)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    app_name = timeout_name
 (runtime / 'ftd2xx-emu.ini').write_text(f'[emulator]\nDevice={args.interface}\n')
 print(f'Programmer copy: {runtime / app_name}\nDongle: {profile}', flush=True)
 if args.prepare_only:

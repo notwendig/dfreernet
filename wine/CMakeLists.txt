@@ -31,5 +31,7 @@ else()
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_test(NAME wine_factory_patch_guards COMMAND "${Python3_EXECUTABLE}"
       "${CMAKE_CURRENT_SOURCE_DIR}/tests/factory_patch_test.py")
+    add_test(NAME wine_download_timeout_guards COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/download_timeout_patch_test.py")
   endif()
 endif()

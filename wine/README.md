@@ -93,6 +93,21 @@ den zugehörigen Proxy. Andere Wine-/Emulator-Prozesse werden nicht beendet.
 Jeder Lauf erhält eigene Logs unter `build/wine/logs/<Zeitstempel>/`:
 `programmer.log`, `proxy.log` und (sobald die DLL geladen wird) `ftd2xx.log`.
 
+Für einen grafischen OEM-Starter kann der Desktop-Menüeintrag
+`python3 /absoluter/pfad/zu/dfreernet/wine/start_oem.py` aufrufen
+(`Terminal=false`). Dieser setzt `DONGLE=OEM` und das normale `~/.wine`-Präfix,
+startet die geprüfte OEM-Wine-Kopie samt Proxy und hält doppelte Aufrufe dieses
+Starters von derselben Sitzung fern. Startfehler erscheinen bei vorhandenem
+Zenity als Dialog; das Startprotokoll liegt in `build/wine/oem-launcher.log`.
+Ein Direktstart der installierten EXE umgeht weiterhin diesen Startpfad.
+
+`wine/start_ir.py` ist der entsprechende grafische Starter für die originale
+`IRConfigurator.exe`: OEM-Dongle, dieselbe vorbereitete Laufzeit und ein eigener
+Proxy-Lebenszyklus. Das Startprotokoll heißt `build/wine/ir-launcher.log`.
+OEM-Programmer und IRConfigurator aus diesen Startern werden nacheinander
+verwendet; vor dem Wechsel das laufende Programm schließen. Ein bereits aktiver
+Proxy wird vor dem Überschreiben der Laufzeitdateien erkannt.
+
 Der Programmer kann selbst CAN-Schreibbefehle auslösen. Der Proxy übernimmt
 keine Beschränkung auf Lesezugriffe. Die bestehende Power-Off-Sperre bleibt:
 Nach Empfang von Standard-ID `002` als RTR bleibt CAN-TX bis zum Neustart des
@@ -117,6 +132,63 @@ Die Anpassungen betreffen typisierte CUSBMsg-/CCANMsg-Verarbeitung, DLC-Prüfung
 EXT/RTR-Transport, lokale Peer-Prüfung, Filterstatus, statische MinGW-Laufzeit,
 Tests und den separaten Startpfad. Dies dokumentiert die Herkunft und trifft
 keine zusätzliche Lizenzzusage für übernommene oder proprietäre Bestandteile.
+
+## Download-Frist unter Wine
+
+Der Startpfad korrigiert die automatisch berechnete Download-Frist sowohl in
+der bekannten `DongleInterface.dll` (IRConfigurator) als auch in einer separaten
+OEM-/Factory-Wine-EXE. Der OEM-Programmer enthält den Download-Code statisch
+und lädt `DongleInterface.dll` nicht; eine reine DLL-Korrektur reicht dort
+nicht aus. Die festen
+200 ms werden in beiden Download-Zeitmodellen auf 5000 ms erhöht; die originalen
+3 bzw. 5 ms pro Nutzbyte bleiben erhalten. Für 1070 Bytes beträgt die kurze
+Frist dadurch 8210 statt 3410 ms. Uploads und die Power-Off-Sendesperre werden
+nicht verändert. Die installierte Original-DLL bleibt erhalten.
+
+Unterstützte Original-SHA256:
+`b45ad5e2579b4811cd6c48fd89d0e333c63fafd28d2c6ebf56b7144c35f7e829`.
+Ergebnis-SHA256:
+`55c60b4a0c32ec24e8c0d246099dcdcab1e991f6695ba595178c0dcc080300f1`.
+Andere DLL-Versionen werden vor dem Staging abgewiesen. Geändert werden nur
+die beiden Timeout-Konstanten im automatischen Download-Pfad; die digitale
+Signatur der lokalen Kopie ist dadurch nicht mehr gültig. Proprietäre
+Binärdateien werden nicht mitgeliefert.
+
+Die unveränderten OEM-/Factory-Stagingkopien bleiben erhalten. Gestartet wird
+`RNet Programmer6 OEM Wine.exe` bzw. `RNet Programmer6 Factory Wine.exe`.
+Nur die beiden Download-Konstanten bei Datei-Offsets `0x24A1E` und `0x24A2A`
+werden zusätzlich geändert; die benachbarten Upload-Fristen bleiben unverändert.
+Unterstützte EXE-Ausgangsstände sind die oben bekannte Original-OEM-EXE und
+die verifizierte Zwei-Byte-Factory-Kopie. Die Ausgabeprüfsummen lauten:
+
+- OEM Wine: `9040c12d005b2917f1ea6eccf595cccba7fb6dcf1a97f5f31b5a2e27c01b51e3`
+- Factory Wine: `9428cf1aa050480232e1e61aef8443c9b1a855563ffdbc105bb3567ebd100ac4`
+
+Offline wurde der echte Download-Aufruf der Original-DLL mit synthetischen
+1070 Bytes und verzögerten UDP-Segmentbestätigungen geprüft: Die Originalfrist
+brach nach rund 3420 ms vorzeitig ab. Die korrigierte Kopie übertrug alle
+134 Segmente inklusive Abschlusskennzeichen und unabhängig geprüfter CRC in
+rund 4400 ms. Zusätzlich wurde die tatsächlich korrigierte OEM-Wine-EXE im
+isolierten Profil geprüft: 1070/1070 Bytes, 134 Segmente, Abschlusskennzeichen
+und unabhängig bestätigte CRC nach 4458 ms. Eine reine DLL-Korrektur behob den
+OEM-Abbruch nicht, weil die EXE den Code statisch enthält. Eine bereits
+beschädigte Datei im Controller wird durch das Staging allein nicht repariert.
+
+```bash
+python3 wine/tests/download_timeout_patch_test.py \
+  --original '/pfad/zur/originalen/DongleInterface.dll' \
+  --programmer '/pfad/zur/originalen/RNet Programmer6 OEM.exe'
+DONGLE=OEM wine/run.sh --prepare-only
+```
+
+Der Startpfad kopiert außerdem vorhandene `libgcc_s_dw2-1.dll` und
+`libwinpthread-1.dll` aus `/usr/i686-w64-mingw32/sys-root/mingw/bin` neben die
+Laufzeitkopie. Diese Abhängigkeiten benötigt das lokal installierte 32-Bit-
+Wine-Mono für `IRConfigurator.exe`; ohne libgcc endete der Teststart mit Code
+255. Ein anderer Bibliotheksordner lässt sich über
+`DFREERNET_MINGW32_RUNTIME_DIR` angeben. Das Wine-Präfix wird nicht verändert.
+Nach Ergänzung der Bibliotheken erreichte der isolierte IRConfigurator-Test
+die Geräteauswahl. Die vollständige IR-Kommunikation wurde damit nicht geprüft.
 
 ## Separate EXE-Kopie für Factory
 

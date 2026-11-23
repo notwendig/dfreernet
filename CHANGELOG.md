@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.2 — 2026-11-23
+
+- Explain how to connect a Linux computer or Raspberry Pi through SocketCAN hardware, with a signal diagram, interface setup, reception checks and troubleshooting. Require galvanic isolation of CAN signals and CAN-side power; keep connector pin positions explicitly unverified.
+- Add system timers, power-module logs and diagnostic views, with offline Qt checks.
+- Add graphical OEM Programmer and IRConfigurator launchers with a shared launch lock, runtime staging and per-application logs.
+- Extend the known Wine DLL and OEM/Factory EXE download deadlines in separate, SHA256-verified copies; preserve upload deadlines and installed originals. Include offline patch guards and document the delayed-acknowledgement replay results.
+- Stage available MinGW runtime dependencies for the original IRConfigurator. Proprietary binaries, personal configurations and captures remain excluded; these changes do not establish general controller or Raspberry Pi compatibility.
+
 ## 1.4.1 — 2026-11-22
 
 - Add `--factory-exe` to create a separate Factory-capable copy of the supported OEM Programmer, guarded by source and output SHA256 checks. Preserve the original and refuse unknown output files.

@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.4.2 — 23. November 2026
+
+- Anschluss eines Linux-PCs oder Raspberry Pi über SocketCAN-Hardware mit Signalzeichnung, Schnittstelleneinrichtung, Empfangsprüfung und Fehlersuche erklären. Galvanische Trennung von CAN-Signalen und CAN-seitiger Versorgung voraussetzen; Steckerpositionen ausdrücklich als nicht verifiziert kennzeichnen.
+- Systemtimer, Leistungsmodul-Protokolle und Diagnoseansichten mit Offline-Qt-Prüfungen ergänzen.
+- Grafische OEM-Programmer- und IRConfigurator-Starter mit gemeinsamer Startsperre, vorbereiteter Laufzeit und getrennten Programmprotokollen ergänzen.
+- Download-Fristen der bekannten Wine-DLL und OEM-/Factory-EXE in separaten, SHA256-geprüften Kopien verlängern; Upload-Fristen und installierte Originale erhalten. Offline-Patch-Prüfungen und Ergebnisse mit verzögerten Bestätigungen dokumentieren.
+- Vorhandene MinGW-Laufzeitabhängigkeiten für den originalen IRConfigurator bereitstellen. Proprietäre Binärdateien, persönliche Konfigurationen und Mitschnitte bleiben ausgeschlossen; dies bestätigt keine allgemeine Controller- oder Raspberry-Pi-Kompatibilität.
+
 ## 1.4.1 — 22. November 2026
 
 - `--factory-exe` erzeugt eine separate Factory-fähige Kopie des unterstützten OEM-Programmers mit SHA256-Prüfung von Quelle und Ergebnis. Originaldatei erhalten und unbekannte Zieldateien ablehnen.
