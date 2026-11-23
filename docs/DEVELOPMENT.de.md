@@ -80,7 +80,7 @@ Primärquellen: [systemd Inhibitor Locks](https://systemd.io/INHIBITOR_LOCKS/), 
 
 ## Optionales Wine-Programmer-Unterprojekt
 
-[`wine/README.md`](../wine/README.md) beschreibt die separate PE32-`ftd2xx.dll`,
+[`wine/README.de.md`](../wine/README.de.md) beschreibt die separate PE32-`ftd2xx.dll`,
 die lokale Verarbeitung von USB-Kommandos und den nativen UDP-/SocketCAN-Proxy.
 `wine/build.sh` baut das Unterprojekt; `python3 wine/tests/offline.py` prüft die
 DLL unter Wine ohne CAN-Zugriff. `wine/run.sh --prepare-only` legt eine private

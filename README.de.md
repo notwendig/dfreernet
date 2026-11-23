@@ -12,11 +12,11 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 ## Version 1.4.2
 
-Version 1.4.2 ergänzt eine Anschlussanleitung mit verpflichtender galvanischer Trennung, Systemtimer und Diagnosen, grafische OEM-/IR-Starter sowie geprüfte Wine-Download-Zeitkorrekturen in separaten Laufzeitkopien. Details stehen im [Änderungsprotokoll](CHANGELOG.de.md) und [Wine-Unterprojekt](wine/README.md). Controllerzugriffe bleiben experimentell; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
+Version 1.4.2 ergänzt eine Anschlussanleitung mit verpflichtender galvanischer Trennung, Systemtimer und Diagnosen, grafische OEM-/IR-Starter sowie geprüfte Wine-Download-Zeitkorrekturen in separaten Laufzeitkopien. Details stehen im [Änderungsprotokoll](CHANGELOG.de.md) und [Wine-Unterprojekt](wine/README.de.md). Controllerzugriffe bleiben experimentell; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
 
 ### Factory-Unterstützung seit 1.4.1
 
-Version 1.4.1 ergänzt einen optionalen, geprüften Factory-Patch für eine separate Kopie der unterstützten OEM-Programmer-EXE. Start: `DONGLE=Factory wine/run.sh --factory-exe`. Der Patch hebt die Anwendungsstufe auf 3 an und wählt den klassischen Dateidialog für Wine-Kompatibilität. Originaldateien bleiben unverändert und werden nicht mitgeliefert. Offline bestätigt wurden Generic Factory, Dateianhebung, Speichern unter und erneutes Öffnen; Controller-Schreibvorgänge wurden nicht getestet. Unterstützte Prüfsummen und Verwendung stehen im [Wine-Unterprojekt](wine/README.md). Die native dfreernet-Anwendung bleibt unabhängig von Wine.
+Version 1.4.1 ergänzt einen optionalen, geprüften Factory-Patch für eine separate Kopie der unterstützten OEM-Programmer-EXE. Start: `DONGLE=Factory wine/run.sh --factory-exe`. Der Patch hebt die Anwendungsstufe auf 3 an und wählt den klassischen Dateidialog für Wine-Kompatibilität. Originaldateien bleiben unverändert und werden nicht mitgeliefert. Offline bestätigt wurden Generic Factory, Dateianhebung, Speichern unter und erneutes Öffnen; Controller-Schreibvorgänge wurden nicht getestet. Unterstützte Prüfsummen und Verwendung stehen im [Wine-Unterprojekt](wine/README.de.md). Die native dfreernet-Anwendung bleibt unabhängig von Wine.
 
 ## Bildschirmfotos
 
@@ -134,7 +134,7 @@ Keine Ausgabe beweist keinen Rollstuhldefekt: Einschaltzustand, gewählte Schnit
 
 `scripts/run.sh` starten und unter **Bearbeiten → Einstellungen → CAN** die eingerichtete Schnittstelle auswählen. **CAN beim Start einrichten und aktivieren** ausgeschaltet lassen, wenn die Einrichtung manuell erfolgte. Empfangener Verkehr erscheint im CAN-Mitschnitt; das Herz erkennt nur den dokumentierten Heartbeat und bestätigt keine Kompatibilität. Controller-Lesevorgänge senden aktiv Anfragen und können das Fahren vorübergehend sperren. Den Rollstuhl stillstehen lassen, vor Änderungen eine Sicherung lesen und aufbewahren und für Controllerzugriffe die [Bedienungsanleitung](docs/USER-GUIDE.de.md) befolgen.
 
-Gespeicherte `.R-net`-Dateien lassen sich auch ohne CAN-Hardware erkunden. Das optionale [Wine-Unterprojekt](wine/README.md) verwendet dieselbe physische CAN-Verbindung; es ersetzt weder Adapter noch Abzweigkabel.
+Gespeicherte `.R-net`-Dateien lassen sich auch ohne CAN-Hardware erkunden. Das optionale [Wine-Unterprojekt](wine/README.de.md) verwendet dieselbe physische CAN-Verbindung; es ersetzt weder Adapter noch Abzweigkabel.
 
 ## Funktionen
 
