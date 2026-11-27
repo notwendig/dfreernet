@@ -55,6 +55,13 @@ class StartupTest(unittest.TestCase):
         self.assertEqual(result.returncode,2)
         self.assertIn('--offline',result.stderr)
 
+    def test_tray_recovery_override_keeps_automated_window_visible(self):
+        shot = self.root/'tray-override.png'
+        result = self.run_app('--offline','--start-in-tray','--no-tray','--software',
+                              '--screenshot',str(shot),'--quit-after','600')
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertTrue(shot.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'))
+
     def test_bad_profile_exits_before_interface_open(self):
         profile = self.root/'bad.json'
         profile.write_text('{broken')

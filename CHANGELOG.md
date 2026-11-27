@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.5.1 — 2026-11-27
+
+- State that the original BGM must be disconnected from the R-net bus before starting the emulator and remain disconnected throughout operation; both use the same captured module identity/slot.
+- Use “R-Net Control” / “R-Net Steuerung” as window, tray and launcher title. Share a joystick app icon across window, taskbar and tray, and supply the matching SVG desktop icon. Record the user's confirmation of registration, deregistration, reconnect and control on the local system.
+- Add bounded verification/reactivation of an already registered BGM when the app starts on running CAN: match live identities/slot assignment and captured configuration readbacks; keep initial registration, readiness resets and automatic ownership changes out of this path. Add private reference extraction, cleanup and offline rejection/replay tests. The user has confirmed reconnect and control on the existing system.
+- Make ordinary BGM window closing hide to tray; keep full GUI termination in the tray context menu. Suspend control and hide after confirmed return, restore on resume without taking control, and handle tray availability delayed at login. Add a user autostart installer for the existing binary and offline close/pause/startup regression checks.
+- Match the BGM power-on lifecycle: use the common `00C` exchange for discovery; profiles without a reconnect reference wait for power-on instead of sending enrollment bursts into normal operation. Show an explicit restart instruction, distinguish initial observer cleanup from a real disconnect, and retain module participation while tray control is suspended. Add offline regression checks.
+- Add optional tray startup/minimization with saved preferences, visible recovery when the tray is unavailable, and a tray control-suspension action. Suspension returns ownership without disconnecting the registered BGM; resuming requires a new explicit takeover. Retain orderly return before quitting, including hidden-window exits. Add offline tray, suspension and hidden-window heartbeat checks.
+
 ## 1.5.0 — 2026-11-27
 
 - Add the Linux `qt_attendant` R-net attendant emulator with confirmed registration/readiness, takeover and return, driving/seating modes within profile 8, full-range joystick axes and independent 0–100% speed control for the captured device arrangement.

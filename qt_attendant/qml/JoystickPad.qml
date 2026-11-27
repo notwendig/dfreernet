@@ -51,9 +51,17 @@ Item {
         maximumTouchPoints: 1
         touchPoints: [TouchPoint { id: point }]
         property bool pointerArmed: false
+        // Output is already neutral in C++. Clear the cached UI input after
+        // bindings settle, without reentering the enabled binding itself.
+        onEnabledChanged: if (!enabled) {
+            pointerArmed = false
+            Qt.callLater(() => pad.inputRequested(0, 0))
+        }
         function cancelInput() {
             pointerArmed = false
-            pad.inputRequested(0, 0)
+            // Disable already centers in C++. Avoid reentering the enabled
+            // binding when Qt cancels an active touch during suspension.
+            if (pad.enabled) pad.inputRequested(0, 0)
         }
         function updateInput() {
             if (!pad.inputActive || !pointerArmed) return

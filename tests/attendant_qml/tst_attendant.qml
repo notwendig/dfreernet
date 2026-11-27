@@ -60,6 +60,44 @@ TestCase {
         compare(controller.profile, 8)
         compare(controller.modeNumber, mode % 2 + 1)
     }
+    function test_hidden_window_keeps_neutral_ownership() {
+        mouseClick(item("takeControlButton"))
+        controller.setAxes(0, 100)
+        verify(controller.outputY > 0)
+        try {
+            app.hide()
+            tryCompare(controller, "outputY", 0)
+            wait(350)
+            verify(controller.attendantControl)
+            compare(controller.outputX, 0)
+            compare(controller.outputY, 0)
+        } finally {
+            app.show()
+            app.requestActivate()
+            wait(80)
+        }
+    }
+    function test_suspend_discards_held_pointer_until_new_gesture() {
+        mouseClick(item("takeControlButton"))
+        const pad = item("joystickPad")
+        mousePress(pad, pad.width/2, pad.height/2)
+        mouseMove(pad, pad.width/2, pad.height/4, 20)
+        tryVerify(() => controller.outputY > 0)
+        controller.setControlSuspended(true)
+        compare(controller.outputY, 0)
+        compare(controller.attendantControl, false)
+        controller.setControlSuspended(false)
+        compare(controller.attendantControl, false)
+        controller.toggleDrivingControl()
+        verify(controller.attendantControl)
+        wait(100)
+        compare(controller.outputY, 0)
+        mouseRelease(pad, pad.width/2, pad.height/4)
+        mousePress(pad, pad.width/2, pad.height/2)
+        mouseMove(pad, pad.width/2, pad.height/4, 20)
+        tryVerify(() => controller.outputY > 0)
+        mouseRelease(pad, pad.width/2, pad.height/4)
+    }
     function test_focus_keeps_control_without_resuming_held_pointer() {
         mouseClick(item("takeControlButton"))
         const pad = item("joystickPad")

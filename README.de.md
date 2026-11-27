@@ -12,9 +12,9 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 Linux-Begleitsteuerung: [R-net-BGM-Unterprojekt](qt_attendant/README.de.md). Start ohne Optionen mit `qt_attendant/run.sh` auf `can0`; Anmeldung, Übernahme/Rückgabe, Fahr-/Sitzmodus und separate Speed-Regelung für den getesteten Gerätebestand.
 
-## Version 1.5.0
+## Version 1.5.1
 
-Version 1.5.0 ergänzt die [Linux-R-net-Begleitsteuerung](qt_attendant/README.de.md) und den [nativen IR-Menüeditor](qt_iredit/README.de.md). Der BGM-Starter richtet can0/can1 ein; Fokuswechsel erhalten Kontrolle, Modus und Speed bei neutralem Joystick, und das Beenden fordert die Rückgabe an den Fahrer an. Ein privates Anmeldeprofil ist erforderlich und wird nicht mitgeliefert. [Änderungsprotokoll](CHANGELOG.de.md) und [Teststand](docs/VALIDATION.de.md) beschreiben geprüften Umfang und offene Live-Prüfungen. Galvanische Trennung bleibt erforderlich; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
+Version 1.5.1 aktualisiert [R-Net Steuerung, die Linux-Begleitsteuerung](qt_attendant/README.de.md), mit Tray-Start, Steuerungspause, Autostart und geprüfter Wiederaufnahme am bereits laufenden System. Schließen blendet das Fenster in den Tray aus; vollständig beenden lässt sich die App im Tray-Kontextmenü. Ein privates Anmeldeprofil ist erforderlich und wird nicht mitgeliefert. **Das originale BGM muss vor dem Start des Emulators vom R-net-Bus abgeklemmt sein und während des gesamten Emulationsbetriebs abgeklemmt bleiben.** [Änderungsprotokoll](CHANGELOG.de.md) und [Teststand](docs/VALIDATION.de.md) beschreiben den geprüften Umfang. Galvanische Trennung bleibt erforderlich; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
 
 ### Factory-Unterstützung seit 1.4.1
 

@@ -22,9 +22,12 @@ AttendantController::AttendantController(QObject *parent):QObject(parent),simula
     connect(&observer_, &CanObserver::firstDataFrame, this, &AttendantController::registerOnDataFrame);
     connect(&observer_, &CanObserver::changed, this, [this] {
         if (!observer_.connected()) {
-            if (observing_) powerDown_ = true;
+            // open() first closes an old socket, including on the very first
+            // attempt. Only losing a previously connected observer is a fault.
+            if (observing_ && observerWasConnected_) powerDown_ = true;
             automaticEnable_ = false;
             enrollment_.reset();
+            resume_.reset();
             startup_.reset();
             readiness_.reset();
             canControl_.reset();
@@ -32,6 +35,7 @@ AttendantController::AttendantController(QObject *parent):QObject(parent),simula
             desired_ = {};
             transmitter_.close();
         }
+        observerWasConnected_ = observer_.connected();
         emit changed();
     });
     timer_.setInterval(10);timer_.setTimerType(Qt::PreciseTimer);connect(&timer_,&QTimer::timeout,this,&AttendantController::pulse);timer_.start();
@@ -40,6 +44,7 @@ AttendantController::~AttendantController(){shutdown();observer_.disconnect(this
 void AttendantController::blockLiveEnrollment(){
     stop();
     enrollment_.reset();
+    resume_.reset();
     startup_.reset();
     readiness_.reset();
     txAllowed_ = false;
@@ -50,6 +55,9 @@ void AttendantController::blockLiveEnrollment(){
 bool AttendantController::setEnrollmentProfile(const QJsonObject &profile){
     if (enrollment_.configure(profile)) {
         setModuleIdentity(QByteArray::fromHex(profile.value("identity").toString().toLatin1()));
+        if(!resume_.configure(profile)) {
+            detail_=text("Invalid registered BGM reference");return false;
+        }
         return enrollment_.liveProfileReady();
     } else {
         detail_ = text("Invalid module enrollment profile");
@@ -59,7 +67,6 @@ bool AttendantController::setEnrollmentProfile(const QJsonObject &profile){
 void AttendantController::registerOnDataFrame(){
     if (powerDown_ || closing_ || effective().linked) return;
     engine_.beginSession(clock_.elapsed());
-    if (txAllowed_) startCanTx();
     emit changed();
 }
 void AttendantController::setCanInterface(const QString &name){if(observer_.connected()||transmitter_.connected())return;interface_=name.trimmed();emit changed();}
@@ -147,6 +154,7 @@ void AttendantController::startCanTx(){
     else {
         detail_=transmitter_.error();
         enrollment_.fail(detail_);
+        resume_.fail(detail_);
         canControl_.reset();
         engine_.stop(Reason::LinkLost);
     }
@@ -158,6 +166,7 @@ void AttendantController::sendFrames(const QStringList &frames){
     for (const auto &frame : frames) {
         if (!transmitter_.send(frame)) {
             enrollment_.fail(transmitter_.error());
+            resume_.fail(transmitter_.error());
             canControl_.reset();
             engine_.stop();
             automaticEnable_ = false;
@@ -172,6 +181,8 @@ void AttendantController::receiveFrame(quint32 id, const QByteArray &data){
     if (id == 0x00c && data.isEmpty()) powerDown_ = false;
     if (!effective().linked && id != 0) registerOnDataFrame();
     if (id == 0x00c && data.isEmpty()) {
+        resume_.reset();
+        if (controlSuspended_) suspendReturnConfirmed_=true;
         returnFailed_ = controlFailed_ = false;
         canControl_.reset();
         stop();
@@ -185,6 +196,17 @@ void AttendantController::receiveFrame(quint32 id, const QByteArray &data){
         systemPowerOffRequested();
         return;
     }
+    // On a running bus, verify the existing assignment by reads. This path
+    // never restarts discovery, initializes peer readiness or transfers tables.
+    if(!closing_ && !enrollment_.started() && resume_.configured() && !resume_.started())
+        resume_.begin(clock_.elapsed());
+    const bool wasResumed=resume_.ready();
+    const auto resumeFrames=resume_.receive(id,data,clock_.elapsed());
+    if(!resumeFrames.isEmpty() && !transmitter_.connected() && resume_.running())startCanTx();
+    if(transmitter_.connected())sendFrames(resumeFrames);
+    if(!wasResumed && resume_.ready())detail_=text("Registered BGM verified; takeover is available");
+    if(resume_.state()==RegisteredResume::State::Failed)
+        detail_=QCoreApplication::translate("RNet",resume_.error().toUtf8().constData());
     if (id == 0x1fb00000 && data.size() == 8 && !moduleIdentity_.isEmpty() && data != moduleIdentity_) {
         stop();
         startup_.reset();
@@ -201,7 +223,7 @@ void AttendantController::receiveFrame(quint32 id, const QByteArray &data){
             sendFrames(readiness_.begin(clock_.elapsed()));
         sendFrames(readiness_.receive(id,data,clock_.elapsed()));
     }
-    if (id == 0x02000000 && readiness_.ready()) {
+    if (id == 0x02000000 && moduleReady()) {
         stop();
         enrollment_.fail(text("Another device is sending joystick slot 0"));
         detail_ = text("Another device is sending joystick slot 0");
@@ -210,17 +232,19 @@ void AttendantController::receiveFrame(quint32 id, const QByteArray &data){
     if (id == 0x063 || id == 0x00e || id == 0x03c30f0f)
         lastControllerFrame_ = clock_.elapsed();
     bool controlChanged = false;
-    if (readiness_.ready() && startup_.state() == StartupConfig::State::Ready) {
+    if (moduleReady()) {
         const bool returning=canControl_.returning();
         controlChanged = canControl_.receive(id, data, clock_.elapsed());
         sendFrames(canControl_.takeOutgoing());
         if (controlChanged && returning && !canControl_.owned() && !canControl_.pending())
             closeReturnConfirmed_=true;
+        if (controlChanged && controlSuspended_ && !canControl_.owned() && !canControl_.pending() && enrollment_.error().isEmpty())
+            suspendReturnConfirmed_=true;
     }
     if (controlChanged) {
         const bool owns = canControl_.owned();
         engine_.stop();
-        if (closing_ && owns) {
+        if ((closing_ || controlSuspended_) && owns) {
             sendFrames(canControl_.request(false,clock_.elapsed()));
             emit changed();
             return;
@@ -261,6 +285,11 @@ void AttendantController::pulse(){
     }
     if (txAllowed_) {
         const auto now = clock_.elapsed();
+        sendFrames(resume_.tick(now));
+        if(resume_.state()==RegisteredResume::State::Failed) {
+            if(transmitter_.connected())stop();
+            detail_=QCoreApplication::translate("RNet",resume_.error().toUtf8().constData());
+        }
         sendFrames(enrollment_.tick(now));
         if (enrollment_.configurationRequested() && startup_.state() == StartupConfig::State::Waiting)
             sendFrames({startup_.begin(now)});
@@ -319,6 +348,22 @@ void AttendantController::setApplicationActive(bool active){
     pulse();
     emit changed();
 }
+void AttendantController::setControlSuspended(bool suspended){
+    if (closing_ || controlSuspended_ == suspended) return;
+    // A delayed takeover/mode confirmation must finish its return before the
+    // pause can be lifted. Never revive a request issued before suspension.
+    if (!suspended && !canResumeControl()) return;
+    if (suspended)
+        suspendReturnConfirmed_=!txAllowed_||(!canControl_.owned()&&!canControl_.pending());
+    controlSuspended_ = suspended;
+    desired_.x = desired_.y = 0;
+    desired_.attendant = desired_.hold = automaticEnable_ = false;
+    engine_.stop(Reason::Passenger);
+    if (advanceRequest() && suspended && txAllowed_ && canControl_.owned())
+        sendFrames(canControl_.request(false,clock_.elapsed()));
+    pulse();
+    emit changed();
+}
 bool AttendantController::requestClose(){
     if (!txAllowed_ || (!canControl_.owned() && !canControl_.pending())) {
         shutdown();
@@ -338,7 +383,9 @@ bool AttendantController::requestClose(){
 }
 void AttendantController::systemPowerOffRequested(){
     powerDown_ = true;
+    if (controlSuspended_) suspendReturnConfirmed_=true;
     enrollment_.reset();
+    resume_.reset();
     startup_.reset();
     readiness_.reset();
     canControl_.reset();
@@ -349,7 +396,7 @@ void AttendantController::systemPowerOffRequested(){
     detail_ = text("CAN system stopped");
     emit changed();
 }
-void AttendantController::shutdown(){observing_=false;stop();transmitter_.close();timer_.stop();engine_.endSession();observer_.close();}
+void AttendantController::shutdown(){observing_=false;sendFrames(resume_.cancel());stop();transmitter_.close();timer_.stop();engine_.endSession();observer_.close();}
 QString AttendantController::statusText() const{
     if (closing_) return text("Returning control before closing");
     if (!observer_.error().isEmpty()) return text("CAN interface is missing or down.");
@@ -358,9 +405,13 @@ QString AttendantController::statusText() const{
     if (liveEnrollmentBlocked_) return text("Live enrollment disabled after DIME error 8105");
     const auto &s=effective();
     if (!s.linked) return text("Waiting for CAN data");
+    if(txAllowed_ && resume_.running())return text("Verifying registered BGM");
+    if(txAllowed_ && resume_.state()==RegisteredResume::State::Failed)return text("Registered BGM could not be verified");
     if (txAllowed_ && !enrollment_.error().isEmpty()) return text("Module registration failed");
-    if (txAllowed_ && startup_.state() == StartupConfig::State::Waiting) {
+    if (txAllowed_ && !resume_.ready() && startup_.state() == StartupConfig::State::Waiting) {
         if (enrollment_.running()) return text("Module registration in progress");
+        if (enrollment_.configured() && !enrollment_.started())
+            return text("CAN active; keep the app open and restart the system");
         return enrollment_.configured() ? text("Waiting for system power-on") : text("Module enrollment profile is missing");
     }
     if (txAllowed_ && startup_.state() == StartupConfig::State::Loading)
@@ -377,7 +428,9 @@ QString AttendantController::statusText() const{
     if (txAllowed_ && controlFailed_) return text("CAN control confirmation timed out");
     if (txAllowed_ && canControl_.returning()) return text("Waiting for passenger mode confirmation");
     if (txAllowed_ && canControl_.pending()) return text("Waiting for CAN control confirmation");
+    if (controlSuspended_) return text("Control suspended");
     if (txAllowed_ && canControl_.owned()) return text("CAN control confirmed");
+    if (txAllowed_ && resume_.ready())return text("Registered BGM active; takeover is available");
     if (txAllowed_ && readiness_.ready()) return text("Module ready; passenger has control");
     if(!s.power)return text("Virtual module off");
     switch(s.reason){

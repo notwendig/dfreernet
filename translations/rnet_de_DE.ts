@@ -3082,5 +3082,89 @@ Experimentell; rudimentär auf Permobil T5 VS getestet. Die Kompatibilität mit 
     <message><source>CAN monitor; controls disabled</source><translation>CAN-Monitor; Bedienung deaktiviert</translation></message>
     <message><source>Startup table transfer timed out</source><translation>Zeitüberschreitung bei der Übertragung der Starttabellen</translation></message>
     <message><source>Another device is announcing slot 0</source><translation>Ein anderes Gerät meldet sich für Slot 0 an</translation></message>
+        <message>
+            <source>Show window</source>
+            <translation>Fenster anzeigen</translation>
+        </message>
+        <message>
+            <source>Hide to tray</source>
+            <translation>In den Infobereich ausblenden</translation>
+        </message>
+        <message>
+            <source>Suspend control</source>
+            <translation>Steuerung pausieren</translation>
+        </message>
+        <message>
+            <source>Resume control</source>
+            <translation>Steuerung fortsetzen</translation>
+        </message>
+        <message>
+            <source>Start in system tray</source>
+            <translation>Im Infobereich starten</translation>
+        </message>
+        <message>
+            <source>Minimize to system tray</source>
+            <translation>In den Infobereich minimieren</translation>
+        </message>
+        <message>
+            <source>Quit</source>
+            <translation>Beenden</translation>
+        </message>
+        <message>
+            <source>Control suspended</source>
+            <translation>Steuerung pausiert</translation>
+        </message>
+        <message>
+            <source>CAN active; keep the app open and restart the system</source>
+            <translation>CAN aktiv · App geöffnet lassen und das System neu einschalten</translation>
+        </message>
+        <message>
+            <source>Invalid registered BGM reference</source>
+            <translation>Ungültige Referenz für das registrierte BGM</translation>
+        </message>
+        <message>
+            <source>Registered BGM verified; takeover is available</source>
+            <translation>Registriertes BGM geprüft; Übernahme ist möglich</translation>
+        </message>
+        <message>
+            <source>Verifying registered BGM</source>
+            <translation>Registriertes BGM wird geprüft</translation>
+        </message>
+        <message>
+            <source>Registered BGM could not be verified</source>
+            <translation>Registriertes BGM konnte nicht bestätigt werden</translation>
+        </message>
+        <message>
+            <source>Registered BGM active; takeover is available</source>
+            <translation>Registriertes BGM aktiv; Übernahme ist möglich</translation>
+        </message>
+        <message>
+            <source>Registered BGM verification timed out; restart the system with this app open</source>
+            <translation>Zeitüberschreitung bei der BGM-Prüfung; App geöffnet lassen und System neu einschalten</translation>
+        </message>
+        <message>
+            <source>Another device is using BGM slot 0</source>
+            <translation>Ein anderes Gerät verwendet BGM-Slot 0</translation>
+        </message>
+        <message>
+            <source>Registered device assignment differs from the profile</source>
+            <translation>Registrierte Gerätezuordnung weicht vom Profil ab</translation>
+        </message>
+        <message>
+            <source>Registered BGM identity read was rejected</source>
+            <translation>Kennungsabfrage für registriertes BGM wurde abgewiesen</translation>
+        </message>
+        <message>
+            <source>Stored BGM configuration differs from the profile</source>
+            <translation>Gespeicherte BGM-Konfiguration weicht vom Profil ab</translation>
+        </message>
+        <message>
+            <source>Registered BGM configuration read was rejected</source>
+            <translation>Konfigurationsabfrage für registriertes BGM wurde abgewiesen</translation>
+        </message>
+        <message>
+            <source>R-Net Control</source>
+            <translation>R-Net Steuerung</translation>
+        </message>
 </context>
 </TS>

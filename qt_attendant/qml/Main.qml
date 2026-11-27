@@ -10,7 +10,7 @@ ApplicationWindow {
     height: 390
     minimumWidth: 440
     minimumHeight: 370
-    title: tr("Attendant module bench")
+    title: tr("R-Net Control")
     color: "#f2f5fa"
     font.pixelSize: 14
     palette.button: "#e5edf8"
@@ -26,7 +26,7 @@ ApplicationWindow {
         spacing: 12
         RowLayout {
             Layout.fillWidth: true
-            Label { text: window.tr("Attendant module"); font.pixelSize: 24; font.bold: true; color: "#18304d"; Layout.fillWidth: true }
+            Label { text: window.tr("R-Net Control"); font.pixelSize: 24; font.bold: true; color: "#18304d"; Layout.fillWidth: true }
             Label { text: controller.canInterface + " · " + controller.canCount; color: "#526b87" }
         }
         Label {

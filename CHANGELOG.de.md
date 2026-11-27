@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.5.1 — 27. November 2026
+
+- Klar dokumentieren: Das originale BGM muss vor dem Start des Emulators vom R-net-Bus abgeklemmt sein und während des gesamten Betriebs abgeklemmt bleiben; beide verwenden dieselbe aufgezeichnete Modulkennung und denselben Slot.
+- Fenster, Tray und Starter „R-Net Control“ / „R-Net Steuerung“ nennen. Ein gemeinsames Joystick-Symbol für Fenster, Taskleiste und Tray sowie ein passendes SVG-Desktopsymbol verwenden. Benutzerbestätigung von Anmeldung, Deregistrierung, Wiederaufnahme und Steuerung am lokalen System dokumentieren.
+- Bereits registriertes BGM beim App-Start am laufenden CAN durch begrenzte Kennungs-/Slot- und Konfigurationsabfragen prüfen und aktivieren. Diesen Pfad ohne Erst-Anmeldung, Bereitschaftsreset oder automatische Übernahme ausführen. Private Referenzextraktion, Abbruchbehandlung und Offline-Prüfungen ergänzen. Der Benutzer hat Wiederaufnahme und Steuerung am bestehenden System bestätigt.
+- Normales Schließen des BGM-Fensters in den Tray führen; vollständiges GUI-Beenden im Tray-Kontextmenü belassen. Bei Steuerungspause nach bestätigter Rückgabe ausblenden, bei Fortsetzen ohne Übernahme wieder anzeigen und verzögerte Tray-Verfügbarkeit beim Login berücksichtigen. Benutzer-Autostartinstaller für die vorhandene Programmdatei und Offline-Regressionstests für Schließen/Pause/Start ergänzen.
+- Den BGM-Einschaltablauf abbilden: den gemeinsamen `00C`-Dialog für die Geräteerkennung nutzen; ohne Wiederanbindungsreferenz auf Einschalten warten, statt Anmeldeblöcke in den laufenden Bus zu senden. Klare Neustartanweisung anzeigen, anfängliches Socket-Aufräumen von echtem Verbindungsverlust unterscheiden und die Modulteilnahme bei Steuerungspause im Tray erhalten. Offline-Regressionstests ergänzen.
+- Optionalen Tray-Start und Minimierung mit gespeicherten Einstellungen, sichtbarer Rückfallebene bei fehlendem Tray und einer Steuerungspause im Tray ergänzen. Die Pause gibt die Kontrolle zurück, ohne das angemeldete BGM zu trennen; Fortsetzen verlangt eine neue ausdrückliche Übernahme. Geordnete Rückgabe beim Beenden auch aus dem ausgeblendeten Zustand erhalten. Offline-Prüfungen für Tray, Pause und neutrale Hintergrundeingaben bei ausgeblendetem Fenster ergänzen.
+
 ## 1.5.0 — 27. November 2026
 
 - Linux-R-net-Begleitsteuerung `qt_attendant` mit bestätigter Anmeldung/Bereitschaft, Übernahme und Rückgabe, Fahr-/Sitzmodus im Profil 8, vollem Joystick-Ausschlag und unabhängiger Speed-Regelung von 0–100 % für den aufgezeichneten Gerätebestand ergänzen.

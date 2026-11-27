@@ -20,6 +20,7 @@ public:
     void reset();
     void fail(const QString &reason);
     bool running() const { return running_; }
+    bool started() const { return started_; }
     bool configured() const { return serial_.size() == 8; }
     bool registeredRestart() const { return normalConfirmed_; }
     bool complete() const { return normalConfirmed_ || tables_.complete(); }
@@ -36,6 +37,7 @@ private:
     QByteArray serial_, keys_;
     QSet<quint16> expectedWords_, receivedWords_;
     bool running_ = false, advertising_ = false, enumerated_ = false, metadataSent_ = false;
+    bool started_ = false;
     bool configurationRequested_ = false;
     qint64 nextAdvertisement_ = 0, deadline_ = 0, normalReadyAt_ = 0;
     int responses_ = 0, advertisements_ = 0;

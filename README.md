@@ -12,9 +12,9 @@ An experimental desktop application for reading R-Net controller configurations,
 
 Linux attendant control: [R-net BGM subproject](qt_attendant/README.md). Start without options using `qt_attendant/run.sh` on `can0`; enrollment, takeover/return, driving/seating modes and separate speed control for the tested device arrangement.
 
-## Version 1.5.0
+## Version 1.5.1
 
-Version 1.5.0 adds the [Linux R-net attendant emulator](qt_attendant/README.md) and the [native IR menu editor](qt_iredit/README.md). The BGM launcher sets up can0/can1; focus changes retain control, mode and speed with a neutral joystick, and closing requests return to the passenger. A private enrollment profile is required and is not distributed. See the [changelog](CHANGELOG.md) and [validation status](docs/VALIDATION.md) for the tested scope and remaining live checks. Galvanic isolation remains required; Raspberry Pi hardware has not been separately validated.
+Version 1.5.1 updates [R-Net Control, the Linux attendant emulator](qt_attendant/README.md), with tray startup, control suspension, autostart, and verified reconnect to an already running system. Closing the window hides it in the tray; fully exit through the tray context menu. A private enrollment profile is required and is not distributed. **The original BGM must be disconnected from the R-net bus before starting the emulator and remain disconnected throughout its operation.** See the [changelog](CHANGELOG.md) and [validation status](docs/VALIDATION.md) for the tested scope. Galvanic isolation remains required; Raspberry Pi hardware has not been separately validated.
 
 ### Factory support since 1.4.1
 

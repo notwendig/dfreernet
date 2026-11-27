@@ -31,6 +31,64 @@ class AttendantTest : public QObject {
             QVERIFY(frames.isEmpty());
     }
 private slots:
+    void initialObserverOpenDoesNotLatchPowerDown(){
+        AttendantController controller;
+        // Invalid name is rejected before socket creation: no real CAN access.
+        controller.setCanInterface("offline-test-interface-too-long");
+        controller.observeCan();
+        auto *observer=controller.findChild<CanObserver *>();QVERIFY(observer);
+        observer->firstDataFrame();
+        QVERIFY(controller.powered());
+        QCOMPARE(controller.canTxCount(),QString("0"));
+        controller.systemPowerOffRequested();
+        observer->firstDataFrame();QVERIFY(!controller.powered());
+    }
+    void existingTrafficWaitsForCommonPowerOn(){
+        const auto profile=QJsonDocument::fromJson(R"({"identity":"1122334455667788","announcement_keys":"0102030405060708","other_high_words":[1,2,3,4],"identities":["1122334455667788","0100000000000000","0200000000000000","0300000000000000","0400000000000000"],"startup_tables":[{"id":"1ec00800","data":"0000000000000000","ms":0},{"id":"1ec10800","data":"0000000000000000","ms":0}]})").object();
+        AttendantController controller;
+        controller.setCanInterface("offline-test-interface-too-long");
+        controller.allowCanTx(true);QVERIFY(controller.setEnrollmentProfile(profile));
+        auto *observer=controller.findChild<CanObserver *>();QVERIFY(observer);
+        observer->firstDataFrame();
+        QVERIFY(controller.powered());QVERIFY(!controller.canTxConnected());
+        observer->dataFrame(0x03c30f0f,QByteArray::fromHex("00000000"));
+        const auto waiting=QStringLiteral("CAN active; keep the app open and restart the system");
+        QCOMPARE(controller.statusText(),waiting);
+        QVERIFY(!controller.attendantControl());QVERIFY(!controller.controlsEnabled());
+        QCOMPARE(controller.canTxCount(),QString("0")); // invalid interface prevented socket creation
+        for(int i=0;i<10;++i)observer->dataFrame(0x03c30f0f,QByteArray::fromHex("00000000"));
+        QTest::qWait(250); // more than the former advertisement delay
+        QCOMPARE(controller.statusText(),waiting);
+        QVERIFY(!controller.canTxConnected());QCOMPARE(controller.canTxCount(),QString("0"));
+        controller.setControlSuspended(true);
+        observer->dataFrame(0x00c,{});
+        // Even while suspended, power-on starts the device exchange. Here the
+        // deliberately invalid interface rejects the sender before any socket.
+        QCOMPARE(controller.statusText(),QStringLiteral("Module registration failed"));
+        QVERIFY(controller.controlSuspended());QVERIFY(!controller.attendantControl());
+        controller.systemPowerOffRequested();
+        observer->dataFrame(0x03c30f0f,QByteArray::fromHex("00000000"));
+        QVERIFY(!controller.powered());QCOMPARE(controller.canTxCount(),QString("0"));
+    }
+    void registeredResumeNeverEnablesControlOnFailedTransport(){
+        auto profile=QJsonDocument::fromJson(R"({"identity":"1122334455667788","announcement_keys":"0102030405060708","other_high_words":[1,2,3,4],"identities":["1122334455667788","0100000000000000","0200000000000000","0300000000000000","0400000000000000"],"startup_tables":[{"id":"1ec00800","data":"0000000000000000","ms":0},{"id":"1ec10800","data":"0000000000000000","ms":0}]})").object();
+        profile["resume_reference"]=QJsonObject{{"configuration",QJsonArray{"01000000","02000000"}},
+                                               {"flags","12345678"},{"profiles","80000000"}};
+        AttendantController c;c.setCanInterface("offline-test-interface-too-long");c.allowCanTx(true);
+        QVERIFY(c.setEnrollmentProfile(profile));
+        auto *observer=c.findChild<CanObserver *>();QVERIFY(observer);
+        observer->firstDataFrame();
+        for(int i=0;i<2;++i) {
+            observer->dataFrame(0x00e,QByteArray::fromHex("0100000000000000"));
+            observer->dataFrame(0x03c30f0f,QByteArray(7,char(0x87)));
+        }
+        QCOMPARE(c.statusText(),QStringLiteral("Registered BGM could not be verified"));
+        QVERIFY(!c.controlsEnabled());QVERIFY(!c.attendantControl());QVERIFY(!c.canTxConnected());
+        QCOMPARE(c.canTxCount(),QString("0"));
+        observer->dataFrame(0x00c,{}); // new boot restores the canonical power-on path
+        QCOMPARE(c.statusText(),QStringLiteral("Module registration failed"));
+        QCOMPARE(c.canTxCount(),QString("0"));
+    }
     void registrationOnlyDisablesDriving(){
         AttendantController controller;
         controller.registerOnDataFrame();
@@ -178,7 +236,9 @@ private slots:
         ModuleEnrollment enrollment;
         QVERIFY(enrollment.configure(profile));
         enrollment.allowAutomaticEnrollment(false);
+        QVERIFY(!enrollment.started());
         enrollment.boot(0);
+        QVERIFY(enrollment.started());
         // The JSM announces the pre-join network before our own announcement.
         enrollment.receive(0x7b0,{},20);
         for(unsigned slot=0;slot<4;++slot)
@@ -214,6 +274,7 @@ private slots:
         QVERIFY(enrollment.tick(1000).isEmpty());
         // Power-down/reset must not switch back to candidate registration.
         enrollment.reset();
+        QVERIFY(!enrollment.started());
         enrollment.boot(2000);
         QCOMPARE(enrollment.tick(2200).size(),8);
         // An unexpected request never silently upgrades into initial enrollment.
@@ -935,6 +996,26 @@ private slots:
         c.setAxes(0,100);QCOMPARE(c.outputY(),100);
         c.setAxes(std::numeric_limits<double>::quiet_NaN(),0);QCOMPARE(c.outputY(),0);QVERIFY(!c.attendantControl());
         c.shutdown();QVERIFY(!c.canConnected());QCOMPARE(c.outputX(),0);
+    }
+    void suspendReturnsControlAndPreservesRegistration(){
+        AttendantController c;c.registerOnDataFrame();c.toggleDrivingControl();
+        c.nextProfile();c.nextSpeed();c.setAxes(0,100);QCOMPARE(c.outputY(),100);
+        const auto serial=c.benchSerial();const auto mode=c.modeNumber(),speed=c.inputLimit();
+        c.setControlSuspended(true);
+        QVERIFY(c.suspensionComplete());
+        QVERIFY(c.controlSuspended());QVERIFY(!c.attendantControl());QVERIFY(!c.controlsEnabled());
+        QCOMPARE(c.outputY(),0);QVERIFY(!c.held());QVERIFY(c.powered());
+        QCOMPARE(c.benchSerial(),serial);QCOMPARE(c.modeNumber(),mode);QCOMPARE(c.inputLimit(),speed);
+        c.toggleDrivingControl();c.requestControl();c.nextSpeed();c.nextProfile();c.setAxes(0,100);c.setHold(true);
+        QVERIFY(!c.attendantControl());QCOMPARE(c.outputY(),0);QCOMPARE(c.modeNumber(),mode);QCOMPARE(c.inputLimit(),speed);
+        c.setControlSuspended(false);QVERIFY(c.controlsEnabled());QVERIFY(!c.attendantControl());QVERIFY(!c.held());
+        QVERIFY(!c.suspensionComplete());
+        c.setAxes(0,0);c.toggleDrivingControl();QVERIFY(c.attendantControl());QVERIFY(c.held());
+    }
+    void suspensionSurvivesPowerCycle(){
+        AttendantController c;c.registerOnDataFrame();c.toggleDrivingControl();c.setControlSuspended(true);
+        c.systemPowerOffRequested();QVERIFY(c.controlSuspended());QVERIFY(!c.attendantControl());
+        c.setControlSuspended(false);QVERIFY(!c.controlsEnabled());QVERIFY(!c.attendantControl());
     }
 };
 QTEST_GUILESS_MAIN(AttendantTest)

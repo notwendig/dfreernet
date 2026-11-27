@@ -1,8 +1,10 @@
 #include "attendant_controller.hpp"
 #include "shutdown_signals.hpp"
+#include "tray_controller.hpp"
+#include "app_icon.hpp"
 #include "capture_playback.hpp"
 #include <QCommandLineParser>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -53,7 +55,8 @@ bool legacyInstancePresent(const QString &interface)
 }
 }
 int main(int argc,char **argv){
-    QGuiApplication app(argc,argv);app.setDesktopFileName("dfreernet-attendant");app.setApplicationName("qt_attendant");app.setOrganizationName("LocalRNet");app.setApplicationVersion(ATTENDANT_VERSION);
+    QApplication app(argc,argv);app.setDesktopFileName("dfreernet-attendant");app.setApplicationName("qt_attendant");app.setOrganizationName("LocalRNet");app.setApplicationVersion(ATTENDANT_VERSION);
+    app.setWindowIcon(attendant::applicationIcon());
     QCommandLineParser parser;parser.setApplicationDescription("Linux R-net attendant module: automatic startup on can0 and confirmed control.");parser.addHelpOption();parser.addVersionOption();
     parser.addOption({"interface","Linux SocketCAN interface.","interface","can0"});
     QCommandLineOption legacyTx("can-tx","Compatibility option; CAN control is the default.");
@@ -66,6 +69,9 @@ int main(int argc,char **argv){
     parser.addOption({"identity-file","Eight-byte module identity file.","file"});
     parser.addOption({"offline","Use only the local simulation; disable CAN output."});
     parser.addOption({"observe","Open the Linux CAN observer (receive only)."});
+    parser.addOption({"start-in-tray","Start hidden in the system tray, if available."});
+    parser.addOption({"minimize-to-tray","Hide the window in the system tray when minimized."});
+    parser.addOption({"no-tray","Keep the window visible and ignore saved tray preferences."});
     parser.addOption({"language","en_US or de_DE.","language"});
     parser.addOption({"software","Use the software scene graph (offline UI checks)."});
     parser.addOption({"screenshot","Write a local window screenshot.","file"});
@@ -85,7 +91,7 @@ int main(int argc,char **argv){
     if(!qtGerman.load("qtbase_de",QLibraryInfo::path(QLibraryInfo::TranslationsPath)))qWarning("Qt standard German translations unavailable");
     auto language=parser.value("language");if(language.isEmpty())language=QSettings().value("language",QLocale::system().name().startsWith("de")?"de_DE":"en_US").toString();
     if(language!="en_US"&&language!="de_DE"){std::fprintf(stderr,"Use --language en_US or de_DE.\n");return 2;}
-    auto setLanguage=[&](const QString &code){app.removeTranslator(&german);app.removeTranslator(&qtGerman);QLocale::setDefault(QLocale(code));if(code=="de_DE"){app.installTranslator(&qtGerman);app.installTranslator(&german);}};
+    auto setLanguage=[&](const QString &code){app.removeTranslator(&german);app.removeTranslator(&qtGerman);QLocale::setDefault(QLocale(code));if(code=="de_DE"){app.installTranslator(&qtGerman);app.installTranslator(&german);}app.setApplicationDisplayName(QCoreApplication::translate("RNet","R-Net Control"));};
     setLanguage(language);
     if (parser.isSet("play-capture")) {
         const auto capture = attendant::readCapture(parser.value("play-capture"));
@@ -166,14 +172,26 @@ int main(int argc,char **argv){
         });
     }
     QQmlApplicationEngine engine;engine.rootContext()->setContextProperty("controller",&controller);
-    QObject::connect(&controller,&attendant::AttendantController::languageRequested,&engine,[&](const QString &code){if(code!="en_US"&&code!="de_DE")return;setLanguage(code);QSettings().setValue("language",code);engine.retranslate();});
-    QObject::connect(&app,&QGuiApplication::applicationStateChanged,&controller,[&](Qt::ApplicationState state){controller.setApplicationActive(state==Qt::ApplicationActive);});
+    QSettings traySettings;
+    std::unique_ptr<attendant::TrayController> tray;
+    QObject::connect(&controller,&attendant::AttendantController::languageRequested,&engine,[&](const QString &code){if(code!="en_US"&&code!="de_DE")return;setLanguage(code);QSettings().setValue("language",code);engine.retranslate();if(tray)tray->retranslate();});
     QObject::connect(&app,&QCoreApplication::aboutToQuit,&controller,&attendant::AttendantController::shutdown);
+    QObject::connect(&controller,&attendant::AttendantController::closeReady,&app,&QCoreApplication::quit,Qt::QueuedConnection);
     engine.load(QUrl("qrc:/qt/qml/Dfree/Attendant/qml/Main.qml"));if(engine.rootObjects().isEmpty())return 2;
     auto *window=qobject_cast<QQuickWindow *>(engine.rootObjects().first());if(!window)return 2;
+    window->setIcon(app.windowIcon());
+    QObject::connect(&app,&QGuiApplication::applicationStateChanged,&controller,[&](Qt::ApplicationState state){controller.setApplicationActive(state==Qt::ApplicationActive && window->isVisible() && window->isActive());});
+    QObject::connect(window,&QWindow::activeChanged,&controller,[&]{controller.setApplicationActive(window->isActive() && window->isVisible());});
+    QObject::connect(window,&QWindow::visibleChanged,&controller,[&](bool visible){if(!visible)controller.setApplicationActive(false);});
+    // Diagnostics and automated screenshots always use a visible window.
+    if(live || parser.isSet("start-in-tray") || parser.isSet("minimize-to-tray")) {
+        tray=std::make_unique<attendant::TrayController>(window,&controller,traySettings,
+            attendant::TrayController::Options{parser.isSet("start-in-tray"),parser.isSet("minimize-to-tray"),parser.isSet("no-tray") || parser.isSet("screenshot")});
+        QObject::connect(tray.get(),&attendant::TrayController::quitReady,&app,&QCoreApplication::quit);
+    }
     attendant::ShutdownSignals shutdownSignals;
     const QPointer<QQuickWindow> guardedWindow(window);
-    if(!shutdownSignals.install([guardedWindow]{if(guardedWindow)guardedWindow->close();})) {
+    if(!shutdownSignals.install([guardedWindow,&tray]{if(tray)tray->requestQuit();else if(guardedWindow)guardedWindow->close();})) {
         std::fprintf(stderr,"Cannot install orderly shutdown handlers.\n");
         return 2;
     }

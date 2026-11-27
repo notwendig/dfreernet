@@ -85,6 +85,7 @@ void ModuleEnrollment::boot(qint64 now)
 {
     reset();
     if (!configured()) return;
+    started_ = true;
     initialBoot_ = initialRequested_;
     initialRequested_ = false;
     running_ = advertising_ = true;
@@ -93,6 +94,7 @@ void ModuleEnrollment::boot(qint64 now)
 }
 void ModuleEnrollment::reset()
 {
+    started_ = false;
     running_ = advertising_ = enumerated_ = metadataSent_ = configurationRequested_ = false;
     responses_ = advertisements_ = 0;
     serialParts_ = 0;

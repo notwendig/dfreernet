@@ -2,7 +2,7 @@
 
 [English](README.md) | [Deutsch](README.de.md)
 
-Teil von dfreernet 1.5.0.
+Teil von dfreernet 1.5.1.
 
 Eigenständiger Qt-Widgets-Editor für lokale R-net-Menüs im Format `.RnIR3` und
 Pronto-Hex-Signale. Er öffnet keine CAN-Schnittstelle und bietet keinen

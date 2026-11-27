@@ -7,6 +7,7 @@
 #include "startup_config.hpp"
 #include "startup_ready.hpp"
 #include "module_enrollment.hpp"
+#include "registered_resume.hpp"
 #include <QElapsedTimer>
 #include <QObject>
 #include <QTimer>
@@ -21,6 +22,7 @@ class AttendantController : public QObject {
     Q_PROPERTY(bool attendantControl READ attendantControl NOTIFY changed)
     Q_PROPERTY(bool held READ held NOTIFY changed)
     Q_PROPERTY(bool controlsEnabled READ controlsEnabled NOTIFY changed)
+    Q_PROPERTY(bool controlSuspended READ controlSuspended NOTIFY changed)
     Q_PROPERTY(int profile READ profile CONSTANT)
     Q_PROPERTY(int modeNumber READ modeNumber NOTIFY changed)
     Q_PROPERTY(int inputX READ inputX NOTIFY changed)
@@ -37,13 +39,17 @@ class AttendantController : public QObject {
 public:
     explicit AttendantController(QObject *parent=nullptr);
     ~AttendantController() override;
-    QString benchSerial() const { return txAllowed_ ? (startup_.state() == StartupConfig::State::Ready ? QString::fromLatin1(moduleIdentity_.toHex()) : QString()) : (engine_.state().linked ? simulatedSerial_ : QString()); }
+    QString benchSerial() const { return txAllowed_ ? (moduleReady() ? QString::fromLatin1(moduleIdentity_.toHex()) : QString()) : (engine_.state().linked ? simulatedSerial_ : QString()); }
     QString statusText() const;
     QString detail() const{return detail_;}
     bool powered() const{return effective().power;}
     bool attendantControl() const{return effective().attendant;}
     bool held() const{return effective().held;}
-    bool controlsEnabled() const{return !closing_&&!powerDown_&&!registrationOnly_&&!liveEnrollmentBlocked_&&effective().linked&&active_&&(!txAllowed_||(enrollment_.error().isEmpty()&&readiness_.ready()&&enrollment_.complete()&&startup_.state()==StartupConfig::State::Ready&&!canControl_.pending()));}
+    bool controlsEnabled() const{return !controlSuspended_&&!closing_&&!powerDown_&&!registrationOnly_&&!liveEnrollmentBlocked_&&effective().linked&&active_&&(!txAllowed_||(moduleReady()&&!canControl_.pending()));}
+    bool controlSuspended() const{return controlSuspended_;}
+    bool canResumeControl() const{return !closing_&&(!controlSuspended_||suspendReturnConfirmed_)&&(!txAllowed_||(!canControl_.pending()&&!canControl_.owned()));}
+    bool suspensionComplete() const{return controlSuspended_&&suspendReturnConfirmed_;}
+    Q_INVOKABLE void setControlSuspended(bool suspended);
     int profile() const { return 8; }
     int modeNumber() const { return txAllowed_ ? canControl_.mode() + 1 : simulatedMode_ + 1; }
     int inputX() const{return desired_.x;}
@@ -91,6 +97,8 @@ signals:
 private:
     QString interface_="can0",detail_;
     bool active_=true;
+    bool controlSuspended_=false;
+    bool suspendReturnConfirmed_=true;
     const QString simulatedSerial_;
     Input desired_;
 
@@ -103,6 +111,7 @@ private:
     bool registrationOnly_=false;
     bool returnFailed_=false, controlFailed_=false;
     bool inputDirty_=false, powerDown_=false, closing_=false, observing_=false;
+    bool observerWasConnected_=false;
     bool closeReturnConfirmed_=false;
     qint64 lastObserverCheck_=0, lastObserverRetry_=0;
     qint64 closeDeadline_=0;
@@ -113,6 +122,8 @@ private:
     StartupConfig startup_;
     StartupReady readiness_;
     ModuleEnrollment enrollment_;
+    RegisteredResume resume_;
+    bool moduleReady() const {return enrollment_.error().isEmpty() && (resume_.ready() || (readiness_.ready()&&enrollment_.complete()&&startup_.state()==StartupConfig::State::Ready));}
     QByteArray moduleIdentity_;
     qint64 lastControllerFrame_ = -1;
     void sendFrames(const QStringList &frames);
