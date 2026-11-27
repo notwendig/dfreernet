@@ -6,8 +6,8 @@ Copyright (c) 2026 Jürgen Willi Sievers für den eigenständig erstellten Code
 dieses Projekts.
 
 Der Rechteinhaber stellt den eigenständig erstellten Programmcode, die
-Build-Skripte und Tests in `src/`, `scripts/`, `tests/`, `CMakeLists.txt` und
-`cmake/` unter die **GNU GPL Version 3 ausschließlich** (`GPL-3.0-only`);
+Build-Skripte und Tests in `src/`, `scripts/`, `tests/`, `CMakeLists.txt`, `cmake/`,
+`qt_iredit/` und `qt_attendant/` unter die **GNU GPL Version 3 ausschließlich** (`GPL-3.0-only`);
 maßgeblich ist der Wortlaut in [`LICENSE`](LICENSE). Diese Freigabe gilt nur
 für Inhalte, für die der Rechteinhaber die entsprechenden Rechte besitzt.
 

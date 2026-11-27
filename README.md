@@ -10,9 +10,11 @@ An experimental desktop application for reading R-Net controller configurations,
 
 **Test status: rudimentarily tested on Permobil T5 VS.** This is limited development testing, not a general compatibility claim or manufacturer approval. No compatibility with other wheelchair models, controller variants or firmware versions is established. See [validation and limitations](docs/VALIDATION.md).
 
-## Version 1.4.2
+Linux attendant control: [R-net BGM subproject](qt_attendant/README.md). Start without options using `qt_attendant/run.sh` on `can0`; enrollment, takeover/return, driving/seating modes and separate speed control for the tested device arrangement.
 
-Version 1.4.2 adds a beginner connection guide with required galvanic isolation, system timers and diagnostics, graphical OEM/IR launchers, and verified Wine download-timeout corrections in separate runtime copies. See the [changelog](CHANGELOG.md) and [Wine subproject](wine/README.md) for details. Controller access remains experimental; Raspberry Pi hardware has not been separately validated.
+## Version 1.5.0
+
+Version 1.5.0 adds the [Linux R-net attendant emulator](qt_attendant/README.md) and the [native IR menu editor](qt_iredit/README.md). The BGM launcher sets up can0/can1; focus changes retain control, mode and speed with a neutral joystick, and closing requests return to the passenger. A private enrollment profile is required and is not distributed. See the [changelog](CHANGELOG.md) and [validation status](docs/VALIDATION.md) for the tested scope and remaining live checks. Galvanic isolation remains required; Raspberry Pi hardware has not been separately validated.
 
 ### Factory support since 1.4.1
 
@@ -44,7 +46,7 @@ Main window with the parameter table and access levels:
 
 ## Quick start
 
-Requires Linux, a C++17 compiler, CMake 3.21+, Ninja, Python 3, zlib development files, Qt 6.10+ Widgets/Sql/DBus/LinguistTools and Qt Test for the default test build. The development machine currently uses Qt 6.11.2. For controller access, follow [Connecting a wheelchair to a computer or Raspberry Pi](#connecting-a-wheelchair-to-a-computer-or-raspberry-pi) below.
+Requires Linux, a C++17 compiler, CMake 3.21+, Ninja, Python 3, zlib development files, Qt 6.10+ Widgets/Sql/DBus/LinguistTools, Quick/QuickControls2 for `qt_attendant`, and Qt Test/QuickTest for the default test build. The development machine currently uses Qt 6.11.2. For controller access, follow [Connecting a wheelchair to a computer or Raspberry Pi](#connecting-a-wheelchair-to-a-computer-or-raspberry-pi) below.
 
 ```bash
 scripts/build.sh
@@ -157,6 +159,10 @@ You can also explore saved `.R-net` files without any CAN hardware. The optional
 - Optionally configure and enable the selected CAN interface at startup with a saved bitrate, after accepting the startup warning.
 - Store CAN, folder, language and appearance preferences in grouped vertical settings tabs.
 
+## Native IR editor
+
+Standalone Qt editor for `.RnIR3` menus and your own Pronto Hex codes. Start with `qt_iredit/run.sh`. [Instructions and format limits](qt_iredit/README.md).
+
 ## Documentation
 
 | Document | Purpose |
@@ -169,6 +175,8 @@ You can also explore saved `.R-net` files without any CAN hardware. The optional
 ## Project layout
 
 ```text
+qt_attendant/    Linux R-net attendant control
+qt_iredit/       Offline Qt IR menu and Pronto Hex editor
 src/             Native core, SocketCAN tools and Qt interface
 translations/    Qt Linguist German catalog; English source strings
 scripts/         Build, launch, packaging, virtual CAN checks and catalog tools

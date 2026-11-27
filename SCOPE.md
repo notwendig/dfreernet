@@ -5,8 +5,8 @@
 Copyright (c) 2026 Jürgen Willi Sievers for the original code in this project.
 
 The copyright holder licenses the independently authored implementation code,
-build scripts and tests in `src/`, `scripts/`, `tests/`, `CMakeLists.txt` and
-`cmake/` under **GNU GPL version 3 only** (`GPL-3.0-only`), as set out in
+build scripts and tests in `src/`, `scripts/`, `tests/`, `CMakeLists.txt`, `cmake/`,
+`qt_iredit/` and `qt_attendant/` under **GNU GPL version 3 only** (`GPL-3.0-only`), as set out in
 [`LICENSE`](LICENSE). This grant applies only to material for which the
 copyright holder has the right to grant it.
 

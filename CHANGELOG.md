@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.5.0 — 2026-11-27
+
+- Add the Linux `qt_attendant` R-net attendant emulator with confirmed registration/readiness, takeover and return, driving/seating modes within profile 8, full-range joystick axes and independent 0–100% speed control for the captured device arrangement.
+- Start without options using a validated private enrollment profile. Configure `can0` and `can1` at 125000 bit/s in the launcher; leave correct UP interfaces unchanged, respect sender leases and keep offline/diagnostic starts free of network changes.
+- Preserve registration, ownership, mode and speed across focus changes while centering the joystick. Require a new gesture after returning; retain the independent input watchdog, power-down barrier and confirmation timeouts. Window close, SIGINT and SIGTERM request confirmed return before exiting.
+- Add the standalone `qt_iredit` with English/German UI, native RnIR3/JSON editing, Pronto Hex validation, two signal slots, undo/redo and tree collapse/expand. Preserve existing menu data; R-net signal conversion remains experimental.
+- Document both subprojects in English/German, add offline protocol/GUI/launcher checks and Qt Quick CI dependencies, and exclude private enrollment profiles and original captures. Latest startup/shutdown/focus and adapter-setup changes have offline coverage; a combined live retest remains outstanding.
+
 ## 1.4.2 — 2026-11-23
 
 - Explain how to connect a Linux computer or Raspberry Pi through SocketCAN hardware, with a signal diagram, interface setup, reception checks and troubleshooting. Require galvanic isolation of CAN signals and CAN-side power; keep connector pin positions explicitly unverified.

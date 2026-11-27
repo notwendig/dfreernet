@@ -43,6 +43,8 @@ in initialization (repeated `20/80=0x1F`, POP abort `0x20`).
 
 For the physical connection, follow the [connection guide](../README.md#connecting-a-wheelchair-to-a-computer-or-raspberry-pi), including the required galvanic isolation.
 
+For native local IR menu editing, see [qt_iredit](../qt_iredit/README.md). It can open/save Pronto RnIR3 menus and accept your own Pronto Hex codes without starting Wine or a CAN proxy.
+
 ## Build and test offline
 
 In addition to a native C++17 compiler, you need CMake, Ninja, MinGW-w64 i686

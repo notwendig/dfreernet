@@ -3,6 +3,62 @@
 <TS version="2.1" language="de_DE" sourcelanguage="en_US">
     <context>
         <name>RNet</name>
+    <message><source>Mode %1</source><translation>Modus %1</translation></message>
+    <message><source>Live enrollment disabled after DIME error 8105</source><translation>Live-Anmeldung nach DIME-Fehler 8105 gesperrt</translation></message>
+    <message><source>No response to module announcement</source><translation>Keine Antwort auf die Modulmeldung</translation></message>
+    <message><source>Module enumeration differs from the captured system</source><translation>Gerätebestand weicht vom aufgezeichneten System ab</translation></message>
+    <message><source>Repeated module enumeration requests</source><translation>Wiederholte Anmeldeanfragen des Systems</translation></message>
+    <message><source>Module enumeration timed out</source><translation>Zeitüberschreitung der Modulanmeldung</translation></message>
+    <message><source>Module enrollment profile is missing</source><translation>Modul-Anmeldeprofil fehlt</translation></message>
+    <message><source>Waiting for system power-on</source><translation>Warte auf Einschalten des Systems</translation></message>
+    <message><source>Module registration in progress</source><translation>Systemanmeldung läuft</translation></message>
+    <message><source>Module registration failed</source><translation>Systemanmeldung fehlgeschlagen</translation></message>
+    <message><source>Invalid module enrollment profile</source><translation>Ungültiges Modul-Anmeldeprofil</translation></message>
+    <message><source>Configuration response timed out</source><translation>Zeitüberschreitung der Konfigurationsantwort</translation></message>
+    <message><source>Configuration request rejected</source><translation>Konfigurationsanfrage abgelehnt</translation></message>
+    <message><source>Slot 0 contains another device</source><translation>Slot 0 ist einem anderen Gerät zugeordnet</translation></message>
+    <message><source>Module configuration failed</source><translation>Laden der Modulkonfiguration fehlgeschlagen</translation></message>
+    <message><source>Loading module configuration</source><translation>Modulkonfiguration wird geladen</translation></message>
+    <message><source>Waiting for module enumeration</source><translation>Warte auf Modulanmeldung im System</translation></message>
+    <message><source>Module identity is missing</source><translation>Modulkennung fehlt</translation></message>
+    <message><source>Sent: %1</source><translation>Gesendet: %1</translation></message>
+    <message><source>Another device is sending joystick slot 0</source><translation>Ein anderes Gerät sendet Joystickwerte für Slot 0</translation></message>
+    <message><source>CAN system stopped</source><translation>CAN-System ausgeschaltet</translation></message>
+    <message><source>CAN control confirmed</source><translation>CAN-Steuerung bestätigt</translation></message>
+    <message><source>Waiting for CAN control confirmation</source><translation>Warte auf CAN-Steuerungsbestätigung</translation></message>
+    <message><source>CAN control confirmation timed out</source><translation>Zeitüberschreitung der CAN-Steuerungsbestätigung</translation></message>
+    <message><source>CAN transmitter ready</source><translation>CAN-Sender bereit</translation></message>
+    <message><source>Speed %1%</source><translation>Speed %1%</translation></message>
+    <message><source>Take control</source><translation>Übernehmen</translation></message>
+    <message><source>CAN settings</source><translation>CAN-Einstellungen</translation></message>
+    <message><source>Controls</source><translation>Bedienung</translation></message>
+    <message><source>Space: play / pause · Arrow keys: ±5 seconds</source><translation>Leertaste: Start / Pause · Pfeiltasten: ±5 Sekunden</translation></message>
+    <message><source>Position</source><translation>Position</translation></message>
+    <message><source>Playback speed</source><translation>Wiedergabegeschwindigkeit</translation></message>
+    <message><source>Next protocol event</source><translation>Nächstes Protokollereignis</translation></message>
+    <message><source>Previous protocol event</source><translation>Vorheriges Protokollereignis</translation></message>
+    <message><source>Next</source><translation>Weiter</translation></message>
+    <message><source>Previous</source><translation>Zurück</translation></message>
+    <message><source>Pause</source><translation>Pause</translation></message>
+    <message><source>Play</source><translation>Abspielen</translation></message>
+    <message><source>Offline</source><translation>Offline</translation></message>
+    <message><source>Capture analysis</source><translation>Mitschnitt auswerten</translation></message>
+    <message><source>Enumerated identity</source><translation>Erfasste Gerätekennung</translation></message>
+    <message><source>Confirmed control slot</source><translation>Bestätigter Steuerungsslot</translation></message>
+    <message><source>Joystick</source><translation>Joystick</translation></message>
+    <message><source>Start</source><translation>Start</translation></message>
+    <message><source>Off</source><translation>Aus</translation></message>
+    <message><source>Enumerated</source><translation>Gerät erfasst</translation></message>
+    <message><source>Confirmed</source><translation>Übernahme bestätigt</translation></message>
+    <message><source>Suspend</source><translation>Ausgabe unterbrochen</translation></message>
+    <message><source>Request</source><translation>Übernahme angefordert</translation></message>
+    <message><source>Waiting for CAN data</source><translation>Warte auf CAN-Daten</translation></message>
+    <message><source>Offline capture playback</source><translation>Offline-Wiedergabe des Mitschnitts</translation></message>
+    <message><source>Mode/profile byte</source><translation>Modus-/Profilbyte</translation></message>
+    <message><source>Take control, switch enable on, then move the joystick.</source><translation>Steuerung übernehmen, Freigabe einschalten und den Joystick bewegen.</translation></message>
+    <message><source>Disable</source><translation>Freigabe aus</translation></message>
+    <message><source>Enable</source><translation>Freigabe ein</translation></message>
+    <message><source>Registered in simulation: %1</source><translation>In der Simulation angemeldet: %1</translation></message>
         <message>
             <source>Parameter help</source>
             <translation>Parameterhilfe</translation>
@@ -2222,5 +2278,809 @@ Experimentell; rudimentär auf Permobil T5 VS getestet. Die Kompatibilität mit 
             <source>Blink duration must be shorter than the interval (interval 2–86400 s, duration 1–3600 s)</source>
             <translation>Die Blinkdauer muss kürzer als das Intervall sein (Intervall 2–86400 s, Dauer 1–3600 s)</translation>
         </message>
-    </context>
+        <message>
+            <source>%1 kHz · %2 pulse pairs · %3 R-net bytes</source>
+            <translation>%1 kHz · %2 Impulspaare · %3 R-net-Bytes</translation>
+        </message>
+        <message>
+            <source>%1 menu entries · %2 commands with stored signals</source>
+            <translation>%1 Menüeinträge · %2 Befehle mit gespeicherten Signalen</translation>
+        </message>
+        <message>
+            <source>&amp;New IR menu</source>
+            <translation>&amp;Neues IR-Menü</translation>
+        </message>
+        <message>
+            <source>&amp;Open IR menu…</source>
+            <translation>IR-Menü ö&amp;ffnen…</translation>
+        </message>
+        <message>
+            <source>&amp;Quit</source>
+            <translation>&amp;Beenden</translation>
+        </message>
+        <message>
+            <source>&amp;Redo IR edit</source>
+            <translation>IR-Bearbeitung &amp;wiederholen</translation>
+        </message>
+        <message>
+            <source>&amp;Save IR menu</source>
+            <translation>IR-Menü &amp;speichern</translation>
+        </message>
+        <message>
+            <source>&amp;Undo IR edit</source>
+            <translation>IR-Bearbeitung &amp;rückgängig</translation>
+        </message>
+        <message>
+            <source>A · primary</source>
+            <translation>A · Hauptsignal</translation>
+        </message>
+        <message>
+            <source>Add IR command</source>
+            <translation>IR-Befehl hinzufügen</translation>
+        </message>
+        <message>
+            <source>Add IR device</source>
+            <translation>IR-Gerät hinzufügen</translation>
+        </message>
+        <message>
+            <source>Add command</source>
+            <translation>Befehl hinzufügen</translation>
+        </message>
+        <message>
+            <source>Add device</source>
+            <translation>Gerät hinzufügen</translation>
+        </message>
+        <message>
+            <source>An internal pulse exceeds the R-net format 2 range.</source>
+            <translation>Ein innerer Impuls überschreitet den Wertebereich von R-net-Format 2.</translation>
+        </message>
+        <message>
+            <source>Apply entry</source>
+            <translation>Eintrag übernehmen</translation>
+        </message>
+        <message>
+            <source>B · toggle / alternate</source>
+            <translation>B · Umschalt-/Alternativsignal</translation>
+        </message>
+        <message>
+            <source>Cannot add an IR device here.</source>
+            <translation>Hier kann kein IR-Gerät hinzugefügt werden.</translation>
+        </message>
+        <message>
+            <source>Carrier frequency is outside the supported R-net range.</source>
+            <translation>Die Trägerfrequenz liegt außerhalb des unterstützten R-net-Bereichs.</translation>
+        </message>
+        <message>
+            <source>Clear IR signal</source>
+            <translation>IR-Signal löschen</translation>
+        </message>
+        <message>
+            <source>Clear signal</source>
+            <translation>Signal löschen</translation>
+        </message>
+        <message>
+            <source>Command name</source>
+            <translation>Befehlsname</translation>
+        </message>
+        <message>
+            <source>Copy Pronto</source>
+            <translation>Pronto kopieren</translation>
+        </message>
+        <message>
+            <source>Device / command</source>
+            <translation>Gerät / Befehl</translation>
+        </message>
+        <message>
+            <source>Device / folder</source>
+            <translation>Gerät / Ordner</translation>
+        </message>
+        <message>
+            <source>Device name</source>
+            <translation>Gerätename</translation>
+        </message>
+        <message>
+            <source>Duplicate IR class metadata.</source>
+            <translation>Doppelte IR-Klassenmetadaten.</translation>
+        </message>
+        <message>
+            <source>Each Pronto word must contain four hexadecimal digits.</source>
+            <translation>Jedes Pronto-Wort muss vier Hexadezimalstellen enthalten.</translation>
+        </message>
+        <message>
+            <source>Edit IR entry</source>
+            <translation>IR-Eintrag bearbeiten</translation>
+        </message>
+        <message>
+            <source>Enter a complete Pronto Hex code.</source>
+            <translation>Einen vollständigen Pronto-Hex-Code eingeben.</translation>
+        </message>
+        <message>
+            <source>Enter a non-empty name of at most 256 characters.</source>
+            <translation>Einen nicht leeren Namen mit höchstens 256 Zeichen eingeben.</translation>
+        </message>
+        <message>
+            <source>Enter an entry name.</source>
+            <translation>Einen Eintragsnamen eingeben.</translation>
+        </message>
+        <message>
+            <source>Entry name</source>
+            <translation>Eintragsname</translation>
+        </message>
+        <message>
+            <source>IR code exceeds the supported size.</source>
+            <translation>Der IR-Code überschreitet die unterstützte Größe.</translation>
+        </message>
+        <message>
+            <source>IR editor</source>
+            <translation>IR-Editor</translation>
+        </message>
+        <message>
+            <source>IR file exceeds supported limits.</source>
+            <translation>Die IR-Datei überschreitet die unterstützten Grenzen.</translation>
+        </message>
+        <message>
+            <source>IR menus (*.RnIR3 *.rnir3 *.json);;All files (*)</source>
+            <translation>IR-Menüs (*.RnIR3 *.rnir3 *.json);;Alle Dateien (*)</translation>
+        </message>
+        <message>
+            <source>Import Pronto file</source>
+            <translation>Pronto-Datei importieren</translation>
+        </message>
+        <message>
+            <source>Import Pronto file…</source>
+            <translation>Pronto-Datei importieren…</translation>
+        </message>
+        <message>
+            <source>Incomplete IR file.</source>
+            <translation>Unvollständige IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Invalid IR code list.</source>
+            <translation>Ungültige IR-Codeliste.</translation>
+        </message>
+        <message>
+            <source>Invalid IR item name.</source>
+            <translation>Ungültiger IR-Eintragsname.</translation>
+        </message>
+        <message>
+            <source>Invalid IR library identifier.</source>
+            <translation>Ungültige IR-Bibliothekskennung.</translation>
+        </message>
+        <message>
+            <source>Invalid IR menu list.</source>
+            <translation>Ungültige IR-Menüliste.</translation>
+        </message>
+        <message>
+            <source>Invalid IR menu size or shortcut table.</source>
+            <translation>Ungültige IR-Menügröße oder Verknüpfungstabelle.</translation>
+        </message>
+        <message>
+            <source>Invalid IR numeric field.</source>
+            <translation>Ungültiges IR-Zahlenfeld.</translation>
+        </message>
+        <message>
+            <source>Invalid IR object identifier.</source>
+            <translation>Ungültige IR-Objektkennung.</translation>
+        </message>
+        <message>
+            <source>Invalid IR project JSON.</source>
+            <translation>Ungültiges IR-Projekt-JSON.</translation>
+        </message>
+        <message>
+            <source>Invalid IR project entry.</source>
+            <translation>Ungültiger IR-Projekteintrag.</translation>
+        </message>
+        <message>
+            <source>Invalid IR string length.</source>
+            <translation>Ungültige IR-Zeichenkettenlänge.</translation>
+        </message>
+        <message>
+            <source>Invalid UTF-8 in IR file.</source>
+            <translation>Ungültiges UTF-8 in der IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Invalid hexadecimal code in IR project.</source>
+            <translation>Ungültiger Hexadezimalcode im IR-Projekt.</translation>
+        </message>
+        <message>
+            <source>Invalid null array in IR file.</source>
+            <translation>Ungültiges Null-Array in der IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Invalid parent reference in IR menu.</source>
+            <translation>Ungültiger Verweis auf einen übergeordneten IR-Menüeintrag.</translation>
+        </message>
+        <message>
+            <source>Invalid shortcut reference in IR menu.</source>
+            <translation>Ungültiger Verknüpfungsverweis im IR-Menü.</translation>
+        </message>
+        <message>
+            <source>Local files only · no controller connection</source>
+            <translation>Nur lokale Dateien · keine Controllerverbindung</translation>
+        </message>
+        <message>
+            <source>Missing IR class metadata.</source>
+            <translation>Fehlende IR-Klassenmetadaten.</translation>
+        </message>
+        <message>
+            <source>Missing IR library metadata.</source>
+            <translation>Fehlende IR-Bibliotheksmetadaten.</translation>
+        </message>
+        <message>
+            <source>Missing IR menu field.</source>
+            <translation>Fehlendes IR-Menüfeld.</translation>
+        </message>
+        <message>
+            <source>Missing IR object reference.</source>
+            <translation>Fehlender IR-Objektverweis.</translation>
+        </message>
+        <message>
+            <source>Missing IR value.</source>
+            <translation>Fehlender IR-Wert.</translation>
+        </message>
+        <message>
+            <source>New IR menu</source>
+            <translation>Neues IR-Menü</translation>
+        </message>
+        <message>
+            <source>No IR code stored for this slot.</source>
+            <translation>Für diesen Signalplatz ist kein IR-Code gespeichert.</translation>
+        </message>
+        <message>
+            <source>Not a supported Pronto RnIR3 menu.</source>
+            <translation>Kein unterstütztes Pronto-RnIR3-Menü.</translation>
+        </message>
+        <message>
+            <source>Not an RnIR3 file.</source>
+            <translation>Keine RnIR3-Datei.</translation>
+        </message>
+        <message>
+            <source>Offline IR editor · R-net signal conversion is experimental. Exported signals require verification on the target device.</source>
+            <translation>Offline-IR-Editor · Die R-net-Signalumrechnung ist experimentell. Exportierte Signale müssen am Zielgerät geprüft werden.</translation>
+        </message>
+        <message>
+            <source>Only RnIR3 version 4 menus are supported.</source>
+            <translation>Es werden nur RnIR3-Menüs der Version 4 unterstützt.</translation>
+        </message>
+        <message>
+            <source>Only modulated raw Pronto codes beginning with 0000 are supported.</source>
+            <translation>Es werden nur modulierte Pronto-Rohcodes unterstützt, die mit 0000 beginnen.</translation>
+        </message>
+        <message>
+            <source>Open IR menu</source>
+            <translation>IR-Menü öffnen</translation>
+        </message>
+        <message>
+            <source>Paste Pronto Hex here. Use Clear signal to remove stored data.</source>
+            <translation>Pronto-Hex hier einfügen. Gespeicherte Daten mit „Signal löschen“ entfernen.</translation>
+        </message>
+        <message>
+            <source>Pronto Hex · paste a complete code beginning with 0000</source>
+            <translation>Pronto-Hex · vollständigen Code beginnend mit 0000 einfügen</translation>
+        </message>
+        <message>
+            <source>Pronto carrier frequency must not be zero.</source>
+            <translation>Die Pronto-Trägerfrequenz darf nicht null sein.</translation>
+        </message>
+        <message>
+            <source>Pronto codes (*.pronto *.txt);;All files (*)</source>
+            <translation>Pronto-Codes (*.pronto *.txt);;Alle Dateien (*)</translation>
+        </message>
+        <message>
+            <source>Pronto file is too large.</source>
+            <translation>Die Pronto-Datei ist zu groß.</translation>
+        </message>
+        <message>
+            <source>Pronto pulse count does not match its header.</source>
+            <translation>Die Pronto-Impulsanzahl passt nicht zum Header.</translation>
+        </message>
+        <message>
+            <source>Pronto pulse durations must not be zero.</source>
+            <translation>Pronto-Impulsdauern dürfen nicht null sein.</translation>
+        </message>
+        <message>
+            <source>R-net IR menu (*.RnIR3);;IR editor project (*.json)</source>
+            <translation>R-net-IR-Menü (*.RnIR3);;IR-Editor-Projekt (*.json)</translation>
+        </message>
+        <message>
+            <source>Remove IR entry</source>
+            <translation>IR-Eintrag entfernen</translation>
+        </message>
+        <message>
+            <source>Remove entry</source>
+            <translation>Eintrag entfernen</translation>
+        </message>
+        <message>
+            <source>Save IR menu</source>
+            <translation>IR-Menü speichern</translation>
+        </message>
+        <message>
+            <source>Save IR menu &amp;as…</source>
+            <translation>IR-Menü speichern &amp;unter…</translation>
+        </message>
+        <message>
+            <source>Save changes to this IR menu?</source>
+            <translation>Änderungen an diesem IR-Menü speichern?</translation>
+        </message>
+        <message>
+            <source>Saved locally: %1</source>
+            <translation>Lokal gespeichert: %1</translation>
+        </message>
+        <message>
+            <source>Select a command to edit its signal.</source>
+            <translation>Einen Befehl auswählen, um sein Signal zu bearbeiten.</translation>
+        </message>
+        <message>
+            <source>Select a device or folder first.</source>
+            <translation>Zuerst ein Gerät oder einen Ordner auswählen.</translation>
+        </message>
+        <message>
+            <source>Select an IR command first.</source>
+            <translation>Zuerst einen IR-Befehl auswählen.</translation>
+        </message>
+        <message>
+            <source>Select an IR menu entry first.</source>
+            <translation>Zuerst einen IR-Menüeintrag auswählen.</translation>
+        </message>
+        <message>
+            <source>Separate Pronto introduction and repeat sequences cannot be converted to R-net yet.</source>
+            <translation>Getrennte Pronto-Anfangs- und Wiederholungssequenzen können noch nicht nach R-net umgerechnet werden.</translation>
+        </message>
+        <message>
+            <source>Sequence</source>
+            <translation>Sequenz</translation>
+        </message>
+        <message>
+            <source>Signal slot</source>
+            <translation>Signalplatz</translation>
+        </message>
+        <message>
+            <source>Signals</source>
+            <translation>Signale</translation>
+        </message>
+        <message>
+            <source>Stored R-net bytes · preserved when no replacement code is entered</source>
+            <translation>Gespeicherte R-net-Bytes · bleiben ohne Eingabe eines Ersatzcodes erhalten</translation>
+        </message>
+        <message>
+            <source>Stored signal retained. Paste Pronto Hex to replace it.</source>
+            <translation>Das gespeicherte Signal bleibt erhalten. Zum Ersetzen Pronto-Hex einfügen.</translation>
+        </message>
+        <message>
+            <source>This code has too many pulse pairs for R-net format 2.</source>
+            <translation>Dieser Code enthält zu viele Impulspaare für R-net-Format 2.</translation>
+        </message>
+        <message>
+            <source>Truncated IR file.</source>
+            <translation>Abgeschnittene IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Unsaved IR menu</source>
+            <translation>Ungespeichertes IR-Menü</translation>
+        </message>
+        <message>
+            <source>Unsupported IR array element type.</source>
+            <translation>Nicht unterstützter IR-Array-Elementtyp.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR byte array.</source>
+            <translation>Nicht unterstütztes IR-Byte-Array.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR class metadata.</source>
+            <translation>Nicht unterstützte IR-Klassenmetadaten.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR field type.</source>
+            <translation>Nicht unterstützter IR-Feldtyp.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR menu item.</source>
+            <translation>Nicht unterstützter IR-Menüeintrag.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR primitive type.</source>
+            <translation>Nicht unterstützter primitiver IR-Typ.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR project format.</source>
+            <translation>Nicht unterstütztes IR-Projektformat.</translation>
+        </message>
+        <message>
+            <source>Unsupported IR stream version.</source>
+            <translation>Nicht unterstützte IR-Datenstromversion.</translation>
+        </message>
+        <message>
+            <source>Unsupported class in IR file.</source>
+            <translation>Nicht unterstützte Klasse in der IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Unsupported extra IR menu fields.</source>
+            <translation>Nicht unterstützte zusätzliche IR-Menüfelder.</translation>
+        </message>
+        <message>
+            <source>Unsupported multidimensional IR array.</source>
+            <translation>Nicht unterstütztes mehrdimensionales IR-Array.</translation>
+        </message>
+        <message>
+            <source>Unsupported record in IR file.</source>
+            <translation>Nicht unterstützter Datensatz in der IR-Datei.</translation>
+        </message>
+        <message>
+            <source>Collapse all</source>
+            <translation>Alle einklappen</translation>
+        </message>
+        <message>
+            <source>Expand all</source>
+            <translation>Alle ausklappen</translation>
+        </message>
+        <message>
+        <source>ATTENDANT</source>
+        <translation>BEGLEITPERSON</translation>
+    </message>
+    <message>
+        <source>App inactive · neutral</source>
+        <translation>Anwendung inaktiv · Neutralstellung</translation>
+    </message>
+    <message>
+        <source>Attendant input enabled · simulation</source>
+        <translation>Eingabe der Begleitperson freigegeben · Simulation</translation>
+    </message>
+    <message>
+        <source>Attendant module</source>
+        <translation>Begleitsteuerung</translation>
+    </message>
+    <message>
+        <source>Attendant module bench</source>
+        <translation>Begleitsteuerung: Prüfstand</translation>
+    </message>
+    <message>
+        <source>Bluetooth client</source>
+        <translation>Bluetooth-Client</translation>
+    </message>
+    <message>
+        <source>Bluetooth connection failed: %1</source>
+        <translation>Bluetooth-Verbindung fehlgeschlagen: %1</translation>
+    </message>
+    <message>
+        <source>Bluetooth disconnected</source>
+        <translation>Bluetooth getrennt</translation>
+    </message>
+    <message>
+        <source>Bluetooth handshake failed.</source>
+        <translation>Bluetooth-Verbindungsaufbau fehlgeschlagen.</translation>
+    </message>
+    <message>
+        <source>Bluetooth host listening · simulation</source>
+        <translation>Bluetooth-Host wartet · Simulation</translation>
+    </message>
+    <message>
+        <source>Bluetooth host stopped</source>
+        <translation>Bluetooth-Host gestoppt</translation>
+    </message>
+    <message>
+        <source>Bluetooth input rate exceeded. Session stopped.</source>
+        <translation>Zu viele Bluetooth-Eingaben. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Bluetooth response timed out.</source>
+        <translation>Zeitüberschreitung der Bluetooth-Antwort.</translation>
+    </message>
+    <message>
+        <source>Bluetooth scan failed. Check nearby-device permission and adapter power.</source>
+        <translation>Bluetooth-Suche fehlgeschlagen. Berechtigung und eingeschalteten Adapter prüfen.</translation>
+    </message>
+    <message>
+        <source>Bluetooth send backlog. Session stopped.</source>
+        <translation>Bluetooth-Sendepuffer überlastet. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Bluetooth sequence exhausted. Reconnect to start a new session.</source>
+        <translation>Bluetooth-Sequenz erschöpft. Für eine neue Sitzung erneut verbinden.</translation>
+    </message>
+    <message>
+        <source>Bluetooth session ready. Control is simulated; CAN transmission is disabled.</source>
+        <translation>Bluetooth-Sitzung bereit. Steuerung wird simuliert; CAN-Senden ist gesperrt.</translation>
+    </message>
+    <message>
+        <source>CAN TX: disabled</source>
+        <translation>CAN TX: gesperrt</translation>
+    </message>
+    <message>
+        <source>CAN observation active. No CAN frames are transmitted.</source>
+        <translation>CAN-Beobachtung aktiv. Es werden keine CAN-Nachrichten gesendet.</translation>
+    </message>
+    <message>
+        <source>Center the joystick before taking control.</source>
+        <translation>Vor der Übernahme den Joystick zentrieren.</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>Verbinden</translation>
+    </message>
+    <message>
+        <source>Connecting to Bluetooth host…</source>
+        <translation>Verbindung zum Bluetooth-Host wird hergestellt…</translation>
+    </message>
+    <message>
+        <source>Connection lost · neutral</source>
+        <translation>Verbindung verloren · Neutralstellung</translation>
+    </message>
+    <message>
+        <source>Control counter exhausted. Start a new session.</source>
+        <translation>Steuerungszähler erschöpft. Eine neue Sitzung starten.</translation>
+    </message>
+    <message>
+        <source>Could not register the Bluetooth service. Check pairing and adapter power.</source>
+        <translation>Bluetooth-Dienst konnte nicht registriert werden. Kopplung und Adapter prüfen.</translation>
+    </message>
+    <message>
+        <source>Could not start the Bluetooth host.</source>
+        <translation>Bluetooth-Host konnte nicht gestartet werden.</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>Trennen</translation>
+    </message>
+    <message>
+        <source>ENABLED</source>
+        <translation>FREIGEGEBEN</translation>
+    </message>
+    <message>
+        <source>Enter a valid Bluetooth address.</source>
+        <translation>Eine gültige Bluetooth-Adresse eingeben.</translation>
+    </message>
+    <message>
+        <source>HOLD TO ENABLE</source>
+        <translation>ZUR FREIGABE HALTEN</translation>
+    </message>
+    <message>
+        <source>Hold Space while moving the joystick with the mouse. Release Space to neutralize.</source>
+        <translation>Leertaste halten und den Joystick mit der Maus bewegen. Loslassen der Leertaste setzt die Ausgabe auf null.</translation>
+    </message>
+    <message>
+        <source>Input limit</source>
+        <translation>Eingabebegrenzung</translation>
+    </message>
+    <message>
+        <source>Input limit changed · release and re-enable</source>
+        <translation>Begrenzung geändert · loslassen und erneut freigeben</translation>
+    </message>
+    <message>
+        <source>Input state rejected. Session stopped.</source>
+        <translation>Eingabezustand abgelehnt. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Input timed out · neutral · take control again</source>
+        <translation>Eingabe überfällig · Neutralstellung · erneut übernehmen</translation>
+    </message>
+    <message>
+        <source>Invalid Bluetooth data. Session stopped.</source>
+        <translation>Ungültige Bluetooth-Daten. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Invalid Bluetooth message. Session stopped.</source>
+        <translation>Ungültige Bluetooth-Nachricht. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Invalid Bluetooth status. Session stopped.</source>
+        <translation>Ungültiger Bluetooth-Status. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Linux host</source>
+        <translation>Linux-Host</translation>
+    </message>
+    <message>
+        <source>Linux host Bluetooth address</source>
+        <translation>Bluetooth-Adresse des Linux-Hosts</translation>
+    </message>
+    <message>
+        <source>Linux · Qt 6 · can0 (receive only)</source>
+        <translation>Linux · Qt 6 · can0 (nur Empfang)</translation>
+    </message>
+    <message>
+        <source>Local bench test. Take control, hold the enable button, then move the joystick.</source>
+        <translation>Lokaler Prüfstand. Steuerung übernehmen, Freigabe halten und dann den Joystick bewegen.</translation>
+    </message>
+    <message>
+        <source>Nearby-device permission is required for Bluetooth.</source>
+        <translation>Für Bluetooth ist die Berechtigung für Geräte in der Nähe erforderlich.</translation>
+    </message>
+    <message>
+        <source>Observe CAN (RX only)</source>
+        <translation>CAN mitlesen (nur RX)</translation>
+    </message>
+    <message>
+        <source>PASSENGER</source>
+        <translation>FAHRER</translation>
+    </message>
+    <message>
+        <source>Received: %1</source>
+        <translation>Empfangen: %1</translation>
+    </message>
+    <message>
+        <source>Release the enable button, then center the joystick.</source>
+        <translation>Freigabe loslassen und den Joystick zentrieren.</translation>
+    </message>
+    <message>
+        <source>Return to passenger</source>
+        <translation>An Fahrer zurückgeben</translation>
+    </message>
+    <message>
+        <source>SIMULATION · CAN transmission is disabled. Original attendant-module login and takeover are not implemented yet.</source>
+        <translation>SIMULATION · CAN-Senden ist gesperrt. Anmeldung und Übernahme des originalen Begleitmoduls sind noch nicht implementiert.</translation>
+    </message>
+    <message>
+        <source>STOP</source>
+        <translation>STOPP</translation>
+    </message>
+    <message>
+        <source>Scan</source>
+        <translation>Suchen</translation>
+    </message>
+    <message>
+        <source>Scanning…</source>
+        <translation>Suche läuft…</translation>
+    </message>
+    <message>
+        <source>Simulation</source>
+        <translation>Simulation</translation>
+    </message>
+    <message>
+        <source>Stale or invalid Bluetooth input. Session stopped.</source>
+        <translation>Veraltete oder ungültige Bluetooth-Eingabe. Sitzung gestoppt.</translation>
+    </message>
+    <message>
+        <source>Start Bluetooth host</source>
+        <translation>Bluetooth-Host starten</translation>
+    </message>
+    <message>
+        <source>Stop Bluetooth host</source>
+        <translation>Bluetooth-Host stoppen</translation>
+    </message>
+    <message>
+        <source>Stop CAN observation</source>
+        <translation>CAN-Beobachtung stoppen</translation>
+    </message>
+    <message>
+        <source>Take control (simulation)</source>
+        <translation>Übernehmen (Simulation)</translation>
+    </message>
+    <message>
+        <source>The Bluetooth host runs on Linux.</source>
+        <translation>Der Bluetooth-Host läuft unter Linux.</translation>
+    </message>
+    <message>
+        <source>The Bluetooth host runs on Linux. Use client mode here.</source>
+        <translation>Der Bluetooth-Host läuft unter Linux. Hier den Client-Modus verwenden.</translation>
+    </message>
+    <message>
+        <source>Virtual attendant has control</source>
+        <translation>Virtuelle Begleitperson hat die Kontrolle</translation>
+    </message>
+    <message>
+        <source>Virtual input: X %1 / Y %2</source>
+        <translation>Virtuelle Eingabe: X %1 / Y %2</translation>
+    </message>
+    <message>
+        <source>Virtual module off</source>
+        <translation>Virtuelles Modul ausgeschaltet</translation>
+    </message>
+    <message>
+        <source>Virtual passenger has control</source>
+        <translation>Virtueller Fahrer hat die Kontrolle</translation>
+    </message>
+    <message>
+        <source>Virtual power</source>
+        <translation>Virtuelle Stromversorgung</translation>
+    </message>
+    <message>
+        <source>Invalid CAN interface name.</source>
+        <translation>Ungültiger CAN-Schnittstellenname.</translation>
+    </message>
+    <message>
+        <source>CAN interface is missing or down.</source>
+        <translation>CAN-Schnittstelle fehlt oder ist nicht aktiviert.</translation>
+    </message>
+    <message>
+        <source>CAN observation is provided by the Linux host.</source>
+        <translation>CAN-Beobachtung erfolgt am Linux-Host.</translation>
+    </message>
+    <message>
+        <source>CAN receive failed.</source>
+        <translation>CAN-Empfang fehlgeschlagen.</translation>
+    </message>
+    <message>
+        <source>Manual CAN transmission</source>
+        <translation>Manuell CAN senden</translation>
+    </message>
+    <message>
+        <source>One frame per click. STOP, focus loss or changing mode closes the transmitter.</source>
+        <translation>Ein Frame pro Klick. STOPP, Fokusverlust oder Moduswechsel schließt den Sender.</translation>
+    </message>
+    <message>
+        <source>Stop CAN TX</source>
+        <translation>CAN TX stoppen</translation>
+    </message>
+    <message>
+        <source>Start CAN TX</source>
+        <translation>CAN TX starten</translation>
+    </message>
+    <message>
+        <source>Driver accepted: %1</source>
+        <translation>An Treiber übergeben: %1</translation>
+    </message>
+    <message>
+        <source>CAN frame: ID#HEX or ID#R</source>
+        <translation>CAN-Frame: ID#HEX oder ID#R</translation>
+    </message>
+    <message>
+        <source>Send frame</source>
+        <translation>Frame senden</translation>
+    </message>
+    <message>
+        <source>CAN TX: manual</source>
+        <translation>CAN TX: manuell</translation>
+    </message>
+    <message>
+        <source>SIMULATION · Manual CAN TX is available. Automatic registration and control takeover are not implemented.</source>
+        <translation>SIMULATION · Manuelles CAN-Senden ist verfügbar. Automatische Anmeldung und Kontrollübernahme sind nicht implementiert.</translation>
+    </message>
+    <message>
+        <source>Manual CAN transmitter ready. No automatic registration or joystick output.</source>
+        <translation>Manueller CAN-Sender bereit. Keine automatische Anmeldung oder Joystick-Ausgabe.</translation>
+    </message>
+    <message>
+        <source>CAN frame accepted by the local driver; device acknowledgement is unverified.</source>
+        <translation>CAN-Frame an lokalen Treiber übergeben; Gerätebestätigung ungeprüft.</translation>
+    </message>
+    <message>
+        <source>Manual CAN transmission requires Linux.</source>
+        <translation>Manuelles CAN-Senden benötigt Linux.</translation>
+    </message>
+    <message>
+        <source>Invalid CAN frame. Use 123#0102 or 02000300#0000.</source>
+        <translation>Ungültiger CAN-Frame. Format: 123#0102 oder 02000300#0000.</translation>
+    </message>
+    <message>
+        <source>CAN transmitter is stopped.</source>
+        <translation>CAN-Sender ist gestoppt.</translation>
+    </message>
+    <message>
+        <source>Incomplete CAN transmission.</source>
+        <translation>Unvollständige CAN-Übertragung.</translation>
+    </message>
+    <message>
+        <source>Linux · Qt 6 · SocketCAN</source>
+        <translation>Linux · Qt 6 · SocketCAN</translation>
+    </message>
+    <message>
+        <source>CAN observation active. The observer receives only.</source>
+        <translation>CAN-Beobachtung aktiv. Der Beobachter empfängt ausschließlich.</translation>
+    </message>
+    <message>
+        <source>Bluetooth session ready. Bluetooth control is simulated.</source>
+        <translation>Bluetooth-Sitzung bereit. Bluetooth-Steuerung wird simuliert.</translation>
+    </message>
+    <message>
+        <source>Startup table peer response timed out</source>
+        <translation>Zeitüberschreitung beim Warten auf Antworten zur Starttabelle</translation>
+    </message>
+    <message><source>System requests initial enrollment; explicit opt-in required</source><translation>System fordert Erst-Anmeldung; ausdrückliche Freigabe erforderlich</translation></message>
+    <message><source>Registered startup differs from the captured system</source><translation>Normaler Modulstart weicht vom aufgezeichneten System ab</translation></message>
+    <message><source>Module readiness confirmation timed out</source><translation>Zeitüberschreitung bei der Modul-Bereitschaftsbestätigung</translation></message>
+    <message><source>Module readiness failed</source><translation>Modul-Bereitschaft nicht bestätigt</translation></message>
+    <message><source>Waiting for module readiness</source><translation>Warte auf Modul-Bereitschaft</translation></message>
+    <message><source>Registration transfer complete; restart the system</source><translation>Registrierung übertragen; System neu einschalten</translation></message>
+    <message><source>Module ready; passenger has control</source><translation>Modul bereit; Fahrer hat die Kontrolle</translation></message>
+    <message><source>Return to passenger not confirmed</source><translation>Rückgabe an Fahrer nicht bestätigt</translation></message>
+    <message><source>Waiting for passenger mode confirmation</source><translation>Warte auf Bestätigung des Fahrermodus</translation></message>
+    <message><source>Unexpected module enumeration request</source><translation>Unerwartete Anmeldeanforderung des Systems</translation></message>
+    <message><source>Incomplete module enumeration</source><translation>Unvollständige Geräteanmeldung</translation></message>
+    <message><source>Another R-net client owns the CAN interface</source><translation>Ein anderer R-net-Client verwendet die CAN-Schnittstelle</translation></message>
+    <message><source>Returning control before closing</source><translation>Kontrolle vor dem Schließen zurückgeben</translation></message>
+    <message><source>CAN monitor; controls disabled</source><translation>CAN-Monitor; Bedienung deaktiviert</translation></message>
+    <message><source>Startup table transfer timed out</source><translation>Zeitüberschreitung bei der Übertragung der Starttabellen</translation></message>
+    <message><source>Another device is announcing slot 0</source><translation>Ein anderes Gerät meldet sich für Slot 0 an</translation></message>
+</context>
 </TS>

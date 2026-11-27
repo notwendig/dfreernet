@@ -30,3 +30,11 @@ __pycache__/
 *.sqlite3-journal
 *.sqlite3-wal
 *.sqlite3-shm
+
+# Private annotated CAN capture
+/bgm.txt
+/obgm.txt
+
+# Private original attendant captures
+/insys.txt
+/ctrlsys.txt

@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [Deutsch](CHANGELOG.de.md)
 
+## 1.5.0 — 27. November 2026
+
+- Linux-R-net-Begleitsteuerung `qt_attendant` mit bestätigter Anmeldung/Bereitschaft, Übernahme und Rückgabe, Fahr-/Sitzmodus im Profil 8, vollem Joystick-Ausschlag und unabhängiger Speed-Regelung von 0–100 % für den aufgezeichneten Gerätebestand ergänzen.
+- Ohne Optionen mit geprüftem privatem Anmeldeprofil starten. Der Starter richtet `can0` und `can1` mit 125000 Bit/s ein, erhält korrekt aktive Schnittstellen, beachtet Sendersperren und verändert bei Offline-/Diagnosestarts keine Netzwerkeinstellungen.
+- Anmeldung, Übernahme, Modus und Speed beim Fokuswechsel erhalten und den Joystick neutral stellen. Nach Rückkehr eine neue Betätigung verlangen; unabhängige Eingabezeitüberwachung, Power-down-Barriere und Bestätigungsfristen beibehalten. Fensterschließen, SIGINT und SIGTERM fordern vor dem Beenden die bestätigte Rückgabe an.
+- Eigenständigen `qt_iredit` mit englischer/deutscher Oberfläche, nativer RnIR3-/JSON-Bearbeitung, Pronto-Hex-Prüfung, zwei Signalplätzen, Rückgängig/Wiederholen und Ein-/Ausklappen des Baums ergänzen. Vorhandene Menüdaten erhalten; die R-net-Signalumrechnung bleibt experimentell.
+- Beide Unterprojekte auf Deutsch/Englisch dokumentieren, Offline-Protokoll-/Oberflächen-/Starterprüfungen und Qt-Quick-Abhängigkeiten für CI ergänzen sowie private Anmeldeprofile und Originalmitschnitte ausschließen. Die neuesten Start-/Beendigungs-/Fokus- und Schnittstelleneinrichtungsänderungen sind offline geprüft; ein gemeinsamer Live-Nachtest steht aus.
+
 ## 1.4.2 — 23. November 2026
 
 - Anschluss eines Linux-PCs oder Raspberry Pi über SocketCAN-Hardware mit Signalzeichnung, Schnittstelleneinrichtung, Empfangsprüfung und Fehlersuche erklären. Galvanische Trennung von CAN-Signalen und CAN-seitiger Versorgung voraussetzen; Steckerpositionen ausdrücklich als nicht verifiziert kennzeichnen.

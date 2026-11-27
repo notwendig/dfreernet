@@ -2,7 +2,11 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Status: 23 November 2026. Application: dfreernet 1.4.2, native Linux / Qt 6 with an optional Wine bridge.
+Status: 27 November 2026. Application: dfreernet 1.5.0, native Linux / Qt 6 with optional Wine, IR editor and Linux attendant subprojects.
+
+For 1.5.0, `scripts/test.sh` passes 22 offline test targets. These cover the IR editor, attendant protocol state machines and GUI, focus preservation with neutral background input, input expiry, orderly termination, and simulated can0/can1 setup. All three native applications report version 1.5.0. Private capture-dependent cases skip when their local files are absent; enrollment profiles and raw captures are not distributed.
+
+Earlier authorized stationary-wheelchair development tests confirmed BGM enrollment/restart, takeover/return, direct driving/seating mode changes, seating control and the lowest speed step for the recorded slot arrangement and profile 8. The latest automatic startup, shutdown, focus and adapter-setup changes have offline coverage only; a combined live retest remains outstanding. No physical CAN integration test was run as part of preparing this release. R-net IR pulse conversion is experimental; file round trips do not validate physical infrared output.
 
 For 1.4.2, `scripts/test.sh` passed all 16 registered offline test targets in the development checkout, including diagnostics, system timers and Wine download-timeout guards. The built application reports `dfreernet 1.4.2`. Additional local-fixture checks passed all five download-timeout patch tests and all three Factory patch tests; these read local originals and create only temporary copies. No physical CAN integration test was run for this release. The connection guide is documentation, not validation of a particular adapter, cable or Raspberry Pi. Historical evidence and limitations follow.
 

@@ -10,9 +10,11 @@ Experimentelle Desktopanwendung zum Lesen von R-Net-Controllerkonfigurationen, B
 
 **Teststand: rudimentär auf Permobil T5 VS getestet.** Dies sind begrenzte Entwicklungsversuche, keine allgemeine Kompatibilitätszusage oder Herstellerfreigabe. Andere Rollstuhlmodelle, Steuerungsvarianten und Firmwarestände sind nicht bestätigt. Siehe [Teststand und Grenzen](docs/VALIDATION.de.md).
 
-## Version 1.4.2
+Linux-Begleitsteuerung: [R-net-BGM-Unterprojekt](qt_attendant/README.de.md). Start ohne Optionen mit `qt_attendant/run.sh` auf `can0`; Anmeldung, Übernahme/Rückgabe, Fahr-/Sitzmodus und separate Speed-Regelung für den getesteten Gerätebestand.
 
-Version 1.4.2 ergänzt eine Anschlussanleitung mit verpflichtender galvanischer Trennung, Systemtimer und Diagnosen, grafische OEM-/IR-Starter sowie geprüfte Wine-Download-Zeitkorrekturen in separaten Laufzeitkopien. Details stehen im [Änderungsprotokoll](CHANGELOG.de.md) und [Wine-Unterprojekt](wine/README.de.md). Controllerzugriffe bleiben experimentell; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
+## Version 1.5.0
+
+Version 1.5.0 ergänzt die [Linux-R-net-Begleitsteuerung](qt_attendant/README.de.md) und den [nativen IR-Menüeditor](qt_iredit/README.de.md). Der BGM-Starter richtet can0/can1 ein; Fokuswechsel erhalten Kontrolle, Modus und Speed bei neutralem Joystick, und das Beenden fordert die Rückgabe an den Fahrer an. Ein privates Anmeldeprofil ist erforderlich und wird nicht mitgeliefert. [Änderungsprotokoll](CHANGELOG.de.md) und [Teststand](docs/VALIDATION.de.md) beschreiben geprüften Umfang und offene Live-Prüfungen. Galvanische Trennung bleibt erforderlich; Raspberry-Pi-Hardware wurde nicht gesondert geprüft.
 
 ### Factory-Unterstützung seit 1.4.1
 
@@ -45,7 +47,7 @@ Hauptfenster mit Parametertabelle und Berechtigungsstufen:
 
 ## Schnellstart
 
-Benötigt werden Linux, ein C++17-Compiler, CMake ab 3.21, Ninja, Python 3, zlib-Entwicklungsdateien sowie Qt ab 6.10 mit Widgets/Sql/DBus/LinguistTools und Qt Test für den Standard-Testbuild. Auf dem Entwicklungsrechner wird Qt 6.11.2 verwendet. Für Controllerzugriffe siehe [Rollstuhl mit PC oder Raspberry Pi verbinden](#rollstuhl-mit-pc-oder-raspberry-pi-verbinden) weiter unten.
+Benötigt werden Linux, ein C++17-Compiler, CMake ab 3.21, Ninja, Python 3, zlib-Entwicklungsdateien sowie Qt ab 6.10 mit Widgets/Sql/DBus/LinguistTools, Quick/QuickControls2 für `qt_attendant` sowie Qt Test/QuickTest für den Standard-Testbuild. Auf dem Entwicklungsrechner wird Qt 6.11.2 verwendet. Für Controllerzugriffe siehe [Rollstuhl mit PC oder Raspberry Pi verbinden](#rollstuhl-mit-pc-oder-raspberry-pi-verbinden) weiter unten.
 
 ```bash
 scripts/build.sh
@@ -158,6 +160,10 @@ Gespeicherte `.R-net`-Dateien lassen sich auch ohne CAN-Hardware erkunden. Das o
 - Die ausgewählte CAN-Schnittstelle nach Annahme der Startwarnung optional mit gespeicherter Bitrate einrichten und einschalten.
 - CAN-, Ordner-, Sprach- und Darstellungseinstellungen in vertikalen Reitern speichern.
 
+## Nativer IR-Editor
+
+Eigenständiger Qt-Editor für `.RnIR3`-Menüs und eigene Pronto-Hex-Codes. Start mit `qt_iredit/run.sh`. [Anleitung und Formatgrenzen](qt_iredit/README.de.md).
+
 ## Dokumentation
 
 | Dokument | Inhalt |
@@ -170,6 +176,8 @@ Gespeicherte `.R-net`-Dateien lassen sich auch ohne CAN-Hardware erkunden. Das o
 ## Projektstruktur
 
 ```text
+qt_attendant/    Linux-R-net-Begleitsteuerung
+qt_iredit/       Offline-Qt-Editor für IR-Menüs und Pronto-Hex
 src/             Nativer Kern, SocketCAN-Werkzeuge und Qt-Oberfläche
 translations/    Deutscher Qt-Linguist-Katalog; englische Quelltexte
 scripts/         Build, Start, Paketierung, virtuelle CAN-Tests und Katalogwerkzeuge

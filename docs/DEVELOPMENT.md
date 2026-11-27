@@ -4,7 +4,7 @@
 
 ## Build and run
 
-The supported development frontend is native Linux, C++17, CMake 3.21+, Ninja, Python 3, zlib development files and Qt 6.10+ (Widgets, Sql, DBus, LinguistTools, and Test for tests). No additional network services are required at runtime. Qt 6.11.2 is installed on the current development host.
+The supported development frontend is native Linux, C++17, CMake 3.21+, Ninja, Python 3, zlib development files and Qt 6.10+ (Widgets, Sql, DBus, LinguistTools; Quick, QuickControls2 for `qt_attendant`; Test and QuickTest for tests). No additional network services are required at runtime. Qt 6.11.2 is installed on the current development host.
 
 ```bash
 scripts/build.sh
@@ -42,7 +42,7 @@ RND imports create new database files using a transaction and readback checks; e
 
 ## Preferences and translation
 
-Application identity: `LocalRNet` / `dfreernet`, version 1.4.2. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. Other persisted paths remain intact; default application-local paths use the new application name.
+Application identity: `LocalRNet` / `dfreernet`, version 1.5.0. Qt QSettings stores preferences in the platform-native location (normally `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf` on Linux). On first use of the new name, existing `LocalRNet` / `R-net Qt` keys are copied only if the new store is empty. The old store is left intact. Other persisted paths remain intact; default application-local paths use the new application name.
 
 English (US) is the source language; German uses a compiled Qt `.qm` resource. Add translated strings with the existing `RNet` context, preserve placeholders, update the `.ts` catalog and run translation tests. Qt standard widgets use the installed Qt German translations.
 
@@ -58,7 +58,7 @@ scripts/test.sh
 QT_QPA_PLATFORM=offscreen build/RELEASE/rnet_preferences_test heartbeatConsumesSharedFrames
 ```
 
-Do not point integration tests at a live CAN interface. Standard checks run offline. A local checkout with private fixtures has 17 test targets; the private Git snapshot runs the fixture-free subset. Visual changes should include Qt screenshots; tests already capture settings and startup layouts into `analysis/`. Physical access requires a stationary wheelchair and an explicitly authorized operation. Never infer a write authorization from a code change request.
+Do not point integration tests at a live CAN interface. Standard checks run offline. Release 1.5.0 registers 22 offline test targets without optional fixture-dependent targets. Additional cases are enabled when private fixtures are available. Visual changes should include Qt screenshots; tests already capture settings and startup layouts into `analysis/`. Physical access requires a stationary wheelchair and an explicitly authorized operation. Never infer a write authorization from a code change request.
 
 ## Local artifacts and recovery
 
@@ -89,3 +89,13 @@ without opening CAN. `wine/run.sh --prepare-only` stages a private copy of the
 installed OEM Programmer. Actual `wine/run.sh` operation forwards Programmer
 CAN requests to `can0` and requires explicitly authorized stationary hardware
 use. The native dfreernet application does not depend on this DLL.
+
+## Linux attendant subproject
+
+The Linux [`qt_attendant`](../qt_attendant/README.md) subproject starts live control on `can0` without options using a validated private profile. Its `run.sh` launcher configures both `can0` and `can1` at 125000 bit/s (override: `RNET_BITRATE`) before live startup; already correct UP adapters are left unchanged. Required changes respect the shared interface lease. Only permission-denied `ip link set` calls are retried using `sudo -n`, keeping the GUI unprivileged. Setup failure prevents application launch; completed setup steps are not rolled back. Offline/observe/playback/help/UI-check launches skip this setup. The setup tests simulate commands and never open real CAN. Direct binary launches require preconfigured interfaces.
+
+Pure state machines separate registered startup, system-requested enrollment, table transfer, POP reads, readiness, ownership, mode changes and return. Only confirmed ownership enables joystick/speed output. Joystick travel is ±100 independently of speed (0..100). UI input is refreshed every 50 ms and expires after 250 ms without refresh; the 10-ms CAN timer cannot refresh stale input. Focus changes preserve protocol state, ownership, mode and speed, while immediately centering the joystick. The running QML UI emits neutral heartbeats in the background; returning to the window requires a new pointer gesture. Background UI failure still expires the input watchdog. Power-down latches until `00C`; interface checks/reconnects never restore an old ownership request. Close, SIGTERM and SIGINT request bounded return before Qt exits. One live app per interface and the shared controller-helper lease prevent competing senders. `--offline` opens no CAN socket; automated startup checks use offline mode or an invalid interface. Private capture tests skip when fixtures are missing. The latest default-start/shutdown hardening has offline coverage but still needs a fresh live validation. Build with `-DDFREERNET_BUILD_ATTENDANT=OFF` to omit it and its Quick dependencies.
+
+## Native IR editor
+
+[`qt_iredit`](../qt_iredit/README.md) edits local RnIR3 menus and Pronto Hex without Wine or CAN. The bounded native NRBF parser preserves menu structure and both signal slots; physical signal conversion remains experimental. The main build includes its offline parser and Qt Widgets checks.

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=R-net Attendant
+Name[de]=R-net-Begleitsteuerung
+Comment=Linux R-net attendant control on can0
+Comment[de]=Linux-Begleitsteuerung für R-net über can0
+Exec=qt_attendant
+Icon=input-gaming
+Terminal=false
+Categories=Utility;Accessibility;
+StartupNotify=true

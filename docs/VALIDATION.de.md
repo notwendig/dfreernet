@@ -2,7 +2,11 @@
 
 [English](VALIDATION.md) | [Deutsch](VALIDATION.de.md)
 
-Stand: 23. November 2026. Anwendung: dfreernet 1.4.2, natives Linux / Qt 6 mit optionaler Wine-Anbindung.
+Stand: 27. November 2026. Anwendung: dfreernet 1.5.0, natives Linux / Qt 6 mit optionalen Unterprojekten für Wine, IR-Editor und Linux-Begleitsteuerung.
+
+Für 1.5.0 besteht `scripts/test.sh` 22 Offline-Testziele. Geprüft werden IR-Editor, BGM-Protokollzustände und Oberfläche, Zustandserhalt beim Fokuswechsel mit neutraler Hintergrundeingabe, Eingabezeitüberwachung, geordnetes Beenden und simulierte can0/can1-Einrichtung. Alle drei nativen Anwendungen melden Version 1.5.0. Fälle mit privaten Mitschnitten werden bei fehlenden lokalen Dateien übersprungen; Anmeldeprofile und Rohmitschnitte werden nicht mitgeliefert.
+
+Frühere ausdrücklich autorisierte Entwicklungsversuche am stationären Rollstuhl bestätigten BGM-Anmeldung/Wiederstart, Übernahme/Rückgabe, direkten Fahr-/Sitzmoduswechsel, Sitzsteuerung und die kleinste Speed-Stufe für den aufgezeichneten Gerätebestand mit Profil 8. Die neuesten Änderungen an automatischem Start, Beenden, Fokuswechsel und Adaptereinrichtung sind ausschließlich offline geprüft; ein gemeinsamer Live-Nachtest steht aus. Bei der Vorbereitung dieses Releases lief kein physischer CAN-Integrationstest. Die R-net-IR-Impulsumrechnung bleibt experimentell; Dateirundläufe bestätigen keine physische Infrarotausgabe.
 
 Für 1.4.2 bestand `scripts/test.sh` alle 16 registrierten Offline-Testziele im Entwicklungscheckout, einschließlich Diagnosen, Systemtimer und Wine-Download-Fristprüfungen. Die gebaute Anwendung meldet `dfreernet 1.4.2`. Zusätzliche Prüfungen mit lokalen Originaldateien bestanden alle fünf Download-Frist-Patchtests und alle drei Factory-Patchtests; sie lesen lokale Originale und erzeugen nur temporäre Kopien. Für diesen Release lief kein physischer CAN-Integrationstest. Die Anschlussanleitung bestätigt keinen bestimmten Adapter, kein Kabel und keinen Raspberry Pi. Bisherige Nachweise und Einschränkungen folgen.
 

@@ -44,6 +44,8 @@ Initialisierung festhalten (wiederholtes `20/80=0x1F`, POP-Abbruch `0x20`).
 
 Für die physische Verbindung gilt die [Anschlussanleitung](../README.de.md#rollstuhl-mit-pc-oder-raspberry-pi-verbinden), einschließlich der erforderlichen galvanischen Trennung.
 
+Für native lokale IR-Menübearbeitung siehe [qt_iredit](../qt_iredit/README.de.md). Der Editor öffnet/speichert Pronto-RnIR3-Menüs und übernimmt eigene Pronto-Hex-Codes ohne Wine oder CAN-Proxy.
+
 ## Bauen und offline prüfen
 
 Zusätzlich zum nativen C++17-Compiler: CMake, Ninja, MinGW-w64 i686 und Wine.

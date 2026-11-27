@@ -4,7 +4,7 @@
 
 ## Bauen und starten
 
-Die unterstützte Entwicklungsoberfläche ist eine native Linux-Anwendung mit C++17, CMake ab 3.21, Ninja, Python 3, zlib-Entwicklungsdateien und Qt ab 6.10 (Widgets, Sql, DBus, LinguistTools sowie Test für Tests). Im Betrieb werden keine zusätzlichen Netzwerkdienste benötigt. Auf dem aktuellen Entwicklungsrechner ist Qt 6.11.2 installiert.
+Die unterstützte Entwicklungsoberfläche ist eine native Linux-Anwendung mit C++17, CMake ab 3.21, Ninja, Python 3, zlib-Entwicklungsdateien und Qt ab 6.10 (Widgets, Sql, DBus, LinguistTools, Quick und QuickControls2 sowie Test und QuickTest für Tests). Im Betrieb werden keine zusätzlichen Netzwerkdienste benötigt. Auf dem aktuellen Entwicklungsrechner ist Qt 6.11.2 installiert.
 
 ```bash
 scripts/build.sh
@@ -42,7 +42,7 @@ RND-Importe erzeugen neue Datenbankdateien in einer Transaktion mit Rückprüfun
 
 ## Einstellungen und Übersetzung
 
-Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 1.4.2. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
+Anwendungsidentität: `LocalRNet` / `dfreernet`, Version 1.5.0. Qt QSettings speichert Einstellungen am plattformüblichen Ort (unter Linux normalerweise `$XDG_CONFIG_HOME/LocalRNet/dfreernet.conf`). Beim ersten Start unter dem neuen Namen werden Schlüssel aus `LocalRNet` / `R-net Qt` nur übernommen, wenn der neue Speicher leer ist. Der alte Speicher bleibt erhalten. Andere gespeicherte Pfade bleiben bestehen; neue Standardpfade für Anwendungsdaten verwenden den neuen Namen.
 
 US-Englisch ist die Quellsprache; Deutsch verwendet eine kompilierte Qt-`.qm`-Ressource. Übersetzungstexte im vorhandenen Kontext `RNet` ergänzen, Platzhalter erhalten, den `.ts`-Katalog aktualisieren und Übersetzungstests ausführen. Qt-Standardwidgets verwenden die installierten deutschen Qt-Übersetzungen.
 
@@ -58,7 +58,7 @@ scripts/test.sh
 unshare --user --map-root-user --net python3 scripts/test_can_heartbeat.py
 ```
 
-Integrationstests nicht auf eine echte CAN-Schnittstelle richten. Standardprüfungen arbeiten offline. Mit lokalen privaten Referenzdaten umfasst die Suite 17 Testziele; der private Git-Quelltextstand führt die referenzdatenfreien Tests aus. Sichtbare Änderungen durch Qt-Screenshots prüfen; die Tests speichern bereits Einstellungs- und Startansichten unter `analysis/`. Physischer Zugriff erfordert einen stillstehenden Rollstuhl und einen ausdrücklich autorisierten Vorgang. Aus einem Auftrag zur Quelltextänderung ergibt sich keine Schreibfreigabe.
+Integrationstests nicht auf eine echte CAN-Schnittstelle richten. Standardprüfungen arbeiten offline. Version 1.5.0 registriert 22 Offline-Testziele ohne zusätzliche referenzdatenabhängige Ziele. Weitere Fälle werden bei vorhandenen privaten Referenzdaten aktiviert. Sichtbare Änderungen durch Qt-Screenshots prüfen; die Tests speichern bereits Einstellungs- und Startansichten unter `analysis/`. Physischer Zugriff erfordert einen stillstehenden Rollstuhl und einen ausdrücklich autorisierten Vorgang. Aus einem Auftrag zur Quelltextänderung ergibt sich keine Schreibfreigabe.
 
 ## Lokale Artefakte und Wiederherstellung
 
@@ -88,3 +88,15 @@ Kopie des installierten OEM-Programmers an. Der tatsächliche Start mit
 `wine/run.sh` leitet CAN-Anforderungen des Programmers an `can0` weiter und
 benötigt ausdrücklich freigegebene, stationäre Hardware. Die native Anwendung
 ist nicht von dieser DLL abhängig.
+
+## Linux-Begleitsteuerung
+
+[`qt_attendant`](../qt_attendant/README.de.md) startet ohne Optionen mit geprüftem privatem Profil auf `can0`. `run.sh` richtet vor dem Live-Start `can0` und `can1` mit 125000 Bit/s ein (`RNET_BITRATE` ist optional). Bereits korrekt aktive Adapter bleiben unverändert; erforderliche Änderungen beachten die gemeinsame Schnittstellen-Sperre. Nur wegen fehlender Berechtigung gescheiterte `ip link set`-Befehle werden mit `sudo -n` wiederholt. Die Oberfläche läuft als normaler Benutzer. Einrichtungsfehler verhindern ihren Start; bereits ausgeführte Einrichtungsschritte werden nicht zurückgesetzt. Offline-/Empfangs-/Wiedergabe-/Hilfe- und Oberflächenprüfstarts überspringen diese Einrichtung. Direkte Binärstarts brauchen bereits eingerichtete Adapter.
+
+Getrennte Protokollzustände prüfen Anmeldung, Gerätebestand, Konfiguration, Bereitschaft, Übernahme, Moduswechsel und Rückgabe. Joystick-Achsen reichen bis ±100; Speed wird separat geregelt. Oberflächeneingaben werden alle 50 ms aktualisiert und laufen nach 250 ms ab. Der 10-ms-CAN-Timer kann alte Eingaben nicht erneuern. Fokuswechsel erhalten Anmeldung, Übernahme, Modus und Speed, stellen aber sofort neutral. Die laufende QML-Oberfläche aktualisiert im Hintergrund ausschließlich Neutral; nach Rückkehr ist eine neue Betätigung nötig. Ohne frische Oberflächeneingaben greift weiterhin die Zeitüberwachung. Power-down sperrt die Ausgabe bis zum nächsten `00C`. Fensterschließen, SIGINT und SIGTERM fordern vor dem Ende die bestätigte Rückgabe an.
+
+Die Tests verwenden simulierte Adapterbefehle, reine Zustandsautomaten, gespeicherte private Referenzen oder die Offline-Oberfläche. Fehlende private Mitschnitte führen zum Überspringen der betroffenen Fälle. Die jüngsten Start-/Beendigungs-/Fokusänderungen sind offline geprüft; ein neuer gemeinsamer Live-Test steht aus. Mit `-DDFREERNET_BUILD_ATTENDANT=OFF` entfallen BGM und Qt-Quick-Abhängigkeiten.
+
+## Nativer IR-Editor
+
+[`qt_iredit`](../qt_iredit/README.de.md) bearbeitet lokale RnIR3-Menüs und Pronto-Hex ohne Wine oder CAN. Der begrenzte native NRBF-Leser erhält Menüstruktur und beide Signalplätze; die physische Signalumrechnung bleibt experimentell. Der Hauptbuild enthält Offline-Prüfungen für Dateiformat und Qt-Widgets-Oberfläche.

@@ -23,6 +23,7 @@ jobs:
           dnf -y --setopt=install_weak_deps=False install
           gcc-c++ cmake ninja-build python3 git file ripgrep dbus-daemon
           qt6-qtbase-devel qt6-qtbase-gui qt6-qttools-devel qt6-linguist
+          qt6-qtdeclarative-devel
           zlib-ng-compat-devel
 
       - uses: actions/checkout@v7
